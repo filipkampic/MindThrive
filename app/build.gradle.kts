@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.filipkampic.mindthrive"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.filipkampic.mindthrive"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = 26
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -62,4 +62,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
