@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive
+package com.filipkampic.mindthrive.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,11 +10,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun Goals(navController: NavController) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text("Home Screen", fontSize = 24.sp)
+        Text("Goals", fontSize = 24.sp)
     }
 }
