@@ -20,15 +20,15 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.StickyNote2
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -116,10 +116,10 @@ fun HomeScreen(navController: NavController) {
 
         val cards = listOf(
             "Calendar" to Icons.Filled.CalendarToday,
-            "Time Management" to Icons.Filled.AccessTime,
-            "Notes" to Icons.Filled.StickyNote2,
+            "Tasks" to Icons.Filled.CheckCircle,
+            "Notes" to Icons.Filled.EditNote,
             "Focus" to Icons.Filled.CenterFocusStrong,
-            "Habit Tracker" to Icons.Filled.CheckCircle,
+            "Habit Tracker" to Icons.Filled.Insights,
             "Goals" to Icons.Filled.Flag
         )
 
@@ -137,7 +137,7 @@ fun HomeScreen(navController: NavController) {
                 DashboardCard(title = title, icon = icon) {
                     when (title) {
                         "Calendar" -> navController.navigate("calendar")
-                        "Time Management" -> navController.navigate("timeManagement")
+                        "Tasks" -> navController.navigate("tasks")
                         "Notes" -> navController.navigate("notes")
                         "Focus" -> navController.navigate("focus")
                         "Habit Tracker" -> navController.navigate("habitTracker")

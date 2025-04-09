@@ -10,11 +10,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @Composable
-fun TimeManagement(navController: NavController) {
+fun Tasks(navController: NavController) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text("Time Management", fontSize = 24.sp)
+        Text("Tasks", fontSize = 24.sp)
     }
 }
