@@ -241,7 +241,7 @@ fun Calendar(navController: NavController) {
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .clickable(enabled = isCurrentMonth) {
-                                    /* TODO - Time Management */
+                                    navController.navigate("time/${date}")
                                 },
                             contentAlignment = Alignment.Center
                         ) {
