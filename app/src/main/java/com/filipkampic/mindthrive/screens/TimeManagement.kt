@@ -5,7 +5,6 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -30,12 +30,15 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,7 +107,7 @@ fun TimeManagement(navController: NavController, date: String) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(top = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -124,19 +128,46 @@ fun TimeManagement(navController: NavController, date: String) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
-                IconButton(
-                    onClick = {
-                        defaultStartTime = tasks.maxByOrNull { it.end }?.end ?: LocalTime.of(0, 0)
-                        showDialog = true
-                    },
-                    modifier = Modifier.offset(y = 16.dp)
-                ) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "Menu",
-                        tint = Peach,
-                        modifier = Modifier.size(32.dp)
-                    )
+                Box {
+                    val expanded = remember { mutableStateOf(false) }
+                    IconButton(
+                        onClick = { expanded.value = true},
+                        modifier = Modifier.offset(y = 16.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "Menu",
+                            tint = Peach,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded.value,
+                        onDismissRequest = { expanded.value = false },
+                        modifier = Modifier.background(Peach)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Option 1") },
+                            onClick = {
+                                expanded.value = false
+                                // TODO: Dodati logiku za Option 1
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Option 2") },
+                            onClick = {
+                                expanded.value = false
+                                // TODO: Dodati logiku za Option 2
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Option 3") },
+                            onClick = {
+                                expanded.value = false
+                                // TODO: Dodati logiku za Option 3
+                            }
+                        )
+                    }
                 }
             }
 
@@ -326,7 +357,7 @@ fun TaskCard(
                 if (isOverlapping) Peach.copy(alpha = 0.6f) else Peach,
                 RoundedCornerShape(12.dp)
             )
-            .clickable{ onClick() }
+            .clickable { onClick() }
             .padding(12.dp)
             .padding(end = 32.dp)
     ) {
@@ -357,6 +388,34 @@ fun AddTaskDialog(
     var end by remember { mutableStateOf(nextTaskStart ?: LocalTime.of(0, 0)) }
     var description by remember { mutableStateOf(taskToEdit?.description ?: "") }
     val context = LocalContext.current
+
+    val openStartPicker = remember { mutableStateOf(false) }
+    val openEndPicker = remember { mutableStateOf(false) }
+
+    fun showTimePicker(isStart: Boolean, initialHour: Int, initialMinute: Int) {
+        val listener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
+            if (isStart) {
+                start = LocalTime.of(hour, minute)
+                openStartPicker.value = false
+            } else {
+                end = LocalTime.of(hour, minute)
+                openEndPicker.value = false
+            }
+        }
+        TimePickerDialog(context, listener, initialHour, initialMinute, true).show()
+    }
+
+    LaunchedEffect(openStartPicker.value) {
+        if (openStartPicker.value) {
+            showTimePicker(true, start.hour, start.minute)
+        }
+    }
+
+    LaunchedEffect(openEndPicker.value) {
+        if (openEndPicker.value) {
+            showTimePicker(false, end.hour, end.minute)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onCancel,
@@ -393,57 +452,63 @@ fun AddTaskDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = start.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        onValueChange = {},
-                        label = { Text("Start") },
-                        readOnly = true,
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                TimePickerDialog(
-                                    context,
-                                    { _, hour, minute -> start = LocalTime.of(hour, minute) },
-                                    start.hour,
-                                    start.minute,
-                                    true
-                                ).show()
-                            }
-                    )
-                    OutlinedTextField(
-                        value = end.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        onValueChange = {},
-                        label = { Text("End") },
-                        readOnly = true,
+                            .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                            .clickable { openStartPicker.value = true }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Start",
+                                color = Color.Gray,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            Text(
+                                text = start.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                TimePickerDialog(
-                                    context,
-                                    { _, hour, minute -> end = LocalTime.of(hour, minute) },
-                                    end.hour,
-                                    end.minute,
-                                    true
-                                ).show()
-                            }
-                    )
+                            .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                            .clickable { openEndPicker.value = true }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "End",
+                                color = Color.Gray,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            Text(
+                                text = end.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Description (optional)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences
+                    )
                 )
             }
         },
