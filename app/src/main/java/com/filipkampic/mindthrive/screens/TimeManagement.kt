@@ -261,11 +261,20 @@ fun TimeManagement(navController: NavController, date: String) {
                                             .height(48.dp)
                                             .border(1.dp, Peach, RoundedCornerShape(12.dp))
                                             .background(DarkBlue)
-                                            .padding(start = 16.dp),
+                                            .padding(start = 16.dp)
+                                            .clickable {
+                                                defaultStartTime = start
+                                                editingTask = null
+                                                showDialog = true
+                                            },
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         Text(
-                                            text = if (minutes == 0L) "${hours}h" else "${hours}h ${minutes}min",
+                                            text = when {
+                                                hours == 0L -> "${minutes}min"
+                                                minutes == 0L -> "${hours}h"
+                                                else -> "${hours}h ${minutes}min"
+                                            },
                                             color = Peach,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -313,27 +322,6 @@ fun TimeManagement(navController: NavController, date: String) {
                 )
             }
 
-        Box(
-            modifier = Modifier
-                .padding(16.dp)
-                .navigationBarsPadding()
-                .align(Alignment.BottomEnd)
-                .size(56.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(Peach)
-                .clickable {
-                    defaultStartTime = tasks.maxByOrNull { it.end }?.end ?: LocalTime.of(0, 0)
-                    showDialog = true
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "+",
-                color = DarkBlue,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            )
-        }
         if (showOverlapDialog) {
             OverlapDialog(
                 overlappingTasks = selectedOverlappingTasks,
@@ -392,6 +380,8 @@ fun AddTaskDialog(
     val openStartPicker = remember { mutableStateOf(false) }
     val openEndPicker = remember { mutableStateOf(false) }
 
+    val customTheme = remember { context.resources.getIdentifier("CustomTimePickerTheme", "style", context.packageName)}
+
     fun showTimePicker(isStart: Boolean, initialHour: Int, initialMinute: Int) {
         val listener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
             if (isStart) {
@@ -402,7 +392,25 @@ fun AddTaskDialog(
                 openEndPicker.value = false
             }
         }
-        TimePickerDialog(context, listener, initialHour, initialMinute, true).show()
+        val dialog = TimePickerDialog(context, customTheme, listener, initialHour, initialMinute, true).apply {
+            setCanceledOnTouchOutside(true)
+            setCancelable(true)
+            setOnCancelListener {
+                if (isStart) {
+                    openStartPicker.value = false
+                } else {
+                    openEndPicker.value = false
+                }
+            }
+            setOnDismissListener {
+                if (isStart) {
+                    openStartPicker.value = false
+                } else {
+                    openEndPicker.value = false
+                }
+            }
+        }
+        dialog.show()
     }
 
     LaunchedEffect(openStartPicker.value) {

@@ -8,4 +8,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="backgroundColor">#FF083B53</color>
+    <color name="dark_blue">#FF1A2526</color>
+    <color name="peach">#FFFFDAB9</color>
 </resources>
