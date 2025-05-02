@@ -5,9 +5,11 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,13 +21,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Warning
@@ -40,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,10 +52,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -66,7 +75,7 @@ import java.time.format.DateTimeFormatter
 @Preview(showBackground = true)
 @Composable
 fun TimeManagementPreview(modifier: Modifier = Modifier) {
-    TimeManagement(rememberNavController(), "")
+    TimeManagement(rememberNavController(), "2025-04-27")
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -75,34 +84,41 @@ fun TimeManagement(navController: NavController, date: String) {
     var tasks by remember { mutableStateOf(listOf<Task>()) }
     var showDialog by remember { mutableStateOf(false) }
     var defaultStartTime by remember { mutableStateOf(LocalTime.of(0, 0)) }
-    var editingTask by remember { mutableStateOf<Task?>(null)}
+    var editingTask by remember { mutableStateOf<Task?>(null) }
     val currentDate = LocalDate.parse(date)
-    val todaysTasks = tasks.flatMap { task ->
-        if (task.start <= task.end && task.date == currentDate) {
-            listOf(task)
-        } else if (task.start > task.end) {
-            val isToday = task.date == currentDate
-            val isTomorrow = task.date.plusDays(1) == currentDate
-
-            listOfNotNull(
-                if (isToday) Task(task.name, task.start, LocalTime.of(23, 59), task.description, task.date) else null,
-                if (isTomorrow) Task(task.name, LocalTime.MIDNIGHT, task.end.takeIf { it != LocalTime.MIDNIGHT } ?: LocalTime.of(23, 59), task.description, currentDate) else null
-            )
+    val todaysTasks = tasks.filter { task ->
+        if (task.start <= task.end) {
+            task.date == currentDate
         } else {
-            emptyList()
+            task.date == currentDate || task.date.plusDays(1) == currentDate
         }
-    }
+    }.sortedBy { it.start }
     var showOverlapDialog by remember { mutableStateOf(false) }
     var selectedOverlappingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
+
+    val taskListState = remember { mutableStateListOf<Task>().apply { addAll(todaysTasks) } }
+    val lazyListState = rememberLazyListState()
+    val draggedItemIndex = remember { mutableStateOf<Int?>(null) }
+    val dragOffset = remember { mutableStateOf(0f) }
+    val taskHeights = remember { mutableStateListOf<Float>().apply { addAll(List(taskListState.size) { 0f }) } }
+    val hoveredIndex = remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(todaysTasks) {
+        taskListState.clear()
+        taskListState.addAll(todaysTasks)
+        taskHeights.clear()
+        taskHeights.addAll(List(taskListState.size) { 0f })
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBlue)
     ) {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -131,7 +147,7 @@ fun TimeManagement(navController: NavController, date: String) {
                 Box {
                     val expanded = remember { mutableStateOf(false) }
                     IconButton(
-                        onClick = { expanded.value = true},
+                        onClick = { expanded.value = true },
                         modifier = Modifier.offset(y = 16.dp)
                     ) {
                         Icon(
@@ -184,7 +200,7 @@ fun TimeManagement(navController: NavController, date: String) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            "OO:OO",
+                            "00:00",
                             color = Peach,
                             fontSize = 14.sp,
                             modifier = Modifier.width(60.dp)
@@ -215,20 +231,26 @@ fun TimeManagement(navController: NavController, date: String) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "OO:OO",
+                            "00:00",
                             color = Peach,
                             fontSize = 14.sp,
                             modifier = Modifier.width(60.dp)
                         )
                     }
                 }
-            } else
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    val allTimes = (todaysTasks.flatMap { listOf(it.start, it.end) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .navigationBarsPadding(),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    state = lazyListState
+                ) {
+                    val allTimes = (taskListState.flatMap { listOf(it.start, it.end) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
                     val timeBlocks = allTimes.zipWithNext()
 
-                    items(timeBlocks) { (start, end) ->
-                        val tasksInBlock = todaysTasks.filter {
+                    itemsIndexed(timeBlocks, key = { index, (start, _) -> "$index-$start" }) { _, (start, end) ->
+                        val tasksInBlock = taskListState.filter {
                             it.start < end && it.end > start
                         }
                         val isOverlap = tasksInBlock.size > 1
@@ -285,11 +307,91 @@ fun TimeManagement(navController: NavController, date: String) {
                                         showOverlapDialog = true
                                     }
                                 } else {
-                                    tasksInBlock.forEach { task ->
-                                        TaskCard(task, onClick = {
-                                            editingTask = task
-                                            showDialog = true
-                                        })
+                                    tasksInBlock.forEachIndexed { _, task ->
+                                        val globalIndex = taskListState.indexOf(task)
+                                        var isDragging by remember { mutableStateOf(false) }
+                                        val density = LocalDensity.current
+                                        val defaultCardHeightPx = with(density) { 48.dp.toPx() } + with(density) { 8.dp.toPx() }
+                                        val isHovered = hoveredIndex.value == globalIndex && draggedItemIndex.value != globalIndex
+
+                                        TaskCard(
+                                            task = task,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .onGloballyPositioned {
+                                                    if (globalIndex < taskHeights.size) {
+                                                        taskHeights[globalIndex] = it.size.height.toFloat()
+                                                    }
+                                                }
+                                                .offset {
+                                                    if (isDragging && draggedItemIndex.value == globalIndex) {
+                                                        IntOffset(0, dragOffset.value.toInt())
+                                                    } else {
+                                                        IntOffset(0, 0)
+                                                    }
+                                                }
+                                                .pointerInput(task) {
+                                                    detectDragGesturesAfterLongPress(
+                                                        onDragStart = {
+                                                            draggedItemIndex.value = globalIndex
+                                                            dragOffset.value = 0f
+                                                            isDragging = true
+                                                        },
+                                                        onDragEnd = {
+                                                            if (draggedItemIndex.value != null) {
+                                                                val draggedIndex = draggedItemIndex.value!!
+                                                                val draggedTask = taskListState[draggedIndex]
+                                                                taskListState.removeAt(draggedIndex)
+
+                                                                val avgHeight = if (taskHeights.isNotEmpty()) taskHeights.average().toFloat() else defaultCardHeightPx
+                                                                val positionOffset = dragOffset.value / avgHeight
+                                                                val targetIndex = (draggedIndex + positionOffset).toInt().coerceIn(0, taskListState.size)
+
+                                                                taskListState.add(targetIndex, draggedTask)
+
+                                                                val reflowedTasks = reflowTasks(taskListState)
+                                                                tasks = reflowedTasks
+                                                                taskListState.clear()
+                                                                taskListState.addAll(reflowedTasks)
+                                                            }
+                                                            draggedItemIndex.value = null
+                                                            dragOffset.value = 0f
+                                                            hoveredIndex.value = null
+                                                            isDragging = false
+                                                        },
+                                                        onDragCancel = {
+                                                            draggedItemIndex.value = null
+                                                            dragOffset.value = 0f
+                                                            hoveredIndex.value = null
+                                                            isDragging = false
+                                                        },
+                                                        onDrag = { change, dragAmount ->
+                                                            change.consume()
+                                                            if (draggedItemIndex.value == globalIndex) {
+                                                                dragOffset.value += dragAmount.y
+
+                                                                val avgHeight = if (taskHeights.isNotEmpty()) taskHeights.average().toFloat() else defaultCardHeightPx
+                                                                val halfHeight = avgHeight / 2
+                                                                val adjustedOffset = dragOffset.value + halfHeight
+                                                                val positionOffset = adjustedOffset / avgHeight
+                                                                val targetIndex = (globalIndex + positionOffset).toInt().coerceIn(0, taskListState.size)
+
+                                                                if (targetIndex != globalIndex) {
+                                                                    hoveredIndex.value = if (targetIndex > globalIndex) targetIndex - 1 else targetIndex
+                                                                } else {
+                                                                    hoveredIndex.value = null
+                                                                }
+                                                            }
+                                                        }
+                                                    )
+                                                },
+                                            isDragging = isDragging,
+                                            isHovered = isHovered,
+                                            onClick = {
+                                                editingTask = task
+                                                showDialog = true
+                                            }
+                                        )
                                     }
                                 }
                             }
@@ -298,29 +400,30 @@ fun TimeManagement(navController: NavController, date: String) {
                     }
                 }
             }
+        }
 
-            if (showDialog) {
-                AddTaskDialog(
-                    defaultStart = defaultStartTime,
-                    tasks = todaysTasks,
-                    taskToEdit = editingTask,
-                    onSave = { newTask ->
-                        tasks = if (editingTask != null) tasks - editingTask!! + newTask else tasks + newTask
-                        showDialog = false
-                        editingTask = null
-                    },
-                    onDelete = {
-                        tasks = tasks - it
-                        showDialog = false
-                        editingTask = null
-                    },
-                    onCancel = {
-                        showDialog = false
-                        editingTask = null
-                    },
-                    currentDate = currentDate
-                )
-            }
+        if (showDialog) {
+            AddTaskDialog(
+                defaultStart = defaultStartTime,
+                tasks = todaysTasks,
+                taskToEdit = editingTask,
+                onSave = { newTask ->
+                    tasks = if (editingTask != null) tasks - editingTask!! + newTask else tasks + newTask
+                    showDialog = false
+                    editingTask = null
+                },
+                onDelete = {
+                    tasks = tasks - it
+                    showDialog = false
+                    editingTask = null
+                },
+                onCancel = {
+                    showDialog = false
+                    editingTask = null
+                },
+                currentDate = currentDate
+            )
+        }
 
         if (showOverlapDialog) {
             OverlapDialog(
@@ -331,29 +434,87 @@ fun TimeManagement(navController: NavController, date: String) {
     }
 }
 
+private fun reflowTasks(tasks: List<Task>): List<Task> {
+    if (tasks.isEmpty()) return tasks
+    val newTasks = mutableListOf<Task>()
+    var currentTime = LocalTime.of(0, 0)
+
+    tasks.forEach { task ->
+        val duration = Duration.between(task.start, task.end)
+        val newStartTime = currentTime
+        var newEndTime = newStartTime.plus(duration)
+
+        if (newEndTime > LocalTime.of(23, 59)) {
+            newEndTime = LocalTime.of(23, 59)
+        }
+
+        val newTask = task.copy(
+            start = newStartTime,
+            end = newEndTime
+        )
+        newTasks.add(newTask)
+        currentTime = newEndTime
+    }
+    return newTasks
+}
+
 @Composable
 fun TaskCard(
     task: Task,
     modifier: Modifier = Modifier,
     isOverlapping: Boolean = false,
+    isDragging: Boolean = false,
+    isHovered: Boolean = false,
     onClick: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
+    Row(
+        modifier = modifier
             .fillMaxWidth()
             .background(
-                if (isOverlapping) Peach.copy(alpha = 0.6f) else Peach,
+                when {
+                    isDragging -> Color.Gray.copy(alpha = 0.2f)
+                    isHovered -> Peach.copy(alpha = 0.8f)
+                    isOverlapping -> Peach.copy(alpha = 0.6f)
+                    else -> Peach
+                },
                 RoundedCornerShape(12.dp)
             )
-            .clickable { onClick() }
-            .padding(12.dp)
-            .padding(end = 32.dp)
+            .padding(8.dp)
+            .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(task.name, fontWeight = FontWeight.Bold, color = DarkBlue)
-        if (task.description.isNotBlank()) {
-            Text(task.description, color = DarkBlue)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 32.dp)
+        ) {
+            Text(
+                text = task.name,
+                fontWeight = FontWeight.Bold,
+                color = DarkBlue
+            )
+            if (task.description.isNotBlank()) {
+                Text(
+                    text = task.description,
+                    color = DarkBlue,
+                    fontSize = 14.sp
+                )
+            }
+            Text(
+                text = task.duration(),
+                color = DarkBlue,
+                fontSize = 14.sp
+            )
         }
-        Text(task.duration(), color = DarkBlue)
+
+        if (isDragging) {
+            Icon(
+                imageVector = Icons.Default.DragHandle,
+                contentDescription = "Drag",
+                tint = Peach,
+                modifier = Modifier.size(24.dp)
+            )
+        }
     }
 }
 
@@ -375,12 +536,12 @@ fun AddTaskDialog(
         .minOrNull()
     var end by remember { mutableStateOf(nextTaskStart ?: LocalTime.of(0, 0)) }
     var description by remember { mutableStateOf(taskToEdit?.description ?: "") }
+    var openEndPicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val openStartPicker = remember { mutableStateOf(false) }
-    val openEndPicker = remember { mutableStateOf(false) }
 
-    val customTheme = remember { context.resources.getIdentifier("CustomTimePickerTheme", "style", context.packageName)}
+    val customTheme = remember { context.resources.getIdentifier("CustomTimePickerTheme", "style", context.packageName) }
 
     fun showTimePicker(isStart: Boolean, initialHour: Int, initialMinute: Int) {
         val listener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
@@ -389,7 +550,7 @@ fun AddTaskDialog(
                 openStartPicker.value = false
             } else {
                 end = LocalTime.of(hour, minute)
-                openEndPicker.value = false
+                openEndPicker = false
             }
         }
         val dialog = TimePickerDialog(context, customTheme, listener, initialHour, initialMinute, true).apply {
@@ -399,14 +560,14 @@ fun AddTaskDialog(
                 if (isStart) {
                     openStartPicker.value = false
                 } else {
-                    openEndPicker.value = false
+                    openEndPicker = false
                 }
             }
             setOnDismissListener {
                 if (isStart) {
                     openStartPicker.value = false
                 } else {
-                    openEndPicker.value = false
+                    openEndPicker = false
                 }
             }
         }
@@ -419,8 +580,8 @@ fun AddTaskDialog(
         }
     }
 
-    LaunchedEffect(openEndPicker.value) {
-        if (openEndPicker.value) {
+    LaunchedEffect(openEndPicker) {
+        if (openEndPicker) {
             showTimePicker(false, end.hour, end.minute)
         }
     }
@@ -491,7 +652,7 @@ fun AddTaskDialog(
                         modifier = Modifier
                             .weight(1f)
                             .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                            .clickable { openEndPicker.value = true }
+                            .clickable { openEndPicker = true }
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Column {
