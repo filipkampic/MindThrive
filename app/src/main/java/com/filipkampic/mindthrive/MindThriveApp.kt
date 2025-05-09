@@ -5,9 +5,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.filipkampic.mindthrive.screens.Calendar
 import com.filipkampic.mindthrive.screens.Focus
 import com.filipkampic.mindthrive.screens.Goals
@@ -36,7 +38,10 @@ fun MindThriveApp() {
                 composable("profile") { Profile(navController) }
                 composable("settings") { Settings(navController) }
                 composable("calendar") { Calendar(navController) }
-                composable("time/{selectedDate}") { backStackEntry ->
+                composable(
+                    "time/{selectedDate}",
+                    arguments = listOf(navArgument("selectedDate") { type = NavType.StringType })
+                ) { backStackEntry ->
                     val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
                     TimeManagement(navController, selectedDate)
                 }

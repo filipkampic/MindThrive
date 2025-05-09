@@ -1,6 +1,9 @@
 package com.filipkampic.mindthrive.screens
 
+import TaskViewModel
+import TaskViewModelFactory
 import android.annotation.SuppressLint
+import android.app.Application
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -62,15 +67,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.filipkampic.mindthrive.Task
+import com.filipkampic.mindthrive.model.Task
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Preview(showBackground = true)
 @Composable
@@ -81,20 +88,18 @@ fun TimeManagementPreview(modifier: Modifier = Modifier) {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TimeManagement(navController: NavController, date: String) {
-    var tasks by remember { mutableStateOf(listOf<Task>()) }
+    val context = LocalContext.current
+    val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(context.applicationContext as Application))
+    val currentDate = LocalDate.parse(date)
     var showDialog by remember { mutableStateOf(false) }
     var defaultStartTime by remember { mutableStateOf(LocalTime.of(0, 0)) }
     var editingTask by remember { mutableStateOf<Task?>(null) }
-    val currentDate = LocalDate.parse(date)
-    val todaysTasks = tasks.filter { task ->
-        if (task.start <= task.end) {
-            task.date == currentDate
-        } else {
-            task.date == currentDate || task.date.plusDays(1) == currentDate
-        }
-    }.sortedBy { it.start }
     var showOverlapDialog by remember { mutableStateOf(false) }
     var selectedOverlappingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
+    val tasks by viewModel.tasks.collectAsState()
+    val todaysTasks = tasks.filter { task ->
+        task.date == currentDate && task.start != null && task.end != null
+    }.sortedBy { it.start ?: LocalTime.of(0, 0) }
 
     val taskListState = remember { mutableStateListOf<Task>().apply { addAll(todaysTasks) } }
     val lazyListState = rememberLazyListState()
@@ -108,6 +113,10 @@ fun TimeManagement(navController: NavController, date: String) {
         taskListState.addAll(todaysTasks)
         taskHeights.clear()
         taskHeights.addAll(List(taskListState.size) { 0f })
+    }
+
+    LaunchedEffect(date) {
+        viewModel.loadTasks(currentDate)
     }
 
     Box(
@@ -246,12 +255,12 @@ fun TimeManagement(navController: NavController, date: String) {
                     contentPadding = PaddingValues(bottom = 16.dp),
                     state = lazyListState
                 ) {
-                    val allTimes = (taskListState.flatMap { listOf(it.start, it.end) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
+                    val allTimes = (taskListState.flatMap { listOfNotNull(it.start, it.end) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
                     val timeBlocks = allTimes.zipWithNext()
 
                     itemsIndexed(timeBlocks, key = { index, (start, _) -> "$index-$start" }) { _, (start, end) ->
                         val tasksInBlock = taskListState.filter {
-                            it.start < end && it.end > start
+                            it.start != null && it.end != null && it.start < end && it.end > start
                         }
                         val isOverlap = tasksInBlock.size > 1
 
@@ -338,7 +347,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             isDragging = true
                                                         },
                                                         onDragEnd = {
-                                                            if (draggedItemIndex.value != null) {
+                                                            if (draggedItemIndex.value != null && taskListState.isNotEmpty()) {
                                                                 val draggedIndex = draggedItemIndex.value!!
                                                                 val draggedTask = taskListState[draggedIndex]
                                                                 taskListState.removeAt(draggedIndex)
@@ -350,7 +359,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                                                 taskListState.add(targetIndex, draggedTask)
 
                                                                 val reflowedTasks = reflowTasks(taskListState)
-                                                                tasks = reflowedTasks
+                                                                reflowedTasks.forEach { viewModel.updateTask(it) }
                                                                 taskListState.clear()
                                                                 taskListState.addAll(reflowedTasks)
                                                             }
@@ -366,7 +375,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             isDragging = false
                                                         },
                                                         onDrag = { change, dragAmount ->
-                                                            change.consume()
+                                                            change.consumeAllChanges()
                                                             if (draggedItemIndex.value == globalIndex) {
                                                                 dragOffset.value += dragAmount.y
 
@@ -408,12 +417,18 @@ fun TimeManagement(navController: NavController, date: String) {
                 tasks = todaysTasks,
                 taskToEdit = editingTask,
                 onSave = { newTask ->
-                    tasks = if (editingTask != null) tasks - editingTask!! + newTask else tasks + newTask
+                    val adjustedEnd = if (newTask.end == LocalTime.of(0, 0)) LocalTime.of(23, 59) else newTask.end
+                    val adjustedTask = newTask.copy(end = adjustedEnd)
+                    if (editingTask != null) {
+                        viewModel.updateTask(adjustedTask)
+                    } else {
+                        viewModel.insertTask(adjustedTask)
+                    }
                     showDialog = false
                     editingTask = null
                 },
                 onDelete = {
-                    tasks = tasks - it
+                    viewModel.deleteTask(it)
                     showDialog = false
                     editingTask = null
                 },
@@ -440,8 +455,9 @@ private fun reflowTasks(tasks: List<Task>): List<Task> {
     var currentTime = LocalTime.of(0, 0)
 
     tasks.forEach { task ->
+        if (task.start == null || task.end == null) return@forEach
         val duration = Duration.between(task.start, task.end)
-        val newStartTime = currentTime
+        val newStartTime = if (currentTime > task.start) currentTime else task.start
         var newEndTime = newStartTime.plus(duration)
 
         if (newEndTime > LocalTime.of(23, 59)) {
@@ -530,8 +546,8 @@ fun AddTaskDialog(
 ) {
     var name by remember { mutableStateOf(taskToEdit?.name ?: "") }
     var start by remember { mutableStateOf(taskToEdit?.start ?: defaultStart) }
-    val nextTaskStart = taskToEdit?.end ?: tasks
-        .map { it.start }
+    val nextTaskStart = tasks
+        .mapNotNull { it.start }
         .filter { it > defaultStart }
         .minOrNull()
     var end by remember { mutableStateOf(nextTaskStart ?: LocalTime.of(0, 0)) }
@@ -582,7 +598,7 @@ fun AddTaskDialog(
 
     LaunchedEffect(openEndPicker) {
         if (openEndPicker) {
-            showTimePicker(false, end.hour, end.minute)
+            showTimePicker(false, end?.hour ?: 0, end?.minute ?: 0)
         }
     }
 
@@ -591,7 +607,15 @@ fun AddTaskDialog(
         confirmButton = {
             IconButton(onClick = {
                 if (name.isNotBlank()) {
-                    onSave(Task(name, start, end, description, currentDate))
+                    val newTask = Task(
+                        id = taskToEdit?.id ?: UUID.randomUUID().toString(),
+                        name = name,
+                        start = start,
+                        end = end,
+                        description = description,
+                        date = currentDate
+                    )
+                    onSave(newTask)
                 }
             }) {
                 Icon(Icons.Default.Save, contentDescription = "Save")
@@ -643,7 +667,7 @@ fun AddTaskDialog(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             Text(
-                                text = start.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                text = start.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "N/A",
                                 fontSize = 16.sp
                             )
                         }
@@ -663,7 +687,7 @@ fun AddTaskDialog(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             Text(
-                                text = end.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                text = end?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "N/A",
                                 fontSize = 16.sp
                             )
                         }

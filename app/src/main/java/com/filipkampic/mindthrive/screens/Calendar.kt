@@ -241,7 +241,10 @@ fun Calendar(navController: NavController) {
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .clickable(enabled = isCurrentMonth) {
-                                    navController.navigate("time/${date}")
+                                    val formattedDate = date.toString()
+                                    if (formattedDate.isNotEmpty()) {
+                                        navController.navigate("time/$formattedDate")
+                                    }
                                 },
                             contentAlignment = Alignment.Center
                         ) {
