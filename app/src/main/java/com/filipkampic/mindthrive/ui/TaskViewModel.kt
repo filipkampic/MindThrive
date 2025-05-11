@@ -1,4 +1,5 @@
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private val taskDao = AppDatabase.getDatabase(application).taskDao()
@@ -21,9 +25,36 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadTasks(date: LocalDate) {
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+        val startOfDay = LocalDateTime.of(date, LocalTime.MIN).format(formatter)
+        val endOfDay = LocalDateTime.of(date, LocalTime.MAX).format(formatter)
+
         viewModelScope.launch {
-            taskDao.getTasksByDate(date).collectLatest { tasks ->
-                _tasks.value = tasks
+            taskDao.getTasksByDate(date, startOfDay, endOfDay).collectLatest { fetchedTasks ->
+                _tasks.value = splitTasksByDay(fetchedTasks, date)
+            }
+        }
+    }
+
+    private fun splitTasksByDay(tasks: List<Task>, date: LocalDate): List<Task> {
+        val startOfDay = date.atStartOfDay()
+        val endOfDay = date.plusDays(1).atStartOfDay()
+
+        return tasks.mapNotNull { task ->
+            val overlapStart = maxOf(task.start ?: return@mapNotNull null, startOfDay)
+            val overlapEnd = minOf(task.end ?: return@mapNotNull null, endOfDay)
+
+            if (overlapStart < overlapEnd) {
+                Task(
+                    id = task.id,
+                    name = task.name ?: "",
+                    description = task.description ?: "",
+                    start = overlapStart,
+                    end = overlapEnd,
+                    date = date
+                )
+            } else {
+                null
             }
         }
     }

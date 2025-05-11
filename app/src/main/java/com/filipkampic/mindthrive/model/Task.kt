@@ -7,14 +7,15 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.Duration
+import java.time.LocalDateTime
 
 @Entity(tableName = "tasks")
 data class Task(
     @PrimaryKey
     val id: String,
     val name: String,
-    val start: LocalTime?,
-    val end: LocalTime?,
+    val start: LocalDateTime?,
+    val end: LocalDateTime?,
     val description: String = "",
     val date: LocalDate
 ) {
@@ -35,8 +36,8 @@ data class Task(
 }
 
 class TaskTypeConverters {
+    private val dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
-    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     @TypeConverter
     fun fromLocalDate(date: LocalDate?): String? {
@@ -49,12 +50,12 @@ class TaskTypeConverters {
     }
 
     @TypeConverter
-    fun fromLocalTime(time: LocalTime?): String? {
-        return time?.format(timeFormatter)
+    fun fromLocalDateTime(dateTime: LocalDateTime?): String? {
+        return dateTime?.format(dateTimeFormatter)
     }
 
     @TypeConverter
-    fun toLocalTime(timeString: String?): LocalTime? {
-        return timeString?.let { LocalTime.parse(it, timeFormatter) }
+    fun toLocalTime(dateTimeString: String?): LocalDateTime? {
+        return dateTimeString?.let { LocalDateTime.parse(it, dateTimeFormatter) }
     }
 }
