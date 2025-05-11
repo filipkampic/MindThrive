@@ -23,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -142,17 +141,6 @@ fun Calendar(navController: NavController) {
                 Icon(
                     imageVector = Icons.Default.Home,
                     contentDescription = "Home",
-                    tint = Peach,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            IconButton(
-                onClick = { /* TODO: Open Menu */ },
-                modifier = Modifier.offset(y = 16.dp)
-            ) {
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "Menu",
                     tint = Peach,
                     modifier = Modifier.size(32.dp)
                 )

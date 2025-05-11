@@ -179,24 +179,25 @@ fun TimeManagement(navController: NavController, date: String) {
                         modifier = Modifier.background(Peach)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Option 1") },
+                            text = { Text("Duplicate Day") },
                             onClick = {
                                 expanded.value = false
-                                // TODO: Dodati logiku za Option 1
+                                taskListState.forEach { task ->
+                                    val newTask = task.copy(
+                                        id = UUID.randomUUID().toString(),
+                                        start = task.start?.plusDays(1),
+                                        end = task.end?.plusDays(1),
+                                        date = task.date.plusDays(1)
+                                    )
+                                    viewModel.insertTask(newTask)
+                                }
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Option 2") },
+                            text = { Text("Clear All Tasks") },
                             onClick = {
                                 expanded.value = false
-                                // TODO: Dodati logiku za Option 2
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Option 3") },
-                            onClick = {
-                                expanded.value = false
-                                // TODO: Dodati logiku za Option 3
+                                taskListState.forEach { viewModel.deleteTask(it) }
                             }
                         )
                     }
