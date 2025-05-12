@@ -5,10 +5,19 @@ import TaskViewModelFactory
 import android.annotation.SuppressLint
 import android.app.Application
 import android.app.TimePickerDialog
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -786,4 +796,48 @@ fun OverlapDialog(
         },
         containerColor = Peach.copy(alpha = 0.95f)
     )
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun TimeManagementWrapper(navController: NavController, initialDate: String) {
+    var currentDate by rememberSaveable {
+        mutableStateOf(LocalDate.parse(initialDate))
+    }
+
+    val swipeModifier = Modifier.pointerInput(currentDate) {
+        detectHorizontalDragGestures { _, dragAmount ->
+            if (dragAmount < -50) {
+                currentDate = currentDate.plusDays(1)
+            } else if (dragAmount > 50) {
+                currentDate = currentDate.minusDays(1)
+            }
+        }
+    }
+
+    Box(
+        modifier = swipeModifier
+            .fillMaxSize()
+            .background(DarkBlue)
+    ) {
+        AnimatedContent(
+            targetState = currentDate,
+            transitionSpec = {
+                if (targetState > initialState) {
+                    slideInHorizontally { width -> width } + fadeIn() with
+                            slideOutHorizontally { width -> -width } + fadeOut()
+                } else {
+                    slideInHorizontally { width -> -width } + fadeIn() with
+                            slideOutHorizontally { width -> width } + fadeOut()
+                }.using(SizeTransform(clip = false))
+            },
+            modifier = Modifier.fillMaxSize(),
+            label = "dateTransition"
+        ) { targetDate ->
+            TimeManagement(
+                navController = navController,
+                date = targetDate.toString()
+            )
+        }
+    }
 }

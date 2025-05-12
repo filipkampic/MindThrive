@@ -19,7 +19,7 @@ import com.filipkampic.mindthrive.screens.Notes
 import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.Tasks
-import com.filipkampic.mindthrive.screens.TimeManagement
+import com.filipkampic.mindthrive.screens.TimeManagementWrapper
 
 @Composable
 fun MindThriveApp() {
@@ -43,7 +43,7 @@ fun MindThriveApp() {
                     arguments = listOf(navArgument("selectedDate") { type = NavType.StringType })
                 ) { backStackEntry ->
                     val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
-                    TimeManagement(navController, selectedDate)
+                    TimeManagementWrapper(navController, selectedDate)
                 }
                 composable("tasks") { Tasks(navController) }
                 composable("notes") { Notes(navController) }
