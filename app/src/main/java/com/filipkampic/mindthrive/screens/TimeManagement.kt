@@ -1,7 +1,7 @@
 package com.filipkampic.mindthrive.screens
 
-import TaskViewModel
-import TaskViewModelFactory
+import TimeBlockViewModel
+import TimeBlockViewModelFactory
 import android.annotation.SuppressLint
 import android.app.Application
 import android.app.TimePickerDialog
@@ -80,7 +80,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.filipkampic.mindthrive.model.Task
+import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.Duration
@@ -100,40 +100,40 @@ fun TimeManagementPreview(modifier: Modifier = Modifier) {
 @Composable
 fun TimeManagement(navController: NavController, date: String) {
     val context = LocalContext.current
-    val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(context.applicationContext as Application))
+    val viewModel: TimeBlockViewModel = viewModel(factory = TimeBlockViewModelFactory(context.applicationContext as Application))
     val currentDate = LocalDate.parse(date)
     var showDialog by remember { mutableStateOf(false) }
     var defaultStartTime by remember { mutableStateOf(LocalTime.of(0, 0)) }
-    var editingTask by remember { mutableStateOf<Task?>(null) }
+    var editingTimeBlock by remember { mutableStateOf<TimeBlock?>(null) }
     var showOverlapDialog by remember { mutableStateOf(false) }
-    var selectedOverlappingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
-    val tasks by viewModel.tasks.collectAsState()
-    val todaysTasks = tasks.filter { task ->
-        val taskStartDate = task.start?.toLocalDate() ?: task.date
-        val taskEndDate = task.end?.toLocalDate() ?: task.date
-        (taskStartDate == currentDate || taskEndDate == currentDate) && task.start != null && task.end != null
+    var selectedOverlappingTimeBlocks by remember { mutableStateOf<List<TimeBlock>>(emptyList()) }
+    val timeBlocks by viewModel.timeBlocks.collectAsState()
+    val todaysTimeBlocks = timeBlocks.filter { timeBlock ->
+        val timeBlockStartDate = timeBlock.start?.toLocalDate() ?: timeBlock.date
+        val timeBlockEndDate = timeBlock.end?.toLocalDate() ?: timeBlock.date
+        (timeBlockStartDate == currentDate || timeBlockEndDate == currentDate) && timeBlock.start != null && timeBlock.end != null
     }.sortedBy { it.start?.toLocalTime() ?: LocalTime.of(0, 0) }
 
-    val taskListState = remember { mutableStateListOf<Task>().apply { addAll(todaysTasks) } }
+    val timeBlockListState = remember { mutableStateListOf<TimeBlock>().apply { addAll(todaysTimeBlocks) } }
     val lazyListState = rememberLazyListState()
     val draggedItemIndex = remember { mutableStateOf<Int?>(null) }
     val dragOffset = remember { mutableStateOf(0f) }
-    val taskHeights = remember { mutableStateListOf<Float>().apply { addAll(List(taskListState.size) { 0f }) } }
+    val timeBlockHeights = remember { mutableStateListOf<Float>().apply { addAll(List(timeBlockListState.size) { 0f }) } }
     val hoveredIndex = remember { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(todaysTasks) {
-        taskListState.clear()
-        taskListState.addAll(todaysTasks)
-        taskHeights.clear()
-        taskHeights.addAll(List(taskListState.size) { 0f })
+    LaunchedEffect(todaysTimeBlocks) {
+        timeBlockListState.clear()
+        timeBlockListState.addAll(todaysTimeBlocks)
+        timeBlockHeights.clear()
+        timeBlockHeights.addAll(List(timeBlockListState.size) { 0f })
     }
 
     LaunchedEffect(date) {
-        viewModel.loadTasks(currentDate)
-        taskListState.clear()
-        taskListState.addAll(todaysTasks)
-        taskHeights.clear()
-        taskHeights.addAll(List(taskListState.size) { 0f })
+        viewModel.loadTimeBlocks(currentDate)
+        timeBlockListState.clear()
+        timeBlockListState.addAll(todaysTimeBlocks)
+        timeBlockHeights.clear()
+        timeBlockHeights.addAll(List(timeBlockListState.size) { 0f })
     }
 
     Box(
@@ -192,22 +192,22 @@ fun TimeManagement(navController: NavController, date: String) {
                             text = { Text("Duplicate Day") },
                             onClick = {
                                 expanded.value = false
-                                taskListState.forEach { task ->
-                                    val newTask = task.copy(
+                                timeBlockListState.forEach { timeBlock ->
+                                    val newTimeBlock = timeBlock.copy(
                                         id = UUID.randomUUID().toString(),
-                                        start = task.start?.plusDays(1),
-                                        end = task.end?.plusDays(1),
-                                        date = task.date.plusDays(1)
+                                        start = timeBlock.start?.plusDays(1),
+                                        end = timeBlock.end?.plusDays(1),
+                                        date = timeBlock.date.plusDays(1)
                                     )
-                                    viewModel.insertTask(newTask)
+                                    viewModel.insertTimeBlock(newTimeBlock)
                                 }
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Clear All Tasks") },
+                            text = { Text("Clear All Time Blocks") },
                             onClick = {
                                 expanded.value = false
-                                taskListState.forEach { viewModel.deleteTask(it) }
+                                timeBlockListState.forEach { viewModel.deleteTimeBlock(it) }
                             }
                         )
                     }
@@ -216,7 +216,7 @@ fun TimeManagement(navController: NavController, date: String) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (todaysTasks.isEmpty()) {
+            if (todaysTimeBlocks.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Top,
@@ -273,20 +273,20 @@ fun TimeManagement(navController: NavController, date: String) {
                     contentPadding = PaddingValues(bottom = 16.dp),
                     state = lazyListState
                 ) {
-                    val allTimes = (taskListState.flatMap { listOfNotNull(it.start?.toLocalTime(), it.end?.toLocalTime()) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
+                    val allTimes = (timeBlockListState.flatMap { listOfNotNull(it.start?.toLocalTime(), it.end?.toLocalTime()) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
                     val timeBlocks = allTimes.zipWithNext()
 
                     itemsIndexed(timeBlocks, key = { index, pair -> "$index-${pair.first}" }) { _, (start, end) ->
                         val blockStartDateTime = LocalDateTime.of(currentDate, start)
                         val blockEndDateTime = LocalDateTime.of(currentDate, end)
 
-                        val tasksInBlock = taskListState.filter { task ->
-                            val taskStart = task.start
-                            val taskEnd = task.end
-                            taskStart != null && taskEnd != null &&
-                                    taskStart < blockEndDateTime && taskEnd > blockStartDateTime
+                        val timeBlocksInBlock = timeBlockListState.filter { timeBlock ->
+                            val timeBlockStart = timeBlock.start
+                            val timeBlockEnd = timeBlock.end
+                            timeBlockStart != null && timeBlockEnd != null &&
+                                    timeBlockStart < blockEndDateTime && timeBlockEnd > blockStartDateTime
                         }
-                        val isOverlap = tasksInBlock.size > 1
+                        val isOverlap = timeBlocksInBlock.size > 1
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -305,7 +305,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                 }
                             }
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                if (tasksInBlock.isEmpty()) {
+                                if (timeBlocksInBlock.isEmpty()) {
                                     val duration = Duration.between(start, end)
                                     val hours = duration.toHours()
                                     val minutes = duration.toMinutes() % 60
@@ -319,7 +319,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                             .padding(start = 16.dp)
                                             .clickable {
                                                 defaultStartTime = start
-                                                editingTask = null
+                                                editingTimeBlock = null
                                                 showDialog = true
                                             },
                                         contentAlignment = Alignment.CenterStart
@@ -335,25 +335,25 @@ fun TimeManagement(navController: NavController, date: String) {
                                         )
                                     }
                                 } else if (isOverlap) {
-                                    OverlapWarningCard(tasks = tasksInBlock) {
-                                        selectedOverlappingTasks = tasksInBlock
+                                    OverlapWarningCard(timeBlocks = timeBlocksInBlock) {
+                                        selectedOverlappingTimeBlocks = timeBlocksInBlock
                                         showOverlapDialog = true
                                     }
                                 } else {
-                                    tasksInBlock.forEachIndexed { _, task ->
-                                        val globalIndex = taskListState.indexOf(task)
+                                    timeBlocksInBlock.forEachIndexed { _, timeBlock ->
+                                        val globalIndex = timeBlockListState.indexOf(timeBlock)
                                         var isDragging by remember { mutableStateOf(false) }
                                         val density = LocalDensity.current
                                         val defaultCardHeightPx = with(density) { 48.dp.toPx() } + with(density) { 8.dp.toPx() }
                                         val isHovered = hoveredIndex.value == globalIndex && draggedItemIndex.value != globalIndex
 
-                                        TaskCard(
-                                            task = task,
+                                        TimeBlockCard(
+                                            timeBlock = timeBlock,
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .onGloballyPositioned {
-                                                    if (globalIndex < taskHeights.size) {
-                                                        taskHeights[globalIndex] = it.size.height.toFloat()
+                                                    if (globalIndex < timeBlockHeights.size) {
+                                                        timeBlockHeights[globalIndex] = it.size.height.toFloat()
                                                     }
                                                 }
                                                 .offset {
@@ -363,7 +363,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                                         IntOffset(0, 0)
                                                     }
                                                 }
-                                                .pointerInput(task) {
+                                                .pointerInput(timeBlock) {
                                                     detectDragGesturesAfterLongPress(
                                                         onDragStart = {
                                                             draggedItemIndex.value = globalIndex
@@ -371,21 +371,21 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             isDragging = true
                                                         },
                                                         onDragEnd = {
-                                                            if (draggedItemIndex.value != null && taskListState.isNotEmpty()) {
+                                                            if (draggedItemIndex.value != null && timeBlockListState.isNotEmpty()) {
                                                                 val draggedIndex = draggedItemIndex.value!!
-                                                                val draggedTask = taskListState[draggedIndex]
-                                                                taskListState.removeAt(draggedIndex)
+                                                                val draggedTimeBlock = timeBlockListState[draggedIndex]
+                                                                timeBlockListState.removeAt(draggedIndex)
 
-                                                                val avgHeight = if (taskHeights.isNotEmpty()) taskHeights.average().toFloat() else defaultCardHeightPx
+                                                                val avgHeight = if (timeBlockHeights.isNotEmpty()) timeBlockHeights.average().toFloat() else defaultCardHeightPx
                                                                 val positionOffset = dragOffset.value / avgHeight
-                                                                val targetIndex = (draggedIndex + positionOffset).toInt().coerceIn(0, taskListState.size)
+                                                                val targetIndex = (draggedIndex + positionOffset).toInt().coerceIn(0, timeBlockListState.size)
 
-                                                                taskListState.add(targetIndex, draggedTask)
+                                                                timeBlockListState.add(targetIndex, draggedTimeBlock)
 
-                                                                val reflowedTasks = reflowTasks(taskListState, currentDate)
-                                                                reflowedTasks.forEach { viewModel.updateTask(it) }
-                                                                taskListState.clear()
-                                                                taskListState.addAll(reflowedTasks)
+                                                                val reflowedTimeBlocks = reflowTimeBlocks(timeBlockListState, currentDate)
+                                                                reflowedTimeBlocks.forEach { viewModel.updateTimeBlock(it) }
+                                                                timeBlockListState.clear()
+                                                                timeBlockListState.addAll(reflowedTimeBlocks)
                                                             }
                                                             draggedItemIndex.value = null
                                                             dragOffset.value = 0f
@@ -403,11 +403,11 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             if (draggedItemIndex.value == globalIndex) {
                                                                 dragOffset.value += dragAmount.y
 
-                                                                val avgHeight = if (taskHeights.isNotEmpty()) taskHeights.average().toFloat() else defaultCardHeightPx
+                                                                val avgHeight = if (timeBlockHeights.isNotEmpty()) timeBlockHeights.average().toFloat() else defaultCardHeightPx
                                                                 val halfHeight = avgHeight / 2
                                                                 val adjustedOffset = dragOffset.value + halfHeight
                                                                 val positionOffset = adjustedOffset / avgHeight
-                                                                val targetIndex = (globalIndex + positionOffset).toInt().coerceIn(0, taskListState.size)
+                                                                val targetIndex = (globalIndex + positionOffset).toInt().coerceIn(0, timeBlockListState.size)
 
                                                                 if (targetIndex != globalIndex) {
                                                                     hoveredIndex.value = if (targetIndex > globalIndex) targetIndex - 1 else targetIndex
@@ -421,7 +421,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                             isDragging = isDragging,
                                             isHovered = isHovered,
                                             onClick = {
-                                                editingTask = task
+                                                editingTimeBlock = timeBlock
                                                 showDialog = true
                                             }
                                         )
@@ -436,27 +436,27 @@ fun TimeManagement(navController: NavController, date: String) {
         }
 
         if (showDialog) {
-            AddTaskDialog(
+            AddTimeBlockDialog(
                 defaultStart = defaultStartTime,
-                tasks = todaysTasks,
-                taskToEdit = editingTask,
-                onSave = { newTask ->
-                    if (editingTask != null) {
-                        viewModel.updateTask(newTask)
+                timeBlocks = todaysTimeBlocks,
+                timeBlockToEdit = editingTimeBlock,
+                onSave = { newTimeBlock ->
+                    if (editingTimeBlock != null) {
+                        viewModel.updateTimeBlock(newTimeBlock)
                     } else {
-                        viewModel.insertTask(newTask)
+                        viewModel.insertTimeBlock(newTimeBlock)
                     }
                     showDialog = false
-                    editingTask = null
+                    editingTimeBlock = null
                 },
                 onDelete = {
-                    viewModel.deleteTask(it)
+                    viewModel.deleteTimeBlock(it)
                     showDialog = false
-                    editingTask = null
+                    editingTimeBlock = null
                 },
                 onCancel = {
                     showDialog = false
-                    editingTask = null
+                    editingTimeBlock = null
                 },
                 currentDate = currentDate
             )
@@ -464,10 +464,10 @@ fun TimeManagement(navController: NavController, date: String) {
 
         if (showOverlapDialog) {
             OverlapDialog(
-                overlappingTasks = selectedOverlappingTasks,
+                overlappingTimeBlocks = selectedOverlappingTimeBlocks,
                 onDismiss = { showOverlapDialog = false },
-                onTaskClick = { task ->
-                    editingTask = task
+                onTimeBlockClick = { timeBlock ->
+                    editingTimeBlock = timeBlock
                     showDialog = true
                     showOverlapDialog = false
                 }
@@ -476,33 +476,33 @@ fun TimeManagement(navController: NavController, date: String) {
     }
 }
 
-private fun reflowTasks(tasks: List<Task>, baseDate: LocalDate): List<Task> {
-    if (tasks.isEmpty()) return tasks
+private fun reflowTimeBlocks(timeBlocks: List<TimeBlock>, baseDate: LocalDate): List<TimeBlock> {
+    if (timeBlocks.isEmpty()) return timeBlocks
 
-    val newTasks = mutableListOf<Task>()
+    val newTimeBlocks = mutableListOf<TimeBlock>()
     var currentTime = LocalDateTime.of(baseDate, LocalTime.of(0, 0))
 
-    tasks.forEach { task ->
-        if (task.start == null || task.end == null) return@forEach
+    timeBlocks.forEach { timeBlock ->
+        if (timeBlock.start == null || timeBlock.end == null) return@forEach
 
-        val originalDuration = Duration.between(task.start, task.end)
+        val originalDuration = Duration.between(timeBlock.start, timeBlock.end)
 
-        val newTask = task.copy(
+        val newTimeBlock = timeBlock.copy(
             start = currentTime,
             end = currentTime.plus(originalDuration),
             date = currentTime.toLocalDate()
         )
 
-        newTasks.add(newTask)
-        currentTime = newTask.end
+        newTimeBlocks.add(newTimeBlock)
+        currentTime = newTimeBlock.end
     }
 
-    return newTasks
+    return newTimeBlocks
 }
 
 @Composable
-fun TaskCard(
-    task: Task,
+fun TimeBlockCard(
+    timeBlock: TimeBlock,
     modifier: Modifier = Modifier,
     isOverlapping: Boolean = false,
     isDragging: Boolean = false,
@@ -531,19 +531,19 @@ fun TaskCard(
                 .padding(end = 32.dp)
         ) {
             Text(
-                text = task.name,
+                text = timeBlock.name,
                 fontWeight = FontWeight.Bold,
                 color = DarkBlue
             )
-            if (task.description.isNotBlank()) {
+            if (timeBlock.description.isNotBlank()) {
                 Text(
-                    text = task.description,
+                    text = timeBlock.description,
                     color = DarkBlue,
                     fontSize = 14.sp
                 )
             }
             Text(
-                text = task.duration(),
+                text = timeBlock.duration(),
                 color = DarkBlue,
                 fontSize = 14.sp
             )
@@ -561,23 +561,23 @@ fun TaskCard(
 }
 
 @Composable
-fun AddTaskDialog(
+fun AddTimeBlockDialog(
     defaultStart: LocalTime,
-    tasks: List<Task>,
+    timeBlocks: List<TimeBlock>,
     currentDate: LocalDate,
-    taskToEdit: Task? = null,
-    onSave: (Task) -> Unit,
-    onDelete: (Task) -> Unit = {},
+    timeBlockToEdit: TimeBlock? = null,
+    onSave: (TimeBlock) -> Unit,
+    onDelete: (TimeBlock) -> Unit = {},
     onCancel: () -> Unit
 ) {
-    var name by remember { mutableStateOf(taskToEdit?.name ?: "") }
-    var start by remember { mutableStateOf(taskToEdit?.start?.toLocalTime() ?: defaultStart) }
-    val nextTaskStart = tasks
+    var name by remember { mutableStateOf(timeBlockToEdit?.name ?: "") }
+    var start by remember { mutableStateOf(timeBlockToEdit?.start?.toLocalTime() ?: defaultStart) }
+    val nextTimeBlockStart = timeBlocks
         .mapNotNull { it.start?.toLocalTime() }
         .filter { it > defaultStart }
         .minOrNull()
-    var end by remember { mutableStateOf(taskToEdit?.end?.toLocalTime() ?: (nextTaskStart ?: LocalTime.of(0, 0))) }
-    var description by remember { mutableStateOf(taskToEdit?.description ?: "") }
+    var end by remember { mutableStateOf(timeBlockToEdit?.end?.toLocalTime() ?: (nextTimeBlockStart ?: LocalTime.of(0, 0))) }
+    var description by remember { mutableStateOf(timeBlockToEdit?.description ?: "") }
     var openEndPicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -640,15 +640,15 @@ fun AddTaskDialog(
                     } else {
                         endDateTime
                     }
-                    val newTask = Task(
-                        id = taskToEdit?.id ?: UUID.randomUUID().toString(),
+                    val newTimeBlock = TimeBlock(
+                        id = timeBlockToEdit?.id ?: UUID.randomUUID().toString(),
                         name = name,
                         start = startDateTime,
                         end = adjustedEndDateTime,
                         description = description,
                         date = currentDate
                     )
-                    onSave(newTask)
+                    onSave(newTimeBlock)
                 }
             }) {
                 Icon(Icons.Default.Save, contentDescription = "Save")
@@ -656,8 +656,8 @@ fun AddTaskDialog(
         },
         dismissButton = {
             Row {
-                if (taskToEdit != null) {
-                    IconButton(onClick = { onDelete(taskToEdit) }) {
+                if (timeBlockToEdit != null) {
+                    IconButton(onClick = { onDelete(timeBlockToEdit) }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
                 }
@@ -668,7 +668,7 @@ fun AddTaskDialog(
         },
         title = {
             Text(
-                if (taskToEdit != null) "Edit Task" else "New Task",
+                if (timeBlockToEdit != null) "Edit Time Block" else "New Time Block",
                 fontWeight = FontWeight.Bold
             )
         },
@@ -743,7 +743,7 @@ fun AddTaskDialog(
 }
 
 @Composable
-fun OverlapWarningCard(tasks: List<Task>, onClick: () -> Unit) {
+fun OverlapWarningCard(timeBlocks: List<TimeBlock>, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -761,7 +761,7 @@ fun OverlapWarningCard(tasks: List<Task>, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "${tasks.size} overlapping blocks",
+                text = "${timeBlocks.size} overlapping blocks",
                 color = Color.Red,
                 fontWeight = FontWeight.Bold
             )
@@ -771,19 +771,19 @@ fun OverlapWarningCard(tasks: List<Task>, onClick: () -> Unit) {
 
 @Composable
 fun OverlapDialog(
-    overlappingTasks: List<Task>,
+    overlappingTimeBlocks: List<TimeBlock>,
     onDismiss: () -> Unit,
-    onTaskClick: (Task) -> Unit
+    onTimeBlockClick: (TimeBlock) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Overlapping Tasks", fontWeight = FontWeight.Bold) },
+        title = { Text("Overlapping TimeBlocks", fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                overlappingTasks.forEach { task ->
-                    TaskCard(
-                        task = task,
-                        onClick = { onTaskClick(task) }
+                overlappingTimeBlocks.forEach { timeBlock ->
+                    TimeBlockCard(
+                        timeBlock = timeBlock,
+                        onClick = { onTimeBlockClick(timeBlock) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }

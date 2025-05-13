@@ -8,8 +8,8 @@ import java.time.format.DateTimeFormatter
 import java.time.Duration
 import java.time.LocalDateTime
 
-@Entity(tableName = "tasks")
-data class Task(
+@Entity(tableName = "timeBlocks")
+data class TimeBlock(
     @PrimaryKey
     val id: String,
     val name: String,
@@ -34,7 +34,7 @@ data class Task(
     }
 }
 
-class TaskTypeConverters {
+class TimeBlockTypeConverters {
     private val dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
