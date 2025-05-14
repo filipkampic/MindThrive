@@ -59,6 +59,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -83,6 +84,7 @@ import androidx.navigation.compose.rememberNavController
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
+import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -120,6 +122,13 @@ fun TimeManagement(navController: NavController, date: String) {
     val dragOffset = remember { mutableStateOf(0f) }
     val timeBlockHeights = remember { mutableStateListOf<Float>().apply { addAll(List(timeBlockListState.size) { 0f }) } }
     val hoveredIndex = remember { mutableStateOf<Int?>(null) }
+
+    val currentTime by produceState(initialValue = LocalDateTime.now()) {
+        while(true) {
+            value = LocalDateTime.now()
+            delay(1000)
+        }
+    }
 
     LaunchedEffect(todaysTimeBlocks) {
         timeBlockListState.clear()
@@ -274,9 +283,9 @@ fun TimeManagement(navController: NavController, date: String) {
                     state = lazyListState
                 ) {
                     val allTimes = (timeBlockListState.flatMap { listOfNotNull(it.start?.toLocalTime(), it.end?.toLocalTime()) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
-                    val timeBlocks = allTimes.zipWithNext()
+                    val timeIntervals = allTimes.zipWithNext()
 
-                    itemsIndexed(timeBlocks, key = { index, pair -> "$index-${pair.first}" }) { _, (start, end) ->
+                    itemsIndexed(timeIntervals, key = { index, pair -> "$index-${pair.first}" }) { _, (start, end) ->
                         val blockStartDateTime = LocalDateTime.of(currentDate, start)
                         val blockEndDateTime = LocalDateTime.of(currentDate, end)
 
@@ -297,7 +306,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                     text = start.format(DateTimeFormatter.ofPattern("HH:mm")),
                                     color = Peach
                                 )
-                                if (timeBlocks.last().second == end) {
+                                if (timeIntervals.last().second == end) {
                                     Text(
                                         text = end.format(DateTimeFormatter.ofPattern("HH:mm")),
                                         color = Peach
@@ -346,6 +355,9 @@ fun TimeManagement(navController: NavController, date: String) {
                                         val density = LocalDensity.current
                                         val defaultCardHeightPx = with(density) { 48.dp.toPx() } + with(density) { 8.dp.toPx() }
                                         val isHovered = hoveredIndex.value == globalIndex && draggedItemIndex.value != globalIndex
+                                        val isActive = timeBlock.start != null && timeBlock.end != null &&
+                                                        currentTime.isAfter(timeBlock.start) && currentTime.isBefore(timeBlock.end)
+                                        val remainingMinutes = timeBlock.end?.let { Duration.between(currentTime, it).plusSeconds(59).toMinutes().coerceAtLeast(0) } ?: 0
 
                                         TimeBlockCard(
                                             timeBlock = timeBlock,
@@ -420,6 +432,8 @@ fun TimeManagement(navController: NavController, date: String) {
                                                 },
                                             isDragging = isDragging,
                                             isHovered = isHovered,
+                                            isActive = isActive,
+                                            remainingMinutes = remainingMinutes,
                                             onClick = {
                                                 editingTimeBlock = timeBlock
                                                 showDialog = true
@@ -507,22 +521,31 @@ fun TimeBlockCard(
     isOverlapping: Boolean = false,
     isDragging: Boolean = false,
     isHovered: Boolean = false,
+    isActive: Boolean = false,
+    remainingMinutes: Long = 0,
     onClick: () -> Unit = {}
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .padding(2.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(
                 when {
+                    isActive -> Color(0xFFFF5C5C).copy(alpha = 0.95f)
                     isDragging -> Color.Gray.copy(alpha = 0.2f)
                     isHovered -> Peach.copy(alpha = 0.8f)
                     isOverlapping -> Peach.copy(alpha = 0.6f)
                     else -> Peach
-                },
-                RoundedCornerShape(12.dp)
+                }
             )
-            .padding(8.dp)
-            .clickable { onClick() },
+            .border(
+                width = if (isActive) 2.dp else 0.dp,
+                color = if (isActive) Color.Red else Color.Transparent,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable { onClick() }
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
@@ -533,20 +556,39 @@ fun TimeBlockCard(
             Text(
                 text = timeBlock.name,
                 fontWeight = FontWeight.Bold,
-                color = DarkBlue
+                color = if (isActive) Color.White else DarkBlue
             )
             if (timeBlock.description.isNotBlank()) {
                 Text(
                     text = timeBlock.description,
-                    color = DarkBlue,
+                    color = if (isActive) Color.White else DarkBlue,
                     fontSize = 14.sp
                 )
             }
-            Text(
-                text = timeBlock.duration(),
-                color = DarkBlue,
-                fontSize = 14.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = timeBlock.duration(),
+                    color = if (isActive) Color.White else DarkBlue,
+                    fontSize = 14.sp
+                )
+                if (isActive) {
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    val remHours = remainingMinutes / 60
+                    val remMins = remainingMinutes % 60
+
+                    Text(
+                        text = "Remaining: " +
+                                when {
+                                    remHours > 0 -> "${remHours}h ${remMins}min"
+                                    else -> "${remMins}min"
+                                },
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
 
         if (isDragging) {
