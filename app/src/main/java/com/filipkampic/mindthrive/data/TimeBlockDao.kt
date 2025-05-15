@@ -24,8 +24,14 @@ interface TimeBlockDao {
 """)
     fun getTimeBlocksByDate(date: LocalDate, startOfDay: String, endOfDay: String): Flow<List<TimeBlock>>
 
-
-
     @Query("SELECT * FROM timeBlocks")
     fun getAllTimeBlocks(): Flow<List<TimeBlock>>
+
+    @Query("""
+    SELECT * FROM timeBlocks 
+    WHERE start <= :endOfDay AND `end` > :startOfDay
+    ORDER BY start
+""")
+    fun getTimeBlocksInRange(startOfDay: String, endOfDay: String): Flow<List<TimeBlock>>
+
 }

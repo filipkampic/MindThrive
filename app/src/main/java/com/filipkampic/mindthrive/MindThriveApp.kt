@@ -1,10 +1,13 @@
 package com.filipkampic.mindthrive
 
+import android.app.Activity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +27,18 @@ import com.filipkampic.mindthrive.screens.TimeManagementWrapper
 @Composable
 fun MindThriveApp() {
     val navController = rememberNavController()
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        val activity = context as? Activity
+        val intent = activity?.intent
+        val target = intent?.getStringExtra("navigate_to")
+        val date = intent?.getStringExtra("date")
+        if (target == "time" && date != null) {
+            navController.navigate("time/$date")
+        }
+    }
 
     MaterialTheme {
         Surface(

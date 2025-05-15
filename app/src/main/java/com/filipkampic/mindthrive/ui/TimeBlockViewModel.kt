@@ -5,9 +5,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.model.TimeBlock
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -18,6 +23,20 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
     private val timeBlockDao = AppDatabase.getDatabase(application).timeBlockDao()
     private val _timeBlocks = MutableStateFlow<List<TimeBlock>>(emptyList())
     val timeBlocks: StateFlow<List<TimeBlock>> = _timeBlocks
+    private val _currentDate = MutableStateFlow(LocalDate.now())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val todaysTimeBlocks: StateFlow<List<TimeBlock>> = _currentDate
+        .flatMapLatest { date ->
+            val start = LocalDateTime.of(date, LocalTime.MIN)
+            val end = LocalDateTime.of(date, LocalTime.MAX)
+            timeBlockDao.getTimeBlocksInRange(start.toString(), end.toString())
+        }
+        .map { list ->
+            list.sortedBy { it.start }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
 
     init {
         loadTimeBlocks(LocalDate.now())
@@ -74,6 +93,10 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             timeBlockDao.deleteTimeBlock(timeBlock)
         }
+    }
+
+    fun setDate(date: LocalDate) {
+        _currentDate.value = date
     }
 }
 
