@@ -98,6 +98,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.math.roundToInt
 
 @Preview(showBackground = true)
 @Composable
@@ -116,34 +117,9 @@ fun TimeManagement(navController: NavController, date: String) {
     var editingTimeBlock by remember { mutableStateOf<TimeBlock?>(null) }
     var showOverlapDialog by remember { mutableStateOf(false) }
     var selectedOverlappingTimeBlocks by remember { mutableStateOf<List<TimeBlock>>(emptyList()) }
-    val timeBlocks by viewModel.timeBlocks.collectAsState()
     val todaysTimeBlocks by viewModel.todaysTimeBlocks.collectAsState()
     val localTimeBlockList = remember(currentDate, todaysTimeBlocks) {
         mutableStateListOf<TimeBlock>().apply { addAll(todaysTimeBlocks) }
-    }
-    val duplicatedTimeBlocksQueue = remember { mutableStateListOf<TimeBlock>() }
-
-    LaunchedEffect(duplicatedTimeBlocksQueue) {
-        if (duplicatedTimeBlocksQueue.isNotEmpty()) {
-            val appContext = context.applicationContext
-            val alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    data = Uri.parse("package:" + appContext.packageName)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                appContext.startActivity(intent)
-                duplicatedTimeBlocksQueue.clear()
-                return@LaunchedEffect
-            }
-
-            duplicatedTimeBlocksQueue.forEach { timeBlock ->
-                viewModel.insertTimeBlock(timeBlock)
-                scheduleTimeBlockNotification(appContext, timeBlock)
-            }
-            duplicatedTimeBlocksQueue.clear()
-        }
     }
 
     val lazyListState = rememberLazyListState()
@@ -153,23 +129,17 @@ fun TimeManagement(navController: NavController, date: String) {
     val hoveredIndex = remember { mutableStateOf<Int?>(null) }
 
     val currentTime by produceState(initialValue = LocalDateTime.now()) {
-        while(true) {
+        while (true) {
             value = LocalDateTime.now()
             delay(1000)
         }
     }
 
-    LaunchedEffect(timeBlocks, currentDate) {
-        val newList = timeBlocks.filter { timeBlock ->
-            val startDate = timeBlock.start?.toLocalDate() ?: timeBlock.date
-            val endDate = timeBlock.end?.toLocalDate() ?: timeBlock.date
-            (startDate == currentDate || endDate == currentDate) && timeBlock.start != null && timeBlock.end != null
-        }.sortedBy { it.start?.toLocalTime() ?: LocalTime.of(0, 0) }
-
+    LaunchedEffect(todaysTimeBlocks, currentDate) {
+        val newList = todaysTimeBlocks.sortedBy { it.start?.toLocalTime() ?: LocalTime.of(0, 0) }
         localTimeBlockList.clear()
         localTimeBlockList.addAll(newList)
     }
-
 
     LaunchedEffect(currentDate) {
         viewModel.loadTimeBlocks(currentDate)
@@ -231,15 +201,26 @@ fun TimeManagement(navController: NavController, date: String) {
                             text = { Text("Duplicate Day") },
                             onClick = {
                                 expanded.value = false
-                                duplicatedTimeBlocksQueue.clear()
-                                todaysTimeBlocks.forEach { timeBlock ->
-                                    val newTimeBlock = timeBlock.copy(
-                                        id = UUID.randomUUID().toString(),
-                                        start = timeBlock.start?.plusDays(1),
-                                        end = timeBlock.end?.plusDays(1),
-                                        date = timeBlock.date.plusDays(1)
-                                    )
-                                    duplicatedTimeBlocksQueue.add(newTimeBlock)
+                                val appContext = context.applicationContext
+                                val alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                        data = Uri.parse("package:" + appContext.packageName)
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    appContext.startActivity(intent)
+                                } else {
+                                    todaysTimeBlocks.forEach { timeBlock ->
+                                        val newTimeBlock = timeBlock.copy(
+                                            id = UUID.randomUUID().toString(),
+                                            start = timeBlock.start?.plusDays(1),
+                                            end = timeBlock.end?.plusDays(1),
+                                            date = timeBlock.date.plusDays(1)
+                                        )
+                                        viewModel.insertTimeBlock(newTimeBlock)
+                                        scheduleTimeBlockNotification(appContext, newTimeBlock)
+                                    }
                                 }
                             }
                         )
@@ -316,7 +297,7 @@ fun TimeManagement(navController: NavController, date: String) {
                     val allTimes = (todaysTimeBlocks.flatMap { listOfNotNull(it.start?.toLocalTime(), it.end?.toLocalTime()) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
                     val timeIntervals = allTimes.zipWithNext()
 
-                    itemsIndexed(timeIntervals, key = { index, pair -> "$index-${pair.first}" }) { _, (start, end) ->
+                    itemsIndexed(timeIntervals, key = { index, pair -> pair.first.toString() }) { _, (start, end) ->
                         val blockStartDateTime = LocalDateTime.of(currentDate, start)
                         val blockEndDateTime = LocalDateTime.of(currentDate, end)
 
@@ -387,7 +368,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                         val defaultCardHeightPx = with(density) { 48.dp.toPx() } + with(density) { 8.dp.toPx() }
                                         val isHovered = hoveredIndex.value == globalIndex && draggedItemIndex.value != globalIndex
                                         val isActive = timeBlock.start != null && timeBlock.end != null &&
-                                                        currentTime.isAfter(timeBlock.start) && currentTime.isBefore(timeBlock.end)
+                                                currentTime.isAfter(timeBlock.start) && currentTime.isBefore(timeBlock.end)
                                         val remainingMinutes = timeBlock.end?.let { Duration.between(currentTime, it).plusSeconds(59).toMinutes().coerceAtLeast(0) } ?: 0
 
                                         TimeBlockCard(
@@ -414,21 +395,26 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             isDragging = true
                                                         },
                                                         onDragEnd = {
-                                                            if (draggedItemIndex.value != null && todaysTimeBlocks.isNotEmpty()) {
+                                                            if (todaysTimeBlocks.isEmpty() || draggedItemIndex.value == null) {
+                                                                draggedItemIndex.value = null
+                                                                dragOffset.value = 0f
+                                                                hoveredIndex.value = null
+                                                                isDragging = false
+                                                                return@detectDragGesturesAfterLongPress
+                                                            }
+                                                            if (draggedItemIndex.value != null && hoveredIndex.value != null) {
                                                                 val draggedIndex = draggedItemIndex.value!!
-                                                                val draggedTimeBlock = todaysTimeBlocks[draggedIndex]
-                                                                localTimeBlockList.removeAt(draggedIndex)
+                                                                val targetIndex = hoveredIndex.value!!
+                                                                if (draggedIndex != targetIndex) {
+                                                                    val draggedTimeBlock = localTimeBlockList[draggedIndex]
+                                                                    localTimeBlockList.removeAt(draggedIndex)
+                                                                    localTimeBlockList.add(targetIndex, draggedTimeBlock)
 
-                                                                val avgHeight = if (timeBlockHeights.isNotEmpty()) timeBlockHeights.average().toFloat() else defaultCardHeightPx
-                                                                val positionOffset = dragOffset.value / avgHeight
-                                                                val targetIndex = (draggedIndex + positionOffset).toInt().coerceIn(0, todaysTimeBlocks.size)
-
-                                                                localTimeBlockList.add(targetIndex, draggedTimeBlock)
-
-                                                                val reflowedTimeBlocks = reflowTimeBlocks(todaysTimeBlocks, currentDate)
-                                                                reflowedTimeBlocks.forEach { viewModel.updateTimeBlock(it) }
-                                                                localTimeBlockList.clear()
-                                                                localTimeBlockList.addAll(reflowedTimeBlocks)
+                                                                    val reflowedTimeBlocks = reflowTimeBlocks(localTimeBlockList, currentDate)
+                                                                    reflowedTimeBlocks.forEach { viewModel.updateTimeBlock(it) }
+                                                                    localTimeBlockList.clear()
+                                                                    localTimeBlockList.addAll(reflowedTimeBlocks)
+                                                                }
                                                             }
                                                             draggedItemIndex.value = null
                                                             dragOffset.value = 0f
@@ -443,20 +429,22 @@ fun TimeManagement(navController: NavController, date: String) {
                                                         },
                                                         onDrag = { change, dragAmount ->
                                                             change.consumeAllChanges()
-                                                            if (draggedItemIndex.value == globalIndex) {
-                                                                dragOffset.value += dragAmount.y
+                                                            if (todaysTimeBlocks.isEmpty() || draggedItemIndex.value != globalIndex) {
+                                                                return@detectDragGesturesAfterLongPress
+                                                            }
+                                                            dragOffset.value += dragAmount.y
 
-                                                                val avgHeight = if (timeBlockHeights.isNotEmpty()) timeBlockHeights.average().toFloat() else defaultCardHeightPx
-                                                                val halfHeight = avgHeight / 2
-                                                                val adjustedOffset = dragOffset.value + halfHeight
-                                                                val positionOffset = adjustedOffset / avgHeight
-                                                                val targetIndex = (globalIndex + positionOffset).toInt().coerceIn(0, todaysTimeBlocks.size)
+                                                            val avgHeight = if (timeBlockHeights.isNotEmpty()) timeBlockHeights.average().toFloat() else defaultCardHeightPx
+                                                            val positionOffset = dragOffset.value / avgHeight
+                                                            var newIndex = (globalIndex + positionOffset.roundToInt()).coerceIn(0, localTimeBlockList.size - 1)
 
-                                                                if (targetIndex != globalIndex) {
-                                                                    hoveredIndex.value = if (targetIndex > globalIndex) targetIndex - 1 else targetIndex
-                                                                } else {
-                                                                    hoveredIndex.value = null
+                                                            if (newIndex == globalIndex) {
+                                                                hoveredIndex.value = null
+                                                            } else {
+                                                                if (newIndex > globalIndex) {
+                                                                    newIndex = (newIndex - 1).coerceAtLeast(0)
                                                                 }
+                                                                hoveredIndex.value = newIndex
                                                             }
                                                         }
                                                     )
@@ -528,15 +516,19 @@ private fun reflowTimeBlocks(timeBlocks: List<TimeBlock>, baseDate: LocalDate): 
     val newTimeBlocks = mutableListOf<TimeBlock>()
     var currentTime = LocalDateTime.of(baseDate, LocalTime.of(0, 0))
 
-    timeBlocks.forEach { timeBlock ->
-        if (timeBlock.start == null || timeBlock.end == null) return@forEach
+    timeBlocks.forEachIndexed { index, timeBlock ->
+        if (timeBlock.start == null || timeBlock.end == null) return@forEachIndexed
 
         val originalDuration = Duration.between(timeBlock.start, timeBlock.end)
+
+        if (index > 0 && newTimeBlocks.isNotEmpty()) {
+            currentTime = newTimeBlocks.last().end ?: currentTime
+        }
 
         val newTimeBlock = timeBlock.copy(
             start = currentTime,
             end = currentTime.plus(originalDuration),
-            date = currentTime.toLocalDate()
+            date = baseDate
         )
 
         newTimeBlocks.add(newTimeBlock)
