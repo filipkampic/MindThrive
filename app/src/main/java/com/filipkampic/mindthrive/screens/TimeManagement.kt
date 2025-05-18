@@ -1,7 +1,7 @@
 package com.filipkampic.mindthrive.screens
 
-import TimeBlockViewModel
-import TimeBlockViewModelFactory
+import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModel
+import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModelFactory
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.Application
