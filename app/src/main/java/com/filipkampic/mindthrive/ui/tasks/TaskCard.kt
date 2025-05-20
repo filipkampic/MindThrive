@@ -1,6 +1,7 @@
 package com.filipkampic.mindthrive.ui.tasks
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,14 +39,16 @@ fun TaskCardPreview(modifier: Modifier = Modifier) {
             priority = Priority.HIGH,
             isDone = false
         ),
-        onCheck = {}
+        onCheck = {},
+        onEdit = {}
     )
 }
 
 @Composable
 fun TaskCard(
     task: Task,
-    onCheck: (Task) -> Unit
+    onCheck: (Task) -> Unit,
+    onEdit: (Task) -> Unit
 ) {
     val expired = task.dueDate?.isBefore(LocalDate.now()) == true && !task.isDone
     val priorityColor = when (task.priority) {
@@ -58,7 +61,8 @@ fun TaskCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+            .padding(vertical = 6.dp, horizontal = 16.dp)
+            .clickable { onEdit(task) },
         colors = CardDefaults.cardColors(
             containerColor = Peach,
             contentColor = DarkBlue

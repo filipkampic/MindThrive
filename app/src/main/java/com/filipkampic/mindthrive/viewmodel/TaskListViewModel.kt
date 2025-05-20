@@ -37,4 +37,8 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
     fun deleteTask(task: Task) = viewModelScope.launch {
         repository.delete(task)
     }
+
+    fun updateTask(task: Task) = viewModelScope.launch {
+        repository.update(task)
+    }
 }

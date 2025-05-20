@@ -1,13 +1,10 @@
 package com.filipkampic.mindthrive.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,10 +34,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.TaskRepository
+import com.filipkampic.mindthrive.model.Task
 import com.filipkampic.mindthrive.ui.tasks.CategoryFilterRow
 import com.filipkampic.mindthrive.ui.tasks.TaskSection
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 import com.filipkampic.mindthrive.ui.tasks.AddTaskDialog
+import com.filipkampic.mindthrive.ui.tasks.EditTaskDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 
@@ -66,6 +65,7 @@ fun Tasks(
     val showCompleted = remember { mutableStateOf(true) }
     val expandedMenu = remember { mutableStateOf(false) }
     val tasks by viewModel.tasks.collectAsState()
+    val editingTask = remember { mutableStateOf<Task?>(null)}
 
     Scaffold(
         topBar = {
@@ -139,7 +139,8 @@ fun Tasks(
             TaskSection(
                 title = "TO-DO",
                 tasks = tasks.filter { !it.isDone },
-                onCheck = viewModel::toggleTask
+                onCheck = viewModel::toggleTask,
+                onEdit = { editingTask.value = it }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +149,8 @@ fun Tasks(
                 TaskSection(
                     title = "COMPLETED",
                     tasks = tasks.filter { it.isDone },
-                    onCheck = viewModel::toggleTask
+                    onCheck = viewModel::toggleTask,
+                    onEdit = { editingTask.value = it }
                 )
             }
         }
@@ -159,6 +161,21 @@ fun Tasks(
                 onAdd = {
                     viewModel.addTask(it)
                     showDialog.value = false
+                }
+            )
+        }
+
+        if (editingTask.value != null) {
+            EditTaskDialog(
+                task = editingTask.value!!,
+                onDismiss = { editingTask.value = null },
+                onSave = {
+                    viewModel.updateTask(it)
+                    editingTask.value = null
+                },
+                onDelete = {
+                    viewModel.deleteTask(it)
+                    editingTask.value = null
                 }
             )
         }

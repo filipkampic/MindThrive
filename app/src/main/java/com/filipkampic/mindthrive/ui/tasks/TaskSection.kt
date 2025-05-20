@@ -26,7 +26,8 @@ fun TaskSectionPreview(modifier: Modifier = Modifier) {
             Task(title = "Task 2"),
             Task(title = "Task 3")
         ),
-        onCheck = {}
+        onCheck = {},
+        onEdit = {}
     )
 }
 
@@ -34,7 +35,8 @@ fun TaskSectionPreview(modifier: Modifier = Modifier) {
 fun TaskSection(
     title: String,
     tasks: List<Task>,
-    onCheck: (Task) -> Unit
+    onCheck: (Task) -> Unit,
+    onEdit: (Task) -> Unit
 ) {
     Column(modifier = Modifier.padding(vertical = 12.dp)) {
         Text(
@@ -60,7 +62,7 @@ fun TaskSection(
             }
         } else {
             tasks.forEach { task ->
-                TaskCard(task, onCheck)
+                TaskCard(task, onCheck, onEdit)
             }
         }
     }

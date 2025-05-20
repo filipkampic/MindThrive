@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -30,22 +31,31 @@ import java.time.LocalDate
 
 @Composable
 @Preview(showBackground = true)
-fun AddTaskDialogPreview() {
-    AddTaskDialog(onDismiss = {}, onAdd = {})
+fun EditTaskDialogPreview(modifier: Modifier = Modifier) {
+    EditTaskDialog(
+        task = Task(
+            title = "Task Title",
+            dueDate = LocalDate.now(),
+            priority = Priority.HIGH,
+            isDone = false
+        ),
+        onDismiss = {}, onSave = {}, onDelete = {})
 }
 
 @Composable
-fun AddTaskDialog(
+fun EditTaskDialog(
+    task: Task,
     onDismiss: () -> Unit,
-    onAdd: (Task) -> Unit,
+    onSave: (Task) -> Unit,
+    onDelete: (Task) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var dueDate by remember { mutableStateOf< LocalDate?>(null) }
-    var priority by remember { mutableStateOf(Priority.NONE) }
+    var title by remember { mutableStateOf(task.title) }
+    var dueDate by remember { mutableStateOf(task.dueDate) }
+    var priority by remember { mutableStateOf(task.priority) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Task", color = DarkBlue) },
+        title = { Text("Edit Task", color = DarkBlue) },
         text = {
             Column {
                 OutlinedTextField(
@@ -62,12 +72,9 @@ fun AddTaskDialog(
                     Spacer(Modifier.width(8.dp))
                     Text(dueDate?.toString() ?: "None", color = DarkBlue)
                     Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            dueDate = LocalDate.now().plusDays(1) // temporarily
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue, contentColor = Peach)
-                    ) {
+                    Button(onClick = {
+                        dueDate = LocalDate.now().plusDays(1)
+                    }, colors = ButtonDefaults.buttonColors(containerColor = DarkBlue, contentColor = Peach)) {
                         Text("Pick")
                     }
                 }
@@ -82,25 +89,35 @@ fun AddTaskDialog(
             }
         },
         confirmButton = {
-            OutlinedButton(
-                onClick = {
-                    onAdd(
-                        Task(
-                            title = title,
-                            dueDate = dueDate,
-                            priority = priority
-                        )
-                    )
-                },
-                enabled = title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue, contentColor = Peach)
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Cancel", color = DarkBlue)
+            Row(modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = {
+                        onSave(task.copy(title = title, dueDate = dueDate, priority = priority))
+                    },
+                    enabled = title.isNotBlank(),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = DarkBlue, contentColor = Peach),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text("Save")
+                }
+
+                Spacer(Modifier.width(6.dp))
+
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text("Cancel", color = DarkBlue)
+                }
+
+                Spacer(Modifier.width(6.dp))
+
+                Button(
+                    onClick = { onDelete(task) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.White)
+                ) {
+                    Text("Delete")
+                }
             }
         },
         containerColor = Peach
