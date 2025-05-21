@@ -90,6 +90,21 @@ fun TaskCard(
                             textDecoration = if (task.isDone) TextDecoration.LineThrough else null
                         )
                     )
+
+                    if (task.priority != Priority.NONE) {
+                        Box(
+                            modifier = Modifier
+                                .background(priorityColor, shape = RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = task.priority.name,
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+
                     if (task.dueDate != null) {
                         Text(
                             text = "Due: ${task.dueDate}",
@@ -99,14 +114,6 @@ fun TaskCard(
                         )
                     }
                 }
-            }
-
-            if (priorityColor != Color.Transparent) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(priorityColor, shape = CircleShape)
-                )
             }
         }
     }
