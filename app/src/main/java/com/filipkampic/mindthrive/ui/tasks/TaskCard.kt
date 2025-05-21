@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
@@ -79,7 +80,14 @@ fun TaskCard(
                 Checkbox(
                     checked = task.isDone,
                     onCheckedChange = { onCheck(task) },
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = 8.dp),
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = DarkBlue,
+                        checkmarkColor = Peach,
+                        uncheckedColor = DarkBlue,
+                        disabledCheckedColor = Peach,
+                        disabledUncheckedColor = Peach
+                    )
                 )
                 
                 Column {
