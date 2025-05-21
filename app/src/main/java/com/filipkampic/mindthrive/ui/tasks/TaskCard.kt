@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,7 +48,9 @@ fun TaskCard(
     onCheck: (Task) -> Unit,
     onEdit: (Task) -> Unit
 ) {
-    val expired = task.dueDate?.isBefore(LocalDate.now()) == true && !task.isDone
+    val now = LocalDate.now()
+    val expired = task.dueDate?.isBefore(now) == true && !task.isDone
+    val dueSoon = task.dueDate?.isEqual(now) == true && !task.isDone
     val priorityColor = when (task.priority) {
         Priority.HIGH -> Color(0xFFFF5C5C)
         Priority.MEDIUM -> Color(0xFFFFA500)
@@ -106,10 +106,17 @@ fun TaskCard(
                     }
 
                     if (task.dueDate != null) {
+                        val dueText = if (dueSoon) "⚠\uFE0F Due: ${task.dueDate}" else "Due: ${task.dueDate}"
+                        val dueColor = when {
+                            expired -> Color.Red
+                            dueSoon -> Color(0xFFFFA500)
+                            else -> Color.Gray
+                        }
+
                         Text(
-                            text = "Due: ${task.dueDate}",
+                            text = dueText,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (expired) Color.Red else Color.Gray,
+                            color = dueColor,
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
