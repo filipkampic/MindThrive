@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.ui.tasks
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.filipkampic.mindthrive.model.Priority
@@ -28,6 +30,7 @@ import com.filipkampic.mindthrive.model.Task
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
+import java.util.Calendar
 
 @Composable
 @Preview(showBackground = true)
@@ -52,6 +55,7 @@ fun EditTaskDialog(
     var title by remember { mutableStateOf(task.title) }
     var dueDate by remember { mutableStateOf(task.dueDate) }
     var priority by remember { mutableStateOf(task.priority) }
+    val context = LocalContext.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -72,9 +76,21 @@ fun EditTaskDialog(
                     Spacer(Modifier.width(8.dp))
                     Text(dueDate?.toString() ?: "None", color = DarkBlue)
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = {
-                        dueDate = LocalDate.now().plusDays(1)
-                    }, colors = ButtonDefaults.buttonColors(containerColor = DarkBlue, contentColor = Peach)) {
+                    Button(
+                        onClick = {
+                            val today = Calendar.getInstance()
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    dueDate = LocalDate.of(year, month + 1, dayOfMonth)
+                                },
+                                today.get(Calendar.YEAR),
+                                today.get(Calendar.MONTH),
+                                today.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue, contentColor = Peach)
+                    ) {
                         Text("Pick")
                     }
                 }
@@ -90,15 +106,11 @@ fun EditTaskDialog(
         },
         confirmButton = {
             Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
-                    onClick = {
-                        onSave(task.copy(title = title, dueDate = dueDate, priority = priority))
-                    },
-                    enabled = title.isNotBlank(),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = DarkBlue, contentColor = Peach),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                Button(
+                    onClick = { onDelete(task) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.White)
                 ) {
-                    Text("Save")
+                    Text("Delete")
                 }
 
                 Spacer(Modifier.width(6.dp))
@@ -112,11 +124,15 @@ fun EditTaskDialog(
 
                 Spacer(Modifier.width(6.dp))
 
-                Button(
-                    onClick = { onDelete(task) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.White)
+                OutlinedButton(
+                    onClick = {
+                        onSave(task.copy(title = title, dueDate = dueDate, priority = priority))
+                    },
+                    enabled = title.isNotBlank(),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = DarkBlue, contentColor = Peach),
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
-                    Text("Delete")
+                    Text("Save")
                 }
             }
         },
