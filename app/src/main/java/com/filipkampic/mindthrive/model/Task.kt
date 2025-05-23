@@ -15,5 +15,6 @@ data class Task(
     val isDone: Boolean = false,
     val dueDate: LocalDate? = null,
     val priority: Priority = Priority.NONE,
-    val category: String = "General"
+    val category: String = "General",
+    val position: Int = 0
 )

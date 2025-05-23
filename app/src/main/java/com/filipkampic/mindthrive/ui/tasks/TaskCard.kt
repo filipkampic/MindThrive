@@ -39,7 +39,8 @@ fun TaskCardPreview(modifier: Modifier = Modifier) {
             isDone = false
         ),
         onCheck = {},
-        onEdit = {}
+        onEdit = {},
+        modifier = Modifier
     )
 }
 
@@ -47,7 +48,8 @@ fun TaskCardPreview(modifier: Modifier = Modifier) {
 fun TaskCard(
     task: Task,
     onCheck: (Task) -> Unit,
-    onEdit: (Task) -> Unit
+    onEdit: (Task) -> Unit,
+    modifier: Modifier
 ) {
     val now = LocalDate.now()
     val expired = task.dueDate?.isBefore(now) == true && !task.isDone
@@ -89,7 +91,7 @@ fun TaskCard(
                         disabledUncheckedColor = Peach
                     )
                 )
-                
+
                 Column {
                     Text(
                         text = task.title,

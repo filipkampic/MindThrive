@@ -74,4 +74,5 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.composereorderable.reorderable)
 }

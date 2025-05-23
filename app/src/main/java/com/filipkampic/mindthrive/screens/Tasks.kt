@@ -116,7 +116,7 @@ fun Tasks(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showDialog.value = true },
-                containerColor = Peach, 
+                containerColor = Peach,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task", tint = DarkBlue)
@@ -140,7 +140,8 @@ fun Tasks(
                 title = "TO-DO",
                 tasks = tasks.filter { !it.isDone },
                 onCheck = viewModel::toggleTask,
-                onEdit = { editingTask.value = it }
+                onEdit = { editingTask.value = it },
+                onMove = { viewModel.updateTasksOrder(it) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -150,7 +151,8 @@ fun Tasks(
                     title = "COMPLETED",
                     tasks = tasks.filter { it.isDone },
                     onCheck = viewModel::toggleTask,
-                    onEdit = { editingTask.value = it }
+                    onEdit = { editingTask.value = it },
+                    onMove = { viewModel.updateTasksOrder(it) }
                 )
             }
         }

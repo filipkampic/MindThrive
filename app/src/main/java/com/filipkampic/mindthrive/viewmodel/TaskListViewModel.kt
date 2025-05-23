@@ -41,4 +41,8 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
     fun updateTask(task: Task) = viewModelScope.launch {
         repository.update(task)
     }
+
+    fun updateTasksOrder(updated: List<Task>) = viewModelScope.launch {
+        repository.updateTasksOrder(updated)
+    }
 }
