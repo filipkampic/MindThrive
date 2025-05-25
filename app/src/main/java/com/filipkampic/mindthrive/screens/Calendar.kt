@@ -24,15 +24,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Today
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,12 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.filipkampic.mindthrive.ui.tasks.DatePickerDialogContent
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
-import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -62,7 +56,6 @@ fun CalendarPreview() {
     Calendar(navController = rememberNavController())
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Calendar(navController: NavController) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
@@ -95,33 +88,16 @@ fun Calendar(navController: NavController) {
     val fullCalendar = daysBefore + daysCurrent + daysAfter
     val weekDays = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
 
-    val datePickerState = rememberDatePickerState()
     var showDatePicker by remember { mutableStateOf(false) }
 
     if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDatePicker = false
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedDate = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
-                        currentMonth = YearMonth.of(selectedDate.year, selectedDate.month)
-                    }
-                }) {
-                    Text("OK")
-                }
+        DatePickerDialogContent(
+            onDateSelected = { selectedDate ->
+                currentMonth = YearMonth.of(selectedDate.year, selectedDate.month)
+                showDatePicker = false
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false}) {
-                    Text("Cancel")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+            onDismiss = { showDatePicker = false }
+        )
     }
 
     Column(

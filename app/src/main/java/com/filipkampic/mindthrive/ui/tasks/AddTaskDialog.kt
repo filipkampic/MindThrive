@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.ui.tasks
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,8 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,7 +28,6 @@ import com.filipkampic.mindthrive.model.Task
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
-import java.util.Calendar
 
 @Composable
 @Preview(showBackground = true)
@@ -47,7 +43,7 @@ fun AddTaskDialog(
     var title by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf< LocalDate?>(null) }
     var priority by remember { mutableStateOf(Priority.NONE) }
-    val context = LocalContext.current
+    var showDatePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -70,18 +66,7 @@ fun AddTaskDialog(
                     Text(dueDate?.toString() ?: "None", color = DarkBlue)
                     Spacer(Modifier.width(8.dp))
                     Button(
-                        onClick = {
-                            val today = Calendar.getInstance()
-                            DatePickerDialog(
-                                context,
-                                { _, year, month, dayOfMonth ->
-                                    dueDate = LocalDate.of(year, month + 1, dayOfMonth)
-                                },
-                                today.get(Calendar.YEAR),
-                                today.get(Calendar.MONTH),
-                                today.get(Calendar.DAY_OF_MONTH)
-                            ).show()
-                        },
+                        onClick = { showDatePicker = true },
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue, contentColor = Peach)
                     ) {
                         Text("Pick")
@@ -121,4 +106,14 @@ fun AddTaskDialog(
         },
         containerColor = Peach
     )
+
+    if (showDatePicker) {
+        DatePickerDialogContent(
+            onDateSelected = {
+                dueDate = it
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
 }
