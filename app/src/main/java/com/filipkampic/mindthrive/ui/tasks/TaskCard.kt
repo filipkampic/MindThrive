@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.filipkampic.mindthrive.model.Priority
 import com.filipkampic.mindthrive.model.Task
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
@@ -64,17 +65,16 @@ fun TaskCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp)
+            .padding(vertical = 2.dp, horizontal = 8.dp)
             .clickable { onEdit(task) },
         colors = CardDefaults.cardColors(
             containerColor = Peach,
             contentColor = DarkBlue
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(8.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -82,7 +82,7 @@ fun TaskCard(
                 Checkbox(
                     checked = task.isDone,
                     onCheckedChange = { onCheck(task) },
-                    modifier = Modifier.padding(end = 8.dp),
+                    modifier = Modifier.padding(end = 4.dp),
                     colors = CheckboxDefaults.colors(
                         checkedColor = DarkBlue,
                         checkmarkColor = Peach,
@@ -95,7 +95,7 @@ fun TaskCard(
                 Column {
                     Text(
                         text = task.title,
-                        style = MaterialTheme.typography.bodyLarge.copy(
+                        style = MaterialTheme.typography.bodySmall.copy(
                             color = if (task.isDone) Color.Gray else MaterialTheme.colorScheme.onSurface,
                             textDecoration = if (task.isDone) TextDecoration.LineThrough else null
                         )
@@ -105,12 +105,13 @@ fun TaskCard(
                         Box(
                             modifier = Modifier
                                 .background(priorityColor, shape = RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = task.priority.name,
                                 color = Color.White,
-                                style = MaterialTheme.typography.labelSmall
+                                style = MaterialTheme.typography.labelSmall,
+                                lineHeight = 14.sp
                             )
                         }
                     }
