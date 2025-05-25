@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import org.burnoutcrew.reorderable.*
 
@@ -46,7 +47,8 @@ fun TaskSectionPreview(modifier: Modifier = Modifier) {
         ),
         onCheck = {},
         onEdit = {},
-        onMove = {}
+        onMove = {},
+        maxHeight = 300.dp
     )
 }
 
@@ -56,7 +58,8 @@ fun TaskSection(
     tasks: List<Task>,
     onCheck: (Task) -> Unit,
     onEdit: (Task) -> Unit,
-    onMove: (List<Task>) -> Unit
+    onMove: (List<Task>) -> Unit,
+    maxHeight: Dp
 ) {
     val taskList = remember { mutableStateListOf<Task>() }
     val reorderState = rememberReorderableLazyListState(onMove = { from, to ->
@@ -114,7 +117,7 @@ fun TaskSection(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 300.dp)
+                    .heightIn(max = maxHeight)
             ) {
                 LazyColumn(
                     state = listState,

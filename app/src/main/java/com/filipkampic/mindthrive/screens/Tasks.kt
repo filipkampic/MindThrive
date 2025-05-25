@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
@@ -143,7 +141,8 @@ fun Tasks(
                 tasks = tasks.filter { !it.isDone },
                 onCheck = viewModel::toggleTask,
                 onEdit = { editingTask.value = it },
-                onMove = { viewModel.updateTasksOrder(it) }
+                onMove = { viewModel.updateTasksOrder(it) },
+                maxHeight = if (showCompleted.value) 300.dp else 500.dp
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -154,7 +153,8 @@ fun Tasks(
                     tasks = tasks.filter { it.isDone },
                     onCheck = viewModel::toggleTask,
                     onEdit = { editingTask.value = it },
-                    onMove = { viewModel.updateTasksOrder(it) }
+                    onMove = { viewModel.updateTasksOrder(it) },
+                    maxHeight = 300.dp
                 )
             }
         }
