@@ -32,20 +32,21 @@ import java.time.LocalDate
 @Composable
 @Preview(showBackground = true)
 fun AddTaskDialogPreview() {
-    AddTaskDialog(onDismiss = {}, onAdd = {}, categories = listOf("All", "General"))
+    AddTaskDialog(onDismiss = {}, onAdd = {}, categories = listOf("All", "General"), defaultCategory = "General")
 }
 
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
     onAdd: (Task) -> Unit,
-    categories: List<String>
+    categories: List<String>,
+    defaultCategory: String
 ) {
     var title by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf< LocalDate?>(null) }
     var priority by remember { mutableStateOf(Priority.NONE) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "General") }
+    var selectedCategory by remember { mutableStateOf(defaultCategory) }
 
     AlertDialog(
         onDismissRequest = onDismiss,

@@ -1,8 +1,10 @@
 package com.filipkampic.mindthrive.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -12,14 +14,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -67,9 +72,15 @@ fun Tasks(
     val expandedMenu = remember { mutableStateOf(false) }
     val tasks by viewModel.tasks.collectAsState()
     val editingTask = remember { mutableStateOf<Task?>(null)}
+    val allTasks by viewModel.allTasks.collectAsState()
 
+    val customCategories = viewModel.customCategories.collectAsState().value
     val showAddCategoryDialog = remember { mutableStateOf(false) }
     val newCategoryName = remember { mutableStateOf("") }
+    val categoryError = remember { mutableStateOf<String?>(null) }
+
+    val categoryToDelete = remember { mutableStateOf<String?>(null) }
+    val deleteMode = remember { mutableStateOf(DeleteMode.REASSIGN) }
 
     Scaffold(
         topBar = {
@@ -135,9 +146,20 @@ fun Tasks(
         ) {
             CategoryFilterRow(
                 selectedCategory = viewModel.selectedCategory.collectAsState().value,
-                categories = viewModel.customCategories.collectAsState().value,
+                categories = customCategories,
                 onCategoryChange = viewModel::setCategory,
-                onAddCategoryClick = { showAddCategoryDialog.value = true }
+                onAddCategoryClick = { showAddCategoryDialog.value = true },
+                onDeleteCategoryClick = { category ->
+                    val hasTasks = allTasks.any { it.category == category }
+                    if (hasTasks) {
+                        categoryToDelete.value = category
+                    } else {
+                        viewModel.deleteCategory(category)
+                        if (viewModel.selectedCategory.value == category) {
+                            viewModel.setCategory("All")
+                        }
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -167,7 +189,10 @@ fun Tasks(
 
         if (showDialog.value) {
             AddTaskDialog(
-                categories = viewModel.customCategories.collectAsState().value,
+                categories = customCategories,
+                defaultCategory = viewModel.selectedCategory.collectAsState().value.let {
+                    if (it == "All") "General" else it
+                },
                 onDismiss = { showDialog.value = false },
                 onAdd = {
                     viewModel.addTask(it)
@@ -179,7 +204,7 @@ fun Tasks(
         if (editingTask.value != null) {
             EditTaskDialog(
                 task = editingTask.value!!,
-                categories = viewModel.customCategories.collectAsState().value,
+                categories = customCategories,
                 onDismiss = { editingTask.value = null },
                 onSave = {
                     viewModel.updateTask(it)
@@ -195,19 +220,99 @@ fun Tasks(
         if (showAddCategoryDialog.value) {
             AddCategoryDialog(
                 value = newCategoryName.value,
-                onValueChange = { newCategoryName.value = it },
+                onValueChange = {
+                    newCategoryName.value = it
+                    categoryError.value = null
+                },
                 onDismiss = {
                     newCategoryName.value = ""
+                    categoryError.value = null
                     showAddCategoryDialog.value = false
                 },
                 onConfirm = {
-                    if (newCategoryName.value.trim().isNotBlank()) {
-                        viewModel.addCategory(newCategoryName.value.trim())
-                        newCategoryName.value = ""
-                        showAddCategoryDialog.value = false
+                    val trimmed = newCategoryName.value.trim()
+                    val existing = customCategories.map { it.lowercase() }
+
+                    if (trimmed.isBlank()) {
+                        categoryError.value = null
+                        return@AddCategoryDialog
                     }
-                }
+
+                    if (trimmed.lowercase() in existing) {
+                        categoryError.value = "Category already exists."
+                        return@AddCategoryDialog
+                    }
+
+                    viewModel.addCategory(trimmed)
+                    newCategoryName.value = ""
+                    categoryError.value = null
+                    showAddCategoryDialog.value = false
+                },
+                errorMessage = categoryError.value
+            )
+        }
+
+        if (categoryToDelete.value != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    categoryToDelete.value = null
+                    deleteMode.value = DeleteMode.REASSIGN
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (deleteMode.value == DeleteMode.REASSIGN) {
+                            viewModel.reassignTasksFromCategory(categoryToDelete.value!!, "General")
+                        } else {
+                            viewModel.deleteTasksInCategory(categoryToDelete.value!!)
+                        }
+                        viewModel.deleteCategory(categoryToDelete.value!!)
+
+                        if (viewModel.selectedCategory.value == categoryToDelete.value) {
+                            viewModel.setCategory("All")
+                        }
+
+                        categoryToDelete.value = null
+                        deleteMode.value = DeleteMode.REASSIGN
+                    }) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        categoryToDelete.value = null
+                        deleteMode.value = DeleteMode.REASSIGN
+                    }) {
+                        Text("Cancel")
+                    }
+                },
+                title = { Text("Delete category '${categoryToDelete.value}'?") },
+                text = {
+                    Column {
+                        Text("Do you want to delete all tasks in this category or move them to 'General'?")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row {
+                            RadioButton(
+                                selected = deleteMode.value == DeleteMode.REASSIGN,
+                                onClick = { deleteMode.value = DeleteMode.REASSIGN }
+                            )
+                            Text("Reassign to 'General'", modifier = Modifier.clickable { deleteMode.value = DeleteMode.REASSIGN })
+                        }
+                        Row {
+                            RadioButton(
+                                selected = deleteMode.value == DeleteMode.DELETE,
+                                onClick = { deleteMode.value = DeleteMode.DELETE }
+                            )
+                            Text("Delete tasks", modifier = Modifier.clickable { deleteMode.value = DeleteMode.DELETE })
+                        }
+                    }
+                },
+                containerColor = Peach
             )
         }
     }
+}
+
+enum class DeleteMode {
+    REASSIGN,
+    DELETE
 }

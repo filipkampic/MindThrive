@@ -16,4 +16,7 @@ class TaskRepository(
 
     fun getCategories(): Flow<List<Category>> = categoryDao.getAll()
     suspend fun addCategory(category: Category) = categoryDao.insert(category)
+    suspend fun deleteCategory(name: String) = categoryDao.deleteByName(name)
+    suspend fun reassignTasksFromCategory(from: String, to: String) { taskDao.reassignCategory(from, to) }
+    suspend fun deleteTasksInCategory(category: String) { taskDao.deleteByCategory(category) }
 }

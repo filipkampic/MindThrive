@@ -1,17 +1,19 @@
 package com.filipkampic.mindthrive.ui.tasks
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -34,7 +36,8 @@ fun CategoryFilterRowPreview() {
         selectedCategory = "All",
         categories = listOf("All", "Category 1", "Category 2"),
         onCategoryChange = {},
-        onAddCategoryClick = {}
+        onAddCategoryClick = {},
+        onDeleteCategoryClick = {}
     )
 }
 
@@ -43,7 +46,8 @@ fun CategoryFilterRow(
     selectedCategory: String,
     categories: List<String>,
     onCategoryChange: (String) -> Unit,
-    onAddCategoryClick: () -> Unit
+    onAddCategoryClick: () -> Unit,
+    onDeleteCategoryClick: (String) -> Unit
 ) {
     val allCategories = listOf("All") + categories
     var expanded by remember { mutableStateOf(false) }
@@ -68,13 +72,36 @@ fun CategoryFilterRow(
                 modifier = Modifier.background(Peach)
             ) {
                 allCategories.forEach { category ->
-                    DropdownMenuItem(
-                        text = { Text(category, color = DarkBlue) },
-                        onClick = {
-                            onCategoryChange(category)
-                            expanded = false
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = category,
+                            color = DarkBlue,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    onCategoryChange(category)
+                                    expanded = false
+                                }
+                        )
+
+                        if (category != "All" && category != "General") {
+                            IconButton(
+                                onClick = {
+                                    expanded = false
+                                    onDeleteCategoryClick(category)
+                                }
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = DarkBlue)
+                            }
                         }
-                    )
+                    }
                 }
             }
         }

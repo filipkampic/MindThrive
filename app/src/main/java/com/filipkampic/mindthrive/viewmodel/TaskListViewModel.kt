@@ -33,6 +33,8 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allTasks = repository.allTasks.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun addTask(task: Task) = viewModelScope.launch {
         repository.insert(task)
     }
@@ -61,5 +63,18 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
         val trimmed = name.trim()
         if (trimmed in listOf("All", "General")) return@launch
         repository.addCategory(Category(name = trimmed))
+    }
+
+    fun deleteCategory(name: String) = viewModelScope.launch {
+        repository.deleteCategory(name)
+        repository.reassignTasksFromCategory(name, to = "General")
+    }
+
+    fun reassignTasksFromCategory(from: String, to: String) = viewModelScope.launch {
+        repository.reassignTasksFromCategory(from, to)
+    }
+
+    fun deleteTasksInCategory(category: String) = viewModelScope.launch {
+        repository.deleteTasksInCategory(category)
     }
 }

@@ -13,4 +13,7 @@ interface CategoryDao {
 
     @Insert
     suspend fun insert(category: Category)
+
+    @Query("DELETE FROM categories WHERE name = :name")
+    suspend fun deleteByName(name: String)
 }
