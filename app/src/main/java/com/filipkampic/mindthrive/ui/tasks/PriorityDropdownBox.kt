@@ -25,18 +25,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.filipkampic.mindthrive.model.Priority
+import com.filipkampic.mindthrive.model.tasks.Priority
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
 @Preview(showBackground = false)
-fun DropdownMenuBoxPreview() {
-    DropdownMenuBox(selected = Priority.HIGH, onChange = {})
+fun PriorityDropdownBoxPreview() {
+    PriorityDropdownBox(selected = Priority.HIGH, onChange = {})
 }
 
 @Composable
-fun DropdownMenuBox(selected: Priority, onChange: (Priority) -> Unit) {
+fun PriorityDropdownBox(selected: Priority, onChange: (Priority) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     val priorityColor = getPriorityColor(selected)

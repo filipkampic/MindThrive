@@ -34,7 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.TaskRepository
-import com.filipkampic.mindthrive.model.Task
+import com.filipkampic.mindthrive.model.tasks.Task
+import com.filipkampic.mindthrive.ui.tasks.AddCategoryDialog
 import com.filipkampic.mindthrive.ui.tasks.CategoryFilterRow
 import com.filipkampic.mindthrive.ui.tasks.TaskSection
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
@@ -57,7 +58,7 @@ fun Tasks(
     val context = LocalContext.current
     val viewModel = remember {
         val db = AppDatabase.getDatabase(context)
-        val repo = TaskRepository(db.taskDao())
+        val repo = TaskRepository(db.taskDao(), db.categoryDao())
         TaskListViewModel(repo)
     }
 
@@ -66,6 +67,9 @@ fun Tasks(
     val expandedMenu = remember { mutableStateOf(false) }
     val tasks by viewModel.tasks.collectAsState()
     val editingTask = remember { mutableStateOf<Task?>(null)}
+
+    val showAddCategoryDialog = remember { mutableStateOf(false) }
+    val newCategoryName = remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -131,7 +135,9 @@ fun Tasks(
         ) {
             CategoryFilterRow(
                 selectedCategory = viewModel.selectedCategory.collectAsState().value,
-                onCategoryChange = viewModel::setCategory
+                categories = viewModel.customCategories.collectAsState().value,
+                onCategoryChange = viewModel::setCategory,
+                onAddCategoryClick = { showAddCategoryDialog.value = true }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -161,6 +167,7 @@ fun Tasks(
 
         if (showDialog.value) {
             AddTaskDialog(
+                categories = viewModel.customCategories.collectAsState().value,
                 onDismiss = { showDialog.value = false },
                 onAdd = {
                     viewModel.addTask(it)
@@ -172,6 +179,7 @@ fun Tasks(
         if (editingTask.value != null) {
             EditTaskDialog(
                 task = editingTask.value!!,
+                categories = viewModel.customCategories.collectAsState().value,
                 onDismiss = { editingTask.value = null },
                 onSave = {
                     viewModel.updateTask(it)
@@ -180,6 +188,24 @@ fun Tasks(
                 onDelete = {
                     viewModel.deleteTask(it)
                     editingTask.value = null
+                }
+            )
+        }
+
+        if (showAddCategoryDialog.value) {
+            AddCategoryDialog(
+                value = newCategoryName.value,
+                onValueChange = { newCategoryName.value = it },
+                onDismiss = {
+                    newCategoryName.value = ""
+                    showAddCategoryDialog.value = false
+                },
+                onConfirm = {
+                    if (newCategoryName.value.trim().isNotBlank()) {
+                        viewModel.addCategory(newCategoryName.value.trim())
+                        newCategoryName.value = ""
+                        showAddCategoryDialog.value = false
+                    }
                 }
             )
         }

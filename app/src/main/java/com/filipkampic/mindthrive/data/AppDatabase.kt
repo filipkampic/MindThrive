@@ -5,15 +5,17 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.filipkampic.mindthrive.model.Task
+import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.model.TimeBlockTypeConverters
+import com.filipkampic.mindthrive.model.tasks.Category
 
 @TypeConverters(TimeBlockTypeConverters::class)
-@Database(entities = [TimeBlock::class, Task::class], version=3, exportSchema = false)
+@Database(entities = [TimeBlock::class, Task::class, Category::class], version=5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun timeBlockDao(): TimeBlockDao
     abstract fun taskDao(): TaskDao
+    abstract fun categoryDao(): CategoryDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null

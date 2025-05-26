@@ -32,16 +32,20 @@ import com.filipkampic.mindthrive.ui.theme.Peach
 fun CategoryFilterRowPreview() {
     CategoryFilterRow(
         selectedCategory = "All",
-        onCategoryChange = {}
+        categories = listOf("All", "Category 1", "Category 2"),
+        onCategoryChange = {},
+        onAddCategoryClick = {}
     )
 }
 
 @Composable
 fun CategoryFilterRow(
     selectedCategory: String,
-    onCategoryChange: (String) -> Unit
+    categories: List<String>,
+    onCategoryChange: (String) -> Unit,
+    onAddCategoryClick: () -> Unit
 ) {
-    val categories = listOf("All")
+    val allCategories = listOf("All") + categories
     var expanded by remember { mutableStateOf(false) }
 
     Row(
@@ -63,7 +67,7 @@ fun CategoryFilterRow(
                 onDismissRequest = { expanded = false },
                 modifier = Modifier.background(Peach)
             ) {
-                categories.forEach { category ->
+                allCategories.forEach { category ->
                     DropdownMenuItem(
                         text = { Text(category, color = DarkBlue) },
                         onClick = {
@@ -74,7 +78,7 @@ fun CategoryFilterRow(
                 }
             }
         }
-        IconButton(onClick = { /* TODO: Add new category */ }) {
+        IconButton(onClick = onAddCategoryClick) {
             Icon(Icons.Default.Add, contentDescription = "Add Category", tint = Peach)
         }
     }

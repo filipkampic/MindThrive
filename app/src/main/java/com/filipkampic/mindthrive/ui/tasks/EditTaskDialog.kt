@@ -25,8 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.filipkampic.mindthrive.model.Priority
-import com.filipkampic.mindthrive.model.Task
+import com.filipkampic.mindthrive.model.tasks.Priority
+import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
@@ -41,12 +41,14 @@ fun EditTaskDialogPreview(modifier: Modifier = Modifier) {
             priority = Priority.HIGH,
             isDone = false
         ),
+        categories = listOf("All", "General"),
         onDismiss = {}, onSave = {}, onDelete = {})
 }
 
 @Composable
 fun EditTaskDialog(
     task: Task,
+    categories: List<String>,
     onDismiss: () -> Unit,
     onSave: (Task) -> Unit,
     onDelete: (Task) -> Unit
@@ -55,6 +57,7 @@ fun EditTaskDialog(
     var dueDate by remember { mutableStateOf(task.dueDate) }
     var priority by remember { mutableStateOf(task.priority) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf(task.category) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -90,7 +93,19 @@ fun EditTaskDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Priority: ", color = DarkBlue)
                     Spacer(Modifier.width(8.dp))
-                    DropdownMenuBox(priority, onChange = { priority = it })
+                    PriorityDropdownBox(priority, onChange = { priority = it })
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Category: ", color = DarkBlue)
+                    Spacer(Modifier.width(8.dp))
+                    CategoryDropdownBox(
+                        selected = selectedCategory,
+                        options = categories,
+                        onSelect = { selectedCategory = it }
+                    )
                 }
             }
         },
@@ -116,7 +131,7 @@ fun EditTaskDialog(
 
                 OutlinedButton(
                     onClick = {
-                        onSave(task.copy(title = title, dueDate = dueDate, priority = priority))
+                        onSave(task.copy(title = title, dueDate = dueDate, priority = priority, category = selectedCategory))
                     },
                     enabled = title.isNotBlank(),
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = DarkBlue, contentColor = Peach),

@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.filipkampic.mindthrive.model.Priority
-import com.filipkampic.mindthrive.model.Task
+import com.filipkampic.mindthrive.model.tasks.Priority
+import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
@@ -32,18 +32,20 @@ import java.time.LocalDate
 @Composable
 @Preview(showBackground = true)
 fun AddTaskDialogPreview() {
-    AddTaskDialog(onDismiss = {}, onAdd = {})
+    AddTaskDialog(onDismiss = {}, onAdd = {}, categories = listOf("All", "General"))
 }
 
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
     onAdd: (Task) -> Unit,
+    categories: List<String>
 ) {
     var title by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf< LocalDate?>(null) }
     var priority by remember { mutableStateOf(Priority.NONE) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "General") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -78,7 +80,19 @@ fun AddTaskDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Priority: ", color = DarkBlue)
                     Spacer(Modifier.width(8.dp))
-                    DropdownMenuBox(priority, onChange = { priority = it })
+                    PriorityDropdownBox(priority, onChange = { priority = it })
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Category: ", color = DarkBlue)
+                    Spacer(Modifier.width(8.dp))
+                    CategoryDropdownBox(
+                        selected = selectedCategory,
+                        options = categories,
+                        onSelect = { selectedCategory = it }
+                    )
                 }
             }
         },
@@ -89,7 +103,8 @@ fun AddTaskDialog(
                         Task(
                             title = title,
                             dueDate = dueDate,
-                            priority = priority
+                            priority = priority,
+                            category = selectedCategory
                         )
                     )
                 },
