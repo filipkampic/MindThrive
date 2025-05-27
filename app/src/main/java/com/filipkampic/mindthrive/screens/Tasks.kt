@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -30,8 +33,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.TaskRepository
+import com.filipkampic.mindthrive.model.tasks.SortDirection
 import com.filipkampic.mindthrive.model.tasks.Task
+import com.filipkampic.mindthrive.model.tasks.TaskSortOption
 import com.filipkampic.mindthrive.ui.tasks.AddCategoryDialog
 import com.filipkampic.mindthrive.ui.tasks.CategoryFilterRow
 import com.filipkampic.mindthrive.ui.tasks.TaskSection
@@ -55,6 +64,7 @@ fun TasksPreview() {
     Tasks(navController = NavController(LocalContext.current))
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tasks(
@@ -63,13 +73,15 @@ fun Tasks(
     val context = LocalContext.current
     val viewModel = remember {
         val db = AppDatabase.getDatabase(context)
-        val repo = TaskRepository(db.taskDao(), db.categoryDao())
+        val repo = TaskRepository(context, db.taskDao(), db.categoryDao())
         TaskListViewModel(repo)
     }
 
     val showDialog = remember { mutableStateOf(false) }
     val showCompleted = remember { mutableStateOf(true) }
     val expandedMenu = remember { mutableStateOf(false) }
+    val showSortMenu = remember { mutableStateOf(false) }
+    var sortMenuRefreshKey by remember { mutableIntStateOf(0) }
     val tasks by viewModel.tasks.collectAsState()
     val editingTask = remember { mutableStateOf<Task?>(null)}
     val allTasks by viewModel.allTasks.collectAsState()
@@ -102,21 +114,112 @@ fun Tasks(
                             modifier = Modifier.background(Peach)
                         ) {
                             DropdownMenuItem(
-                                text = { Text(if (showCompleted.value) "Hide Completed" else "Show Completed") },
+                                text = { Text(if (showCompleted.value) "Hide Completed" else "Show Completed", color = DarkBlue) },
                                 onClick = { showCompleted.value = !showCompleted.value }
                             )
                             DropdownMenuItem(
-                                text = { Text("Sort") },
-                                onClick = { /* TODO: Sort logic */ }
+                                text = { Text("Sort", color = DarkBlue) },
+                                onClick = { showSortMenu.value = true }
                             )
                             DropdownMenuItem(
-                                text = { Text("Eisenhower Matrix") },
+                                text = { Text("Eisenhower Matrix", color = DarkBlue) },
                                 onClick = { /* TODO: Navigate to Eisenhower Matrix */ }
                             )
                             DropdownMenuItem(
-                                text = { Text("Show Details")},
+                                text = { Text("Show Details", color = DarkBlue)},
                                 onClick = { /* TODO: Show/Hide task details */ }
                             )
+                        }
+
+                        key(sortMenuRefreshKey) {
+                            DropdownMenu(
+                                expanded = showSortMenu.value,
+                                onDismissRequest = {
+                                    showSortMenu.value = false
+                                    expandedMenu.value = false
+                                },
+                                modifier = Modifier.background(Peach)
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("By title", color = DarkBlue)
+                                            if (viewModel.sortOption.value == TaskSortOption.TITLE) {
+                                                Icon(
+                                                    imageVector = if (viewModel.sortDirection.value == SortDirection.ASCENDING) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                                    contentDescription = "Direction",
+                                                    tint = DarkBlue,
+                                                    modifier = Modifier.padding(start = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        if (viewModel.sortOption.value == TaskSortOption.TITLE) {
+                                            viewModel.toggleSortDirection()
+                                        } else {
+                                            viewModel.setSortOption(TaskSortOption.TITLE)
+                                            viewModel.setSortDirection(SortDirection.ASCENDING)
+                                        }
+                                            sortMenuRefreshKey++
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("By due date", color = DarkBlue)
+                                            if (viewModel.sortOption.value == TaskSortOption.DUE_DATE) {
+                                                Icon(
+                                                    imageVector = if (viewModel.sortDirection.value == SortDirection.ASCENDING) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                                    contentDescription = "Direction",
+                                                    tint = DarkBlue,
+                                                    modifier = Modifier.padding(start = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        if (viewModel.sortOption.value == TaskSortOption.DUE_DATE) {
+                                            viewModel.toggleSortDirection()
+                                        } else {
+                                            viewModel.setSortOption(TaskSortOption.DUE_DATE)
+                                            viewModel.setSortDirection(SortDirection.ASCENDING)
+                                        }
+                                            sortMenuRefreshKey++
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("By priority", color = DarkBlue)
+                                            if (viewModel.sortOption.value == TaskSortOption.PRIORITY) {
+                                                Icon(
+                                                    imageVector = if (viewModel.sortDirection.value == SortDirection.ASCENDING) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                                    contentDescription = "Direction",
+                                                    tint = DarkBlue,
+                                                    modifier = Modifier.padding(start = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        if (viewModel.sortOption.value == TaskSortOption.PRIORITY) {
+                                            viewModel.toggleSortDirection()
+                                        } else {
+                                            viewModel.setSortOption(TaskSortOption.PRIORITY)
+                                            viewModel.setSortDirection(SortDirection.ASCENDING)
+                                        }
+                                            sortMenuRefreshKey++
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Default order", color = DarkBlue) },
+                                    onClick = {
+                                        viewModel.setSortOption(TaskSortOption.DEFAULT)
+                                        sortMenuRefreshKey++
+                                    }
+                                )
+                            }
                         }
                     }
                 },

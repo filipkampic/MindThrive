@@ -75,4 +75,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.composereorderable.reorderable)
+    implementation(libs.androidx.datastore.preferences)
+
 }

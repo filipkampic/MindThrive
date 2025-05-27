@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.TaskRepository
 import com.filipkampic.mindthrive.model.tasks.Category
+import com.filipkampic.mindthrive.model.tasks.SortDirection
 import com.filipkampic.mindthrive.model.tasks.Task
+import com.filipkampic.mindthrive.model.tasks.TaskSortOption
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
     private val _selectedCategory = MutableStateFlow("All")
@@ -25,15 +28,51 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("General"))
 
+    private val _sortOption = MutableStateFlow(TaskSortOption.DEFAULT)
+    val sortOption: StateFlow<TaskSortOption> = _sortOption
+    private val _sortDirection = MutableStateFlow(SortDirection.ASCENDING)
+    val sortDirection: StateFlow<SortDirection> = _sortDirection
 
-    val tasks = repository.allTasks
-        .combine(_selectedCategory) { all, category ->
-            if (category == "All") all
-            else all.filter { it.category == category }
+    val tasks: StateFlow<List<Task>> = combine(
+        repository.allTasks,
+        _selectedCategory,
+        _sortOption,
+        _sortDirection
+    ) { allTasks, category, sort, direction ->
+        val filtered = when (category) {
+            "All" -> allTasks
+            else -> allTasks.filter { it.category == category }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+        val sorted = when (sort) {
+            TaskSortOption.TITLE -> filtered.sortedBy { it.title.lowercase() }
+            TaskSortOption.DUE_DATE -> filtered.sortedBy { it.dueDate ?: LocalDate.MAX }
+            TaskSortOption.PRIORITY -> filtered.sortedBy { it.priority.ordinal }
+            else -> filtered.sortedBy { it.position }
+        }
+
+        if (sort != TaskSortOption.DEFAULT && direction == SortDirection.DESCENDING) {
+            sorted.reversed()
+        } else {
+            sorted
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val allTasks = repository.allTasks.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            repository.sortOptionFlow.collect {
+                _sortOption.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            repository.sortDirectionFlow.collect {
+                _sortDirection.value = it
+            }
+        }
+    }
+
 
     fun addTask(task: Task) = viewModelScope.launch {
         repository.insert(task)
@@ -53,6 +92,7 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
 
     fun updateTasksOrder(updated: List<Task>) = viewModelScope.launch {
         repository.updateTasksOrder(updated)
+        _sortOption.value = TaskSortOption.DEFAULT
     }
 
     fun setCategory(category: String) {
@@ -76,5 +116,20 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
 
     fun deleteTasksInCategory(category: String) = viewModelScope.launch {
         repository.deleteTasksInCategory(category)
+    }
+
+    fun setSortOption(option: TaskSortOption) = viewModelScope.launch {
+        _sortOption.value = option
+        repository.saveSortPreferences(option, _sortDirection.value)
+    }
+
+    fun toggleSortDirection() {
+        _sortDirection.value = if (_sortDirection.value == SortDirection.ASCENDING)
+            SortDirection.DESCENDING else SortDirection.ASCENDING
+    }
+
+    fun setSortDirection(direction: SortDirection) = viewModelScope.launch {
+        _sortDirection.value = direction
+        repository.saveSortPreferences(_sortOption.value, direction)
     }
 }
