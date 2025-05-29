@@ -7,6 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.preferences.core.Preferences
@@ -16,16 +19,21 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.filipkampic.mindthrive.data.AppDatabase
+import com.filipkampic.mindthrive.data.TaskRepository
 import com.filipkampic.mindthrive.screens.Calendar
 import com.filipkampic.mindthrive.screens.Focus
 import com.filipkampic.mindthrive.screens.Goals
 import com.filipkampic.mindthrive.screens.HabitTracker
 import com.filipkampic.mindthrive.screens.HomeScreen
+import com.filipkampic.mindthrive.screens.HomeScreen
 import com.filipkampic.mindthrive.screens.Notes
 import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
-import com.filipkampic.mindthrive.screens.Tasks
+import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.tasks.EisenhowerMatrix
+import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 
 val Context.dataStore: androidx.datastore.core.DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
 
@@ -66,6 +74,19 @@ fun MindThriveApp() {
                     TimeManagementWrapper(navController, selectedDate)
                 }
                 composable("tasks") { Tasks(navController) }
+                composable("eisenhower") {
+                    val localContext = LocalContext.current
+                    val db = AppDatabase.getDatabase(localContext)
+                    val repo = TaskRepository(localContext, db.taskDao(), db.categoryDao())
+                    val viewModel = remember { TaskListViewModel(repo) }
+                    val tasks by viewModel.tasks.collectAsState()
+
+                    EisenhowerMatrix(
+                        tasks = tasks,
+                        onCheck = viewModel::toggleTask,
+                        navController = navController
+                    )
+                }
                 composable("notes") { Notes(navController) }
                 composable("focus") { Focus(navController) }
                 composable("habitTracker") { HabitTracker(navController) }

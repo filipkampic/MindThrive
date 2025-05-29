@@ -28,20 +28,32 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("General"))
 
+    val categories = repository.getCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val _sortOption = MutableStateFlow(TaskSortOption.DEFAULT)
     val sortOption: StateFlow<TaskSortOption> = _sortOption
     private val _sortDirection = MutableStateFlow(SortDirection.ASCENDING)
     val sortDirection: StateFlow<SortDirection> = _sortDirection
 
+    val showCompleted = repository.showCompletedFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val tasks: StateFlow<List<Task>> = combine(
         repository.allTasks,
         _selectedCategory,
         _sortOption,
-        _sortDirection
-    ) { allTasks, category, sort, direction ->
-        val filtered = when (category) {
+        _sortDirection,
+        repository.showCompletedFlow
+    ) { allTasks, category, sort, direction, showCompleted ->
+        val filteredByCategory = when (category) {
             "All" -> allTasks
             else -> allTasks.filter { it.category == category }
+        }
+
+        val filtered = if (showCompleted) {
+            filteredByCategory
+        } else {
+            filteredByCategory.filter { !it.isDone }
         }
 
         val sorted = when (sort) {
@@ -131,5 +143,9 @@ class TaskListViewModel(private val repository: TaskRepository): ViewModel() {
     fun setSortDirection(direction: SortDirection) = viewModelScope.launch {
         _sortDirection.value = direction
         repository.saveSortPreferences(_sortOption.value, direction)
+    }
+
+    fun setShowCompleted(show: Boolean) = viewModelScope.launch {
+        repository.saveShowCompleted(show)
     }
 }

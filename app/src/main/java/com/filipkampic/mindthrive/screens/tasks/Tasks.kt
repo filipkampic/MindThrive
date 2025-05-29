@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.screens
+package com.filipkampic.mindthrive.screens.tasks
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -78,7 +78,7 @@ fun Tasks(
     }
 
     val showDialog = remember { mutableStateOf(false) }
-    val showCompleted = remember { mutableStateOf(true) }
+    val showCompleted by viewModel.showCompleted.collectAsState()
     val expandedMenu = remember { mutableStateOf(false) }
     val showSortMenu = remember { mutableStateOf(false) }
     var sortMenuRefreshKey by remember { mutableIntStateOf(0) }
@@ -114,8 +114,8 @@ fun Tasks(
                             modifier = Modifier.background(Peach)
                         ) {
                             DropdownMenuItem(
-                                text = { Text(if (showCompleted.value) "Hide Completed" else "Show Completed", color = DarkBlue) },
-                                onClick = { showCompleted.value = !showCompleted.value }
+                                text = { Text(if (showCompleted) "Hide Completed" else "Show Completed", color = DarkBlue) },
+                                onClick = { viewModel.setShowCompleted(!showCompleted) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Sort", color = DarkBlue) },
@@ -123,11 +123,7 @@ fun Tasks(
                             )
                             DropdownMenuItem(
                                 text = { Text("Eisenhower Matrix", color = DarkBlue) },
-                                onClick = { /* TODO: Navigate to Eisenhower Matrix */ }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Show Details", color = DarkBlue)},
-                                onClick = { /* TODO: Show/Hide task details */ }
+                                onClick = { navController.navigate("eisenhower") }
                             )
                         }
 
@@ -273,12 +269,12 @@ fun Tasks(
                 onCheck = viewModel::toggleTask,
                 onEdit = { editingTask.value = it },
                 onMove = { viewModel.updateTasksOrder(it) },
-                maxHeight = if (showCompleted.value) 300.dp else 500.dp
+                maxHeight = if (showCompleted) 300.dp else 500.dp
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (showCompleted.value) {
+            if (showCompleted) {
                 TaskSection(
                     title = "COMPLETED",
                     tasks = tasks.filter { it.isDone },
@@ -398,14 +394,18 @@ fun Tasks(
                                 selected = deleteMode.value == DeleteMode.REASSIGN,
                                 onClick = { deleteMode.value = DeleteMode.REASSIGN }
                             )
-                            Text("Reassign to 'General'", modifier = Modifier.clickable { deleteMode.value = DeleteMode.REASSIGN })
+                            Text("Reassign to 'General'", modifier = Modifier.clickable { deleteMode.value =
+                                DeleteMode.REASSIGN
+                            })
                         }
                         Row {
                             RadioButton(
                                 selected = deleteMode.value == DeleteMode.DELETE,
                                 onClick = { deleteMode.value = DeleteMode.DELETE }
                             )
-                            Text("Delete tasks", modifier = Modifier.clickable { deleteMode.value = DeleteMode.DELETE })
+                            Text("Delete tasks", modifier = Modifier.clickable { deleteMode.value =
+                                DeleteMode.DELETE
+                            })
                         }
                     }
                 },
