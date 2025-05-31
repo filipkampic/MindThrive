@@ -1,16 +1,22 @@
 package com.filipkampic.mindthrive.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.filipkampic.mindthrive.data.AppDatabase
+import com.filipkampic.mindthrive.data.NoteDao
 import com.filipkampic.mindthrive.model.notes.Note
 import com.filipkampic.mindthrive.model.notes.NoteFolder
 import com.filipkampic.mindthrive.model.notes.NotesSortOption
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
-class NotesViewModel(application: Application) : AndroidViewModel(application) {
+class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
     private val _folders = MutableStateFlow<List<NoteFolder>>(listOf())
     val folders: StateFlow<List<NoteFolder>> = _folders
 
@@ -36,16 +42,41 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun showAddFolderDialog() {
         /* TO-DO */
     }
+
+    fun getNoteById(noteId: Int?): Flow<Note?> {
+        return if (noteId == null) flowOf(null)
+        else notes.map { list -> list.find { it.id == noteId }}
+    }
+
+    fun saveNote(noteId: Int?, title: String, content: String) {
+        viewModelScope.launch {
+            if (noteId == null) {
+                val newNote = Note(
+                    folderId = null,
+                    title = title,
+                    content = content,
+                    timestamp = System.currentTimeMillis()
+                )
+                noteDao.insertNote(newNote)
+            } else {
+                val updatedNote = Note(
+                    id = noteId,
+                    folderId = null,
+                    title = title,
+                    content = content,
+                    timestamp = System.currentTimeMillis()
+                )
+                noteDao.updateNote(updatedNote)
+            }
+        }
+    }
 }
 
 @Suppress("UNCHECKED_CAST")
-class NotesViewModelFactory(
-    private val application: Application
-) : ViewModelProvider.Factory {
+class NotesViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(NotesViewModel::class.java)) {
-            return NotesViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        val database = AppDatabase.getDatabase(application)
+        val noteDao = database.noteDao()
+        return NotesViewModel(noteDao) as T
     }
 }

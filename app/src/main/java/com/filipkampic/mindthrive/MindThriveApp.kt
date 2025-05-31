@@ -26,12 +26,12 @@ import com.filipkampic.mindthrive.screens.Focus
 import com.filipkampic.mindthrive.screens.Goals
 import com.filipkampic.mindthrive.screens.HabitTracker
 import com.filipkampic.mindthrive.screens.HomeScreen
-import com.filipkampic.mindthrive.screens.HomeScreen
-import com.filipkampic.mindthrive.screens.Notes
+import com.filipkampic.mindthrive.screens.notes.Notes
 import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.notes.NoteEditor
 import com.filipkampic.mindthrive.screens.tasks.EisenhowerMatrix
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 
@@ -88,6 +88,11 @@ fun MindThriveApp() {
                     )
                 }
                 composable("notes") { Notes(navController) }
+                composable("editNote") { NoteEditor(navController, noteId = null) }
+                composable("editNote/{noteId}") { backStackEntry ->
+                    val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
+                    NoteEditor(navController = navController, noteId = noteId)
+                }
                 composable("focus") { Focus(navController) }
                 composable("habitTracker") { HabitTracker(navController) }
                 composable("goals") { Goals(navController) }

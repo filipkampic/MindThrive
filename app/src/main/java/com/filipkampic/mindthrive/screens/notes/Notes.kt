@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.screens
+package com.filipkampic.mindthrive.screens.notes
 
 import android.app.Application
 import androidx.compose.foundation.background
@@ -169,7 +169,7 @@ fun Notes(navController: NavController) {
                 modifier = Modifier.padding(16.dp),
                 containerColor = Peach
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Note")
+                Icon(Icons.Default.Add, contentDescription = "Add Note", tint = DarkBlue)
             }
         }
     }
