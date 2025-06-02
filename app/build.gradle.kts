@@ -76,5 +76,5 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.composereorderable.reorderable)
     implementation(libs.androidx.datastore.preferences)
-
+    implementation(libs.richeditor.android)
 }
