@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -43,7 +42,7 @@ import com.filipkampic.mindthrive.ui.notes.AddFolderButton
 import com.filipkampic.mindthrive.ui.notes.FolderCard
 import com.filipkampic.mindthrive.ui.notes.NoteCard
 import com.filipkampic.mindthrive.ui.notes.SearchBar
-import com.filipkampic.mindthrive.ui.notes.SortDropdown
+import com.filipkampic.mindthrive.ui.notes.NotesSortDropdown
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.NotesViewModel
@@ -62,7 +61,7 @@ fun Notes(navController: NavController) {
     val viewModel: NotesViewModel = viewModel(factory = NotesViewModelFactory(context.applicationContext as Application))
 
     val folders by viewModel.folders.collectAsState()
-    val notes by viewModel.notes.collectAsState()
+    val notes by viewModel.sortedNotes.collectAsState()
     val selectedFolderId by viewModel.selectedFolderId.collectAsState()
     val sortOption by viewModel.sortOption.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -135,7 +134,7 @@ fun Notes(navController: NavController) {
             onQueryChanged = { viewModel.updateSearchQuery(it) }
         )
 
-        SortDropdown(
+        NotesSortDropdown(
             current = sortOption,
             onSelected = { viewModel.updateSortOption(it) }
         )

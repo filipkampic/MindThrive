@@ -33,12 +33,12 @@ import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
 @Preview(showBackground = true)
-fun SortDropdownPreview(modifier: Modifier = Modifier) {
-    SortDropdown(current = NotesSortOption.BY_DATE_DESC, onSelected = {})
+fun NotesSortDropdownPreview(modifier: Modifier = Modifier) {
+    NotesSortDropdown(current = NotesSortOption.BY_DATE_DESC, onSelected = {})
 }
 
 @Composable
-fun SortDropdown(
+fun NotesSortDropdown(
     current: NotesSortOption,
     onSelected: (NotesSortOption) -> Unit
 ) {

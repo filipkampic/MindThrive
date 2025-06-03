@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore by preferencesDataStore(name = "task_prefs")
 
 class TaskPreferences(private val context: Context) {
-
     object Keys {
         val SORT_OPTION = stringPreferencesKey("sort_option")
         val SORT_DIRECTION = stringPreferencesKey("sort_direction")
