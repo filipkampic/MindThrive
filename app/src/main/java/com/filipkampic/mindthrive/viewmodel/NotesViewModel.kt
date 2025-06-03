@@ -27,6 +27,14 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
     val searchQuery = MutableStateFlow("")
     val sortOption = MutableStateFlow(NotesSortOption.BY_DATE_DESC)
 
+    init {
+        viewModelScope.launch {
+            noteDao.getAllNotes().collect { noteList ->
+                _notes.value = noteList
+            }
+        }
+    }
+
     fun updateSearchQuery(query: String) {
         searchQuery.value = query
     }

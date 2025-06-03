@@ -229,7 +229,7 @@ fun NoteEditor(
                                         ViewGroup.LayoutParams.MATCH_PARENT,
                                         ViewGroup.LayoutParams.MATCH_PARENT
                                     )
-                                    setHtml(content)
+                                    note?.let { setHtml(it.content) }
                                     setPadding(16, 16, 16, 16)
                                     setBackgroundColor(DarkBlue.value.toInt())
                                     setEditorFontColor(android.graphics.Color.parseColor("#F6C8B3"))
@@ -367,6 +367,7 @@ fun NoteEditor(
             note?.let {
                 title = it.title
                 content = it.content
+                editorRef.value?.setHtml(it.content)
             }
         }
 
