@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.filled.FormatAlignRight
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FormatAlignCenter
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
@@ -67,6 +68,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -112,6 +114,8 @@ fun NoteEditor(
     BackHandler(enabled = hasChanges && !showExitDialog.value) {
         showExitDialog.value = true
     }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -162,6 +166,16 @@ fun NoteEditor(
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Finish Editing",
+                                    tint = Peach
+                                )
+                            }
+                        }
+
+                        if (noteId != null && !isEditing) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Note",
                                     tint = Peach
                                 )
                             }
@@ -389,6 +403,31 @@ fun NoteEditor(
                 },
                 title = { Text("Unsaved Changes", color = Peach) },
                 text = { Text("You have unsaved changes. Are you sure you want to exit?", color = Peach) },
+                containerColor = DarkBlue
+            )
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Note", color = Peach) },
+                text = { Text("Are you sure you want to delete this note?", color = Peach) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteNote()
+                            showDeleteDialog = false
+                            navController.popBackStack()
+                        }
+                    ) {
+                        Text("Delete", color = Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel", color = Peach)
+                    }
+                },
                 containerColor = DarkBlue
             )
         }

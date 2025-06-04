@@ -30,6 +30,9 @@ class NotesViewModel(
     private val _notes = MutableStateFlow<List<Note>>(listOf())
     val notes: StateFlow<List<Note>> = _notes
 
+    private val _currentNote = MutableStateFlow<Note?>(null)
+    val currentNote: StateFlow<Note?> = _currentNote
+
     val selectedFolderId = MutableStateFlow<Int?>(null)
     val searchQuery = MutableStateFlow("")
 
@@ -74,7 +77,10 @@ class NotesViewModel(
 
     fun getNoteById(noteId: Int?): Flow<Note?> {
         return if (noteId == null) flowOf(null)
-        else notes.map { list -> list.find { it.id == noteId }}
+        else noteDao.getNoteById(noteId).map { note ->
+            _currentNote.value = note
+            note
+        }
     }
 
     fun saveNote(noteId: Int?, title: String, content: String) {
@@ -96,6 +102,15 @@ class NotesViewModel(
                     timestamp = System.currentTimeMillis()
                 )
                 noteDao.updateNote(updatedNote)
+            }
+        }
+    }
+
+    fun deleteNote() {
+        val currentNote = _currentNote.value
+        if (currentNote != null) {
+            viewModelScope.launch {
+                noteDao.deleteNote(currentNote)
             }
         }
     }
