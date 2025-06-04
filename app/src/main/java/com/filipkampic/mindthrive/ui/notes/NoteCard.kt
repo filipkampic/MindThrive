@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.ui.notes
 
+import android.text.Html
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -73,11 +74,15 @@ fun NoteCard(
                 color = DarkBlue
             )
             Text(
-                text = note.content.take(100),
+                text = stripHtml(note.content).take(100),
                 color = DarkBlue,
-                maxLines = 4,
+                maxLines = 5,
                 overflow = TextOverflow.Ellipsis
             )
         }
     }
+}
+
+private fun stripHtml(content: String): String {
+    return Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY).toString()
 }

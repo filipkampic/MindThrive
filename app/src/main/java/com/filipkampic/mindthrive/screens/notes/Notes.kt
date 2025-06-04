@@ -61,7 +61,7 @@ fun Notes(navController: NavController) {
     val viewModel: NotesViewModel = viewModel(factory = NotesViewModelFactory(context.applicationContext as Application))
 
     val folders by viewModel.folders.collectAsState()
-    val notes by viewModel.sortedNotes.collectAsState()
+    val notes by viewModel.visibleNotes.collectAsState()
     val selectedFolderId by viewModel.selectedFolderId.collectAsState()
     val sortOption by viewModel.sortOption.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()

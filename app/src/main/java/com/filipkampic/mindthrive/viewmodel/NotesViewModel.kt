@@ -34,7 +34,9 @@ class NotesViewModel(
     val currentNote: StateFlow<Note?> = _currentNote
 
     val selectedFolderId = MutableStateFlow<Int?>(null)
-    val searchQuery = MutableStateFlow("")
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
 
     private val _sortOption = MutableStateFlow(NotesSortOption.BY_DATE_DESC)
     val sortOption: StateFlow<NotesSortOption> = _sortOption
@@ -48,6 +50,13 @@ class NotesViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
+    val visibleNotes = combine(sortedNotes, _searchQuery) { notes, query ->
+        if (query.isBlank()) notes
+        else notes.filter {
+            it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
     init {
         viewModelScope.launch {
             preferences.getSortOption().collect {
@@ -58,7 +67,7 @@ class NotesViewModel(
     }
 
     fun updateSearchQuery(query: String) {
-        searchQuery.value = query
+        _searchQuery.value = query
     }
 
     fun updateSortOption(option: NotesSortOption) {
