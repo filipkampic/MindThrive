@@ -24,16 +24,22 @@ class NotesViewModel(
     private val noteDao: NoteDao,
     private val preferences: NotesPreferences
 ) : ViewModel() {
-    private val _folders = MutableStateFlow<List<NoteFolder>>(listOf())
-    val folders: StateFlow<List<NoteFolder>> = _folders
+    val folders = noteDao.getAllNoteFolders()
+        .map { list -> list.sortedBy { it.name.lowercase() } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _notes = MutableStateFlow<List<Note>>(listOf())
     val notes: StateFlow<List<Note>> = _notes
 
     private val _currentNote = MutableStateFlow<Note?>(null)
-    val currentNote: StateFlow<Note?> = _currentNote
 
-    val selectedFolderId = MutableStateFlow<Int?>(null)
+    private val selectedFolderId = MutableStateFlow<Int?>(null)
+
+    private val _showAddFolderDialog = MutableStateFlow(false)
+    val showAddFolderDialog: StateFlow<Boolean> = _showAddFolderDialog
+
+    private val _showDeleteFolderDialog = MutableStateFlow(false)
+    val showDeleteFolderDialog: StateFlow<Boolean> = _showDeleteFolderDialog
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
@@ -41,7 +47,7 @@ class NotesViewModel(
     private val _sortOption = MutableStateFlow(NotesSortOption.BY_DATE_DESC)
     val sortOption: StateFlow<NotesSortOption> = _sortOption
 
-    val sortedNotes = combine(_notes, _sortOption) { notes, sort ->
+    private val sortedNotes = combine(_notes, _sortOption) { notes, sort ->
         when (sort) {
             NotesSortOption.BY_DATE_ASC -> notes.sortedBy { it.timestamp }
             NotesSortOption.BY_DATE_DESC -> notes.sortedByDescending { it.timestamp }
@@ -80,8 +86,67 @@ class NotesViewModel(
         selectedFolderId.value = folderId
     }
 
-    fun showAddFolderDialog() {
-        /* TO-DO */
+    fun renameFolder(folderId: Int, newName: String) {
+        viewModelScope.launch {
+            noteDao.updateFolderName(folderId, newName)
+        }
+    }
+
+    fun addFolder(name: String) {
+        viewModelScope.launch {
+            val currentFolders = folders.value
+            val exists = currentFolders.any { it.name.equals(name, ignoreCase = true) }
+
+            if (!exists) {
+                val newFolder = NoteFolder(name = name)
+                noteDao.insertNoteFolder(newFolder)
+            }
+        }
+    }
+
+    fun openAddFolderDialog() {
+        _showAddFolderDialog.value = true
+    }
+
+    fun closeAddFolderDialog() {
+        _showAddFolderDialog.value = false
+    }
+
+    fun showDeleteFolderDialog() {
+        _showDeleteFolderDialog.value = true
+    }
+
+    fun hideDeleteFolderDialog() {
+        _showDeleteFolderDialog.value = false
+    }
+
+    fun deleteFolderOnly(folder: NoteFolder) {
+        viewModelScope.launch {
+            noteDao.clearFolderIdFromNotes(folder.id)
+            noteDao.deleteFolder(folder)
+            _showDeleteFolderDialog.value = false
+        }
+    }
+
+    fun deleteFolderAndNotes(folder: NoteFolder) {
+        viewModelScope.launch {
+            noteDao.deleteNotesByFolderId(folder.id)
+            noteDao.deleteFolder(folder)
+            _showDeleteFolderDialog.value = false
+        }
+    }
+
+    fun loadNotesInFolder(folderId: Int?) {
+        viewModelScope.launch {
+            val flow = if (folderId == null) {
+                noteDao.getNotesWithoutFolder()
+            } else {
+                noteDao.getNotesByFolderId(folderId)
+            }
+            flow.collect { notesInFolder ->
+                _notes.value = notesInFolder
+            }
+        }
     }
 
     fun getNoteById(noteId: Int?): Flow<Note?> {
@@ -92,25 +157,26 @@ class NotesViewModel(
         }
     }
 
-    fun saveNote(noteId: Int?, title: String, content: String) {
+    fun saveNote(noteId: Int?, title: String, content: String, folderId: Int? = null) {
         viewModelScope.launch {
             if (noteId == null) {
                 val newNote = Note(
-                    folderId = null,
+                    folderId = folderId,
                     title = title,
                     content = content,
                     timestamp = System.currentTimeMillis()
                 )
                 noteDao.insertNote(newNote)
             } else {
-                val updatedNote = Note(
-                    id = noteId,
-                    folderId = null,
-                    title = title,
-                    content = content,
-                    timestamp = System.currentTimeMillis()
+                noteDao.updateNote(
+                    Note(
+                        id = noteId,
+                        folderId = folderId,
+                        title = title,
+                        content = content,
+                        timestamp = System.currentTimeMillis()
+                    )
                 )
-                noteDao.updateNote(updatedNote)
             }
         }
     }
@@ -137,7 +203,6 @@ class NotesViewModel(
             }
         }
     }
-
 }
 
 @Suppress("UNCHECKED_CAST")

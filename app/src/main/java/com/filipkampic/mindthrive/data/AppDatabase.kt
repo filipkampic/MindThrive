@@ -9,10 +9,11 @@ import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.model.TimeBlockTypeConverters
 import com.filipkampic.mindthrive.model.notes.Note
+import com.filipkampic.mindthrive.model.notes.NoteFolder
 import com.filipkampic.mindthrive.model.tasks.Category
 
 @TypeConverters(TimeBlockTypeConverters::class)
-@Database(entities = [TimeBlock::class, Task::class, Category::class, Note::class], version=6, exportSchema = false)
+@Database(entities = [TimeBlock::class, Task::class, Category::class, Note::class, NoteFolder::class], version=7, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun timeBlockDao(): TimeBlockDao
     abstract fun taskDao(): TaskDao

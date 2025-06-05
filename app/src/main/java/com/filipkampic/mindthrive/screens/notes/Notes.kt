@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.filipkampic.mindthrive.screens.notes
 
 import android.app.Application
@@ -6,34 +8,43 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -61,8 +72,8 @@ fun Notes(navController: NavController) {
     val viewModel: NotesViewModel = viewModel(factory = NotesViewModelFactory(context.applicationContext as Application))
 
     val folders by viewModel.folders.collectAsState()
+    val showAddFolderDialog by viewModel.showAddFolderDialog.collectAsState()
     val notes by viewModel.visibleNotes.collectAsState()
-    val selectedFolderId by viewModel.selectedFolderId.collectAsState()
     val sortOption by viewModel.sortOption.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
@@ -78,11 +89,6 @@ fun Notes(navController: NavController) {
                     Icon(Icons.Default.Home, contentDescription = "Home")
                 }
             },
-            actions = {
-                IconButton(onClick = { /* TO-DO: Hamburger menu action */ }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = DarkBlue,
                 titleContentColor = Peach,
@@ -91,20 +97,26 @@ fun Notes(navController: NavController) {
             )
         )
 
-        LazyRow(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+                .heightIn(max = 200.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
         ) {
             if (folders.isEmpty()) {
-                item {
+                item(span = { GridItemSpan(4) }) {
                     Box(
                         modifier = Modifier
-                            .fillParentMaxWidth()
-                            .padding(vertical = 32.dp),
+                            .fillMaxWidth()
+                            .height(100.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No folders yet.", color = Peach)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            Text("No folders yet.", color = Peach)
+                        }
                     }
                 }
             }
@@ -112,8 +124,10 @@ fun Notes(navController: NavController) {
             items(folders) { folder ->
                 FolderCard(
                     folder = folder,
-                    selected = folder.id == selectedFolderId,
-                    onClick = { viewModel.selectFolder(folder.id) }
+                    onClick = {
+                        viewModel.selectFolder(folder.id)
+                        navController.navigate("folder/${folder.id}")
+                    }
                 )
             }
         }
@@ -124,7 +138,7 @@ fun Notes(navController: NavController) {
                 .padding(end = 16.dp),
             contentAlignment = Alignment.CenterEnd
         ) {
-            AddFolderButton(onClick = { viewModel.showAddFolderDialog() })
+            AddFolderButton(onClick = { viewModel.openAddFolderDialog() })
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -186,6 +200,52 @@ fun Notes(navController: NavController) {
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Note", tint = DarkBlue)
             }
+        }
+
+        if (showAddFolderDialog) {
+            var name by remember { mutableStateOf("") }
+
+            AlertDialog(
+                onDismissRequest = { viewModel.closeAddFolderDialog() },
+                title = { Text("New Folder", color = DarkBlue) },
+                text = {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Folder name", color = DarkBlue) },
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = DarkBlue,
+                            unfocusedBorderColor = DarkBlue.copy(alpha = 0.5f),
+                            cursorColor = DarkBlue,
+                            selectionColors = TextSelectionColors(
+                                handleColor = DarkBlue,
+                                backgroundColor = DarkBlue.copy(alpha = 0.2f)
+                            )
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (name.isNotBlank()) {
+                                viewModel.addFolder(name)
+                                viewModel.closeAddFolderDialog()
+                            }
+                        },
+                        enabled = name.isNotBlank()
+                    ) {
+                        Text("Add", color = DarkBlue)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.closeAddFolderDialog() }) {
+                        Text("Cancel", color = DarkBlue)
+                    }
+                },
+                containerColor = Peach
+            )
         }
     }
 }

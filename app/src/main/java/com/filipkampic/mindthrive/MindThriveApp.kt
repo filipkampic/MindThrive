@@ -32,6 +32,7 @@ import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
 import com.filipkampic.mindthrive.screens.notes.NoteEditor
+import com.filipkampic.mindthrive.screens.notes.NoteFolder
 import com.filipkampic.mindthrive.screens.tasks.EisenhowerMatrix
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 
@@ -92,6 +93,15 @@ fun MindThriveApp() {
                 composable("editNote/{noteId}") { backStackEntry ->
                     val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
                     NoteEditor(navController = navController, noteId = noteId)
+                }
+                composable(
+                    route = "folder/{folderId}",
+                    arguments = listOf(navArgument("folderId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val folderId = backStackEntry.arguments?.getInt("folderId")
+                    if (folderId != null) {
+                        NoteFolder(folderId = folderId, navController = navController)
+                    }
                 }
                 composable("focus") { Focus(navController) }
                 composable("habitTracker") { HabitTracker(navController) }

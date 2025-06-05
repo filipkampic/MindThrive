@@ -1,19 +1,24 @@
 package com.filipkampic.mindthrive.ui.notes
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.filipkampic.mindthrive.R
 import com.filipkampic.mindthrive.model.notes.NoteFolder
-import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
@@ -21,7 +26,6 @@ import com.filipkampic.mindthrive.ui.theme.Peach
 fun FolderCardPreview() {
     FolderCard(
         folder = NoteFolder(id = 1, name = "Sample Folder"),
-        selected = true,
         onClick = {}
     )
 }
@@ -29,18 +33,31 @@ fun FolderCardPreview() {
 @Composable
 fun FolderCard(
     folder: NoteFolder,
-    selected: Boolean,
     onClick: () -> Unit
 ) {
-    val border = if (selected) Modifier.border(2.dp, Color.Cyan) else Modifier
     Box(
         modifier = Modifier
-            .padding(4.dp)
-            .then(border)
-            .clickable(onClick = onClick)
-            .background(Peach)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .aspectRatio(1f)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Text(folder.name, color = DarkBlue, fontWeight = FontWeight.Medium)
+        Image(
+            painter = painterResource(id = R.drawable.folder),
+            contentDescription = "Folder image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
+
+        Text(
+            text = folder.name,
+            color = Peach,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(bottom = 12.dp, start = 6.dp, end = 6.dp)
+                .align(Alignment.BottomCenter),
+            maxLines = 2
+        )
     }
 }

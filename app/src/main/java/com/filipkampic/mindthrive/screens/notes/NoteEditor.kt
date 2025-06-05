@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -45,11 +46,14 @@ import androidx.compose.material.icons.filled.LooksOne
 import androidx.compose.material.icons.filled.LooksTwo
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -97,6 +101,9 @@ fun NoteEditor(
     val viewModel: NotesViewModel = viewModel(factory = NotesViewModelFactory(context.applicationContext as Application))
 
     val note by viewModel.getNoteById(noteId).collectAsState(initial = null)
+    var selectedFolderId by remember { mutableStateOf<Int?>(null) }
+    val folders by viewModel.folders.collectAsState()
+    var expanded by remember { mutableStateOf(false) }
 
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
@@ -129,6 +136,12 @@ fun NoteEditor(
 
     LaunchedEffect(content) {
         scrollState.animateScrollTo(scrollState.maxValue)
+    }
+
+    LaunchedEffect(note) {
+        if (note != null && selectedFolderId == null) {
+            selectedFolderId = note!!.folderId
+        }
     }
 
     CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
@@ -189,7 +202,7 @@ fun NoteEditor(
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
-                        viewModel.saveNote(noteId, title, content)
+                        viewModel.saveNote(noteId, title, content, selectedFolderId)
                         navController.popBackStack()
                     },
                     containerColor = Peach,
@@ -229,6 +242,49 @@ fun NoteEditor(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .background(Peach, RoundedCornerShape(8.dp))
+                            .clickable { expanded = true }
+                            .padding(12.dp)
+                    ) {
+                        val selectedFolderName = folders.find { it.id == selectedFolderId }?.name ?: "Select folder"
+
+                        Text(
+                            text = selectedFolderName,
+                            color = DarkBlue
+                        )
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(Peach)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("No folder", color = DarkBlue) },
+                                onClick = {
+                                    selectedFolderId = null
+                                    expanded = false
+                                },
+                                colors = MenuDefaults.itemColors(textColor = DarkBlue),
+                                modifier = Modifier.background(Peach)
+                            )
+                            folders.forEach { folder ->
+                                DropdownMenuItem(
+                                    text = { Text(folder.name, color = DarkBlue) },
+                                    onClick = {
+                                        selectedFolderId = folder.id
+                                        expanded = false
+                                    },
+                                    modifier = Modifier.background(Peach),
+                                    colors = MenuDefaults.itemColors(textColor = DarkBlue)
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 

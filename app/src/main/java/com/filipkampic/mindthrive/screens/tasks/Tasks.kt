@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -25,6 +27,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -373,7 +377,7 @@ fun Tasks(
                         categoryToDelete.value = null
                         deleteMode.value = DeleteMode.REASSIGN
                     }) {
-                        Text("Delete")
+                        Text("Delete", color = Red)
                     }
                 },
                 dismissButton = {
@@ -381,31 +385,50 @@ fun Tasks(
                         categoryToDelete.value = null
                         deleteMode.value = DeleteMode.REASSIGN
                     }) {
-                        Text("Cancel")
+                        Text("Cancel", color = DarkBlue)
                     }
                 },
-                title = { Text("Delete category '${categoryToDelete.value}'?") },
+                title = {
+                    Text("Delete category '${categoryToDelete.value}'?", color = DarkBlue)
+                },
                 text = {
                     Column {
-                        Text("Do you want to delete all tasks in this category or move them to 'General'?")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row {
+                        Text(
+                            "Do you want to delete all tasks in this category or move them to 'General'?",
+                            color = DarkBlue
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { deleteMode.value = DeleteMode.REASSIGN }
+                                .padding(vertical = 6.dp)
+                        ) {
                             RadioButton(
                                 selected = deleteMode.value == DeleteMode.REASSIGN,
-                                onClick = { deleteMode.value = DeleteMode.REASSIGN }
+                                onClick = { deleteMode.value = DeleteMode.REASSIGN },
+                                colors = RadioButtonDefaults.colors(selectedColor = DarkBlue)
                             )
-                            Text("Reassign to 'General'", modifier = Modifier.clickable { deleteMode.value =
-                                DeleteMode.REASSIGN
-                            })
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Reassign to 'General'", color = DarkBlue)
                         }
-                        Row {
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { deleteMode.value = DeleteMode.DELETE }
+                                .padding(vertical = 6.dp)
+                        ) {
                             RadioButton(
                                 selected = deleteMode.value == DeleteMode.DELETE,
-                                onClick = { deleteMode.value = DeleteMode.DELETE }
+                                onClick = { deleteMode.value = DeleteMode.DELETE },
+                                colors = RadioButtonDefaults.colors(selectedColor = DarkBlue)
                             )
-                            Text("Delete tasks", modifier = Modifier.clickable { deleteMode.value =
-                                DeleteMode.DELETE
-                            })
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Delete tasks", color = DarkBlue)
                         }
                     }
                 },
