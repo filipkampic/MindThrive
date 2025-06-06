@@ -22,7 +22,7 @@ import androidx.navigation.navArgument
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.TaskRepository
 import com.filipkampic.mindthrive.screens.Calendar
-import com.filipkampic.mindthrive.screens.Focus
+import com.filipkampic.mindthrive.screens.focus.Focus
 import com.filipkampic.mindthrive.screens.Goals
 import com.filipkampic.mindthrive.screens.HabitTracker
 import com.filipkampic.mindthrive.screens.HomeScreen
