@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.screens.focus
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,7 +29,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
@@ -49,13 +47,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.material.MaterialTheme.colors
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import kotlinx.coroutines.delay
@@ -71,7 +69,7 @@ fun Pomodoro(
 
     val interactionSource = remember { MutableInteractionSource() }
 
-    val durationOptions = listOf(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120)
+    val durationOptions = listOf(1, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120)
     val sessionsOptions = listOf(1, 2, 3, 4, 5, 6)
     val breakOptions = (1..15).toList()
 
@@ -83,21 +81,50 @@ fun Pomodoro(
     val sessionCount = sessionsOptions[selectedSessionIndex]
     val breakDuration = breakOptions[selectedBreakIndex]
 
-    val totalSeconds by rememberSaveable { mutableIntStateOf(sessionDuration * 60) }
-    var timeLeft by rememberSaveable { mutableIntStateOf(totalSeconds) }
+    var currentSession by rememberSaveable { mutableIntStateOf(1) }
+    var isOnBreak by rememberSaveable { mutableStateOf(false) }
+    var isPaused by rememberSaveable { mutableStateOf(false) }
+    var isWaitingForNextPhase by rememberSaveable { mutableStateOf(false) }
+    var isReset by rememberSaveable { mutableStateOf(true) }
+    var timeLeft by rememberSaveable { mutableIntStateOf(durationOptions[selectedDurationIndex] * 60) }
+    var visualInitialTime by rememberSaveable { mutableIntStateOf(durationOptions[selectedDurationIndex] * 60) }
+
     val minutes = timeLeft / 60
     val seconds = timeLeft % 60
     val timeText = "%02d:%02d".format(minutes, seconds)
 
-    val currentSession by rememberSaveable { mutableIntStateOf(1) }
-    var isPaused by rememberSaveable { mutableStateOf(false) }
+    val progress = if (visualInitialTime > 0)
+        (timeLeft.toFloat() / visualInitialTime.toFloat()).coerceIn(0f, 1f)
+    else 0f
 
-    val progress = timeLeft.toFloat() / totalSeconds
+    val ringColor = if (isOnBreak) Color(0xFF88C0D0) else Peach
+    val ringBgColor = ringColor.copy(alpha = 0.2f)
 
-    LaunchedEffect(isRunning.value, isPaused, timeLeft) {
-        while(isRunning.value && !isPaused && timeLeft > 0) {
-            delay(1000L)
-            timeLeft--
+    LaunchedEffect(selectedDurationIndex) {
+        if (!isRunning.value && !isOnBreak) {
+            val newTime = sessionDuration * 60
+            timeLeft = newTime
+            visualInitialTime = newTime
+        }
+    }
+
+    LaunchedEffect(isRunning.value, isPaused, isWaitingForNextPhase, timeLeft) {
+        if (isRunning.value && !isPaused && !isWaitingForNextPhase) {
+            while (timeLeft > 0) {
+                delay(1000L)
+                timeLeft--
+            }
+
+            if (timeLeft == 0) {
+                if (!isOnBreak && currentSession == sessionCount) {
+                    isRunning.value = false
+                    isWaitingForNextPhase = false
+                    isReset = true
+                } else {
+                    isPaused = true
+                    isWaitingForNextPhase = true
+                }
+            }
         }
     }
 
@@ -124,11 +151,11 @@ fun Pomodoro(
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     drawCircle(
-                        color = Peach.copy(alpha = 0.2f),
+                        color = ringBgColor,
                         style = Stroke(12f)
                     )
                     drawArc(
-                        color = Peach,
+                        color = ringColor,
                         startAngle = -90f,
                         sweepAngle = 360f * progress,
                         useCenter = false,
@@ -138,7 +165,7 @@ fun Pomodoro(
                 Text(
                     text = timeText,
                     style = MaterialTheme.typography.displayLarge,
-                    color = Peach
+                    color = ringColor
                 )
             }
 
@@ -175,7 +202,14 @@ fun Pomodoro(
 
             Spacer(Modifier.height(8.dp))
 
-            Text("Session $currentSession / $sessionCount", color = Peach)
+            if (isRunning.value || isPaused || isWaitingForNextPhase) {
+                Text(
+                    text = "Session $currentSession / $sessionCount",
+                    color = Peach,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+
 
             Spacer(Modifier.height(16.dp))
 
@@ -280,12 +314,87 @@ fun Pomodoro(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 130.dp)
         ) {
-            if (!isRunning.value) {
+            if (isWaitingForNextPhase && !(currentSession == sessionCount && !isOnBreak)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            isWaitingForNextPhase = false
+                            isPaused = false
+
+                            if (isOnBreak) {
+                                isOnBreak = false
+
+                                if (currentSession >= sessionCount) {
+                                    isRunning.value = false
+                                    isWaitingForNextPhase = false
+                                    isReset = true
+                                    return@Button
+                                }
+
+                                currentSession++
+                                timeLeft = sessionDuration * 60
+                                visualInitialTime = timeLeft
+                            } else {
+                                if (currentSession == sessionCount) {
+                                    isRunning.value = false
+                                    isWaitingForNextPhase = false
+                                    isReset = true
+                                    return@Button
+                                }
+
+                                isOnBreak = true
+                                timeLeft = breakDuration * 60
+                                visualInitialTime = timeLeft
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Peach),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        Text(
+                            text = if (isOnBreak) "Start Session" else "Start Break",
+                            color = DarkBlue
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            isRunning.value = false
+                            isPaused = false
+                            isWaitingForNextPhase = false
+                            isReset = true
+                            currentSession = 1
+                            isOnBreak = false
+                            timeLeft = sessionDuration * 60
+                            visualInitialTime = timeLeft
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Stop,
+                            contentDescription = "Stop",
+                            tint = Peach
+                        )
+                    }
+                }
+            } else if (isReset) {
                 IconButton(
                     onClick = {
+                        currentSession = 1
+                        isOnBreak = false
                         timeLeft = sessionDuration * 60
+                        visualInitialTime = timeLeft
                         isRunning.value = true
                         isPaused = false
+                        isWaitingForNextPhase = false
+                        isReset = false
                     },
                     modifier = Modifier.size(64.dp)
                 ) {
@@ -296,7 +405,7 @@ fun Pomodoro(
                         tint = Peach
                     )
                 }
-            } else {
+            } else if (isRunning.value) {
                 Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                     IconButton(
                         onClick = { isPaused = !isPaused },
@@ -313,7 +422,9 @@ fun Pomodoro(
                     IconButton(
                         onClick = {
                             isRunning.value = false
+                            isReset = true
                             timeLeft = sessionDuration * 60
+                            visualInitialTime = timeLeft
                         },
                         modifier = Modifier.size(64.dp)
                     ) {
@@ -325,6 +436,8 @@ fun Pomodoro(
                         )
                     }
                 }
+            } else {
+                Spacer(modifier = Modifier.height(0.dp))
             }
         }
     }
