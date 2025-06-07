@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.focus.FocusBottomNavigation
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
@@ -42,7 +43,14 @@ fun Focus(navController: NavController) {
                 title = { Text(currentTab.replaceFirstChar { it.uppercase() }) },
                 actions = {
                     if (currentTab != "statistics") {
-                        IconButton(onClick = { currentTab = "statistics" }) {
+                        IconButton(
+                            onClick = {
+                                if (!isTimerRunning.value) {
+                                    currentTab = "statistics"
+                                }
+                            },
+                            enabled = !isTimerRunning.value
+                        ) {
                             Icon(Icons.Default.PieChart, contentDescription = "Statistics")
                         }
                     }
@@ -55,13 +63,16 @@ fun Focus(navController: NavController) {
                     navigationIconContentColor = Peach,
                     titleContentColor = Peach,
                     actionIconContentColor = Peach
-                )
+                ),
+                modifier = Modifier.alpha(if (isTimerRunning.value) 0.5f else 1f)
             )
         },
         bottomBar = {
             if (currentTab != "statistics") {
-                FocusBottomNavigation(current = currentTab) { selectedTab ->
-                    if (!isTimerRunning.value) currentTab = selectedTab
+                Box(modifier = Modifier.alpha(if (isTimerRunning.value) 0.5f else 1f)) {
+                    FocusBottomNavigation(current = currentTab) { selectedTab ->
+                        if (!isTimerRunning.value) currentTab = selectedTab
+                    }
                 }
             }
         }

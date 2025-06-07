@@ -48,7 +48,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -102,6 +104,7 @@ fun Pomodoro(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(DarkBlue)
             .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
                 focusManager.clearFocus()
             }
@@ -109,7 +112,6 @@ fun Pomodoro(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(DarkBlue)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -152,7 +154,9 @@ fun Pomodoro(
                     value = activityName,
                     onValueChange = { if (!isRunning.value) activityName = it },
                     label = { Text("Activity name", color = Peach) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .blockIfRunning(isRunning.value),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text
@@ -195,61 +199,87 @@ fun Pomodoro(
 
             Spacer(Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Box(
+                modifier = Modifier.alpha(if (isRunning.value) 0.5f else 1f)
             ) {
-                Slider(
-                    value = selectedDurationIndex.toFloat(),
-                    onValueChange = { if (!isRunning.value) selectedDurationIndex = it.roundToInt().coerceIn(durationOptions.indices) },
-                    valueRange = 0f..(durationOptions.size - 1).toFloat(),
-                    steps = durationOptions.size - 2,
-                    modifier = Modifier.weight(1f),
-                    colors = SliderDefaults.colors(thumbColor = Peach, activeTrackColor = Peach),
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-                Spacer(Modifier.width(8.dp))
-                Slider(
-                    value = selectedSessionIndex.toFloat(),
-                    onValueChange = { if (!isRunning.value) selectedSessionIndex = it.roundToInt().coerceIn(sessionsOptions.indices) },
-                    valueRange = 0f..(sessionsOptions.size - 1).toFloat(),
-                    steps = sessionsOptions.size - 2,
-                    modifier = Modifier.weight(1f),
-                    colors = SliderDefaults.colors(thumbColor = Peach, activeTrackColor = Peach),
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-                Spacer(Modifier.width(8.dp))
-                Slider(
-                    value = selectedBreakIndex.toFloat(),
-                    onValueChange = { if (!isRunning.value) selectedBreakIndex = it.roundToInt().coerceIn(breakOptions.indices) },
-                    valueRange = 0f..(breakOptions.size - 1).toFloat(),
-                    steps = breakOptions.size - 2,
-                    modifier = Modifier.weight(1f),
-                    colors = SliderDefaults.colors(thumbColor = Peach, activeTrackColor = Peach),
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Button(
-                onClick = {
-                    if (!isRunning.value) {
-                        selectedDurationIndex = durationOptions.indexOf(25)
-                        selectedSessionIndex = sessionsOptions.indexOf(4)
-                        selectedBreakIndex = breakOptions.indexOf(5)
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Slider(
+                            value = selectedDurationIndex.toFloat(),
+                            onValueChange = {
+                                if (!isRunning.value) selectedDurationIndex =
+                                    it.roundToInt().coerceIn(durationOptions.indices)
+                            },
+                            valueRange = 0f..(durationOptions.size - 1).toFloat(),
+                            steps = durationOptions.size - 2,
+                            modifier = Modifier
+                                .weight(1f)
+                                .blockIfRunning(isRunning.value),
+                            colors = SliderDefaults.colors(thumbColor = Peach, activeTrackColor = Peach),
+                            interactionSource = remember { MutableInteractionSource() }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Slider(
+                            value = selectedSessionIndex.toFloat(),
+                            onValueChange = {
+                                if (!isRunning.value) selectedSessionIndex =
+                                    it.roundToInt().coerceIn(sessionsOptions.indices)
+                            },
+                            valueRange = 0f..(sessionsOptions.size - 1).toFloat(),
+                            steps = sessionsOptions.size - 2,
+                            modifier = Modifier
+                                .weight(1f)
+                                .blockIfRunning(isRunning.value),
+                            colors = SliderDefaults.colors(thumbColor = Peach, activeTrackColor = Peach),
+                            interactionSource = remember { MutableInteractionSource() }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Slider(
+                            value = selectedBreakIndex.toFloat(),
+                            onValueChange = {
+                                if (!isRunning.value) selectedBreakIndex =
+                                    it.roundToInt().coerceIn(breakOptions.indices)
+                            },
+                            valueRange = 0f..(breakOptions.size - 1).toFloat(),
+                            steps = breakOptions.size - 2,
+                            modifier = Modifier
+                                .weight(1f)
+                                .blockIfRunning(isRunning.value),
+                            colors = SliderDefaults.colors(thumbColor = Peach, activeTrackColor = Peach),
+                            interactionSource = remember { MutableInteractionSource() }
+                        )
                     }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Peach),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Text("Set Default", color = DarkBlue)
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Button(
+                        onClick = {
+                            if (!isRunning.value) {
+                                selectedDurationIndex = durationOptions.indexOf(25)
+                                selectedSessionIndex = sessionsOptions.indexOf(4)
+                                selectedBreakIndex = breakOptions.indexOf(5)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Peach),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .blockIfRunning(isRunning.value)
+                    ) {
+                        Text("Set Default", color = DarkBlue)
+                    }
+                }
             }
+        }
 
-            Spacer(Modifier.height(12.dp))
-
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 130.dp)
+        ) {
             if (!isRunning.value) {
                 IconButton(
                     onClick = {
@@ -257,9 +287,7 @@ fun Pomodoro(
                         isRunning.value = true
                         isPaused = false
                     },
-                    modifier = Modifier
-                        .size(64.dp)
-                        .align(Alignment.CenterHorizontally)
+                    modifier = Modifier.size(64.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
@@ -269,10 +297,7 @@ fun Pomodoro(
                     )
                 }
             } else {
-                Row(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp)
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                     IconButton(
                         onClick = { isPaused = !isPaused },
                         modifier = Modifier.size(64.dp)
@@ -302,31 +327,13 @@ fun Pomodoro(
                 }
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            OutlinedButton(
-                onClick = { /* TODO */ },
-                modifier = Modifier.width(150.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Peach),
-                border = BorderStroke(width = 1.dp, color = Peach),
-                enabled = !isRunning.value
-            ) {
-                Text("Ambient Sound", color = Peach)
-            }
-            OutlinedButton(
-                onClick = { /* TODO */ },
-                modifier = Modifier.width(150.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Peach),
-                border = BorderStroke(width = 1.dp, color = Peach),
-                enabled = !isRunning.value
-            ) {
-                Text("Block Notifications", color = Peach)
-            }
-        }
+fun Modifier.blockIfRunning(isRunning: Boolean): Modifier {
+    return if (isRunning) {
+        this.pointerInput(Unit) {}
+    } else {
+        this
     }
 }
