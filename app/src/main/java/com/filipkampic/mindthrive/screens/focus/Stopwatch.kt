@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.filipkampic.mindthrive.ui.focus.ActivityNameInput
+import com.filipkampic.mindthrive.ui.focus.FocusResults
 import com.filipkampic.mindthrive.ui.focus.FocusTimer
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
@@ -46,15 +47,19 @@ fun Stopwatch(modifier: Modifier = Modifier) {
     var isPaused by rememberSaveable { mutableStateOf(false) }
     var time by rememberSaveable { mutableIntStateOf(0) }
     var activityName by rememberSaveable { mutableStateOf("") }
+    var totalTimeInSeconds by rememberSaveable { mutableIntStateOf(0) }
 
     val minutes = time / 60
     val seconds = time % 60
     val timeText = "%02d:%02d".format(minutes, seconds)
 
+    var showResults by rememberSaveable { mutableStateOf(false) }
+
     LaunchedEffect(isRunning, isPaused) {
         while (isRunning && !isPaused) {
             delay(1000)
             time++
+            totalTimeInSeconds++
         }
     }
 
@@ -66,72 +71,85 @@ fun Stopwatch(modifier: Modifier = Modifier) {
                 focusManager.clearFocus()
             }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(DarkBlue)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(100.dp))
-
-            FocusTimer(timeText = timeText, ringColor = Peach)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ActivityNameInput(
-                value = activityName,
-                onValueChange = { activityName = it },
-                isReadOnly = false
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            if (!isRunning) {
-                IconButton(
-                    onClick = {
-                        isRunning = true
-                        isPaused = false
-                        time = 0
-                    },
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start",
-                        modifier = Modifier.fillMaxSize(),
-                        tint = Peach
-                    )
+        if (showResults) {
+            FocusResults(
+                title = "Deep Work Complete",
+                totalTime = totalTimeInSeconds,
+                activityName = activityName,
+                onDone = {
+                    showResults = false
+                    activityName = ""
                 }
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                    IconButton(
-                        onClick = { isPaused = !isPaused },
-                        modifier = Modifier.size(64.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                            contentDescription = if (isPaused) "Resume" else "Pause",
-                            modifier = Modifier.fillMaxSize(),
-                            tint = Peach
-                        )
-                    }
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(DarkBlue)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(100.dp))
 
+                FocusTimer(timeText = timeText, ringColor = Peach)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ActivityNameInput(
+                    value = activityName,
+                    onValueChange = { activityName = it },
+                    isReadOnly = false
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                if (!isRunning) {
                     IconButton(
                         onClick = {
-                            isRunning = false
+                            isRunning = true
                             isPaused = false
                             time = 0
                         },
                         modifier = Modifier.size(64.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Stop,
-                            contentDescription = "Stop",
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Start",
                             modifier = Modifier.fillMaxSize(),
                             tint = Peach
                         )
+                    }
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                        IconButton(
+                            onClick = { isPaused = !isPaused },
+                            modifier = Modifier.size(64.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                contentDescription = if (isPaused) "Resume" else "Pause",
+                                modifier = Modifier.fillMaxSize(),
+                                tint = Peach
+                            )
+                        }
+
+                        IconButton(
+                            onClick = {
+                                isRunning = false
+                                isPaused = false
+                                time = 0
+                                showResults = true
+                            },
+                            modifier = Modifier.size(64.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Stop,
+                                contentDescription = "Stop",
+                                modifier = Modifier.fillMaxSize(),
+                                tint = Peach
+                            )
+                        }
                     }
                 }
             }
