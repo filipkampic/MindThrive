@@ -3,7 +3,6 @@ package com.filipkampic.mindthrive.screens.focus
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PieChart
@@ -79,9 +78,7 @@ fun Focus(navController: NavController) {
     ) { padding ->
         when (currentTab) {
             "pomodoro" -> Pomodoro(modifier = Modifier.padding(padding), isRunning = isTimerRunning)
-            "stopwatch" -> {
-                Text("Stopwatch ", modifier = Modifier.padding(padding))
-            }
+            "stopwatch" -> Stopwatch(modifier = Modifier.padding(padding))
             "statistics" -> {
                 Text("Statistics ", modifier = Modifier.padding(padding))
             }

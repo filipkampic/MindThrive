@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.screens.focus
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,9 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.LocalTextSelectionColors
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -28,14 +24,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -48,12 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.filipkampic.mindthrive.ui.focus.ActivityNameInput
+import com.filipkampic.mindthrive.ui.focus.FocusTimer
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import kotlinx.coroutines.delay
@@ -67,9 +58,7 @@ fun Pomodoro(
     var activityName by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    val interactionSource = remember { MutableInteractionSource() }
-
-    val durationOptions = listOf(1, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120)
+    val durationOptions = listOf(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120)
     val sessionsOptions = listOf(1, 2, 3, 4, 5, 6)
     val breakOptions = (1..15).toList()
 
@@ -96,9 +85,6 @@ fun Pomodoro(
     val progress = if (visualInitialTime > 0)
         (timeLeft.toFloat() / visualInitialTime.toFloat()).coerceIn(0f, 1f)
     else 0f
-
-    val ringColor = if (isOnBreak) Color(0xFF88C0D0) else Peach
-    val ringBgColor = ringColor.copy(alpha = 0.2f)
 
     LaunchedEffect(selectedDurationIndex) {
         if (!isRunning.value && !isOnBreak) {
@@ -145,60 +131,19 @@ fun Pomodoro(
         ) {
             Spacer(modifier = Modifier.height(100.dp))
 
-            Box(
-                modifier = Modifier.size(220.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawCircle(
-                        color = ringBgColor,
-                        style = Stroke(12f)
-                    )
-                    drawArc(
-                        color = ringColor,
-                        startAngle = -90f,
-                        sweepAngle = 360f * progress,
-                        useCenter = false,
-                        style = Stroke(12f)
-                    )
-                }
-                Text(
-                    text = timeText,
-                    style = MaterialTheme.typography.displayLarge,
-                    color = ringColor
-                )
-            }
+            FocusTimer(
+                timeText = timeText,
+                ringColor = if (isOnBreak) Color(0xFF88C0D0) else Peach,
+                progress = progress
+            )
 
             Spacer(Modifier.height(16.dp))
 
-            val customTextSelectionColors = TextSelectionColors(
-                handleColor = Peach,
-                backgroundColor = Peach.copy(alpha = 0.4f)
+            ActivityNameInput(
+                value = activityName,
+                onValueChange = { if (!isRunning.value) activityName = it },
+                isReadOnly = isRunning.value
             )
-
-            CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
-                OutlinedTextField(
-                    value = activityName,
-                    onValueChange = { if (!isRunning.value) activityName = it },
-                    label = { Text("Activity name", color = Peach) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .blockIfRunning(isRunning.value),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Peach,
-                        focusedBorderColor = Peach,
-                        cursorColor = Peach,
-                        focusedTextColor = Peach,
-                        unfocusedTextColor = Peach
-                    ),
-                    interactionSource = interactionSource,
-                    readOnly = isRunning.value
-                )
-            }
 
             Spacer(Modifier.height(8.dp))
 
