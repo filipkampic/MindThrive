@@ -23,6 +23,16 @@ fun Focus(navController: NavController) {
 
     val isTimerRunning = remember { mutableStateOf(false) }
 
+    var pomodoroShowPlanner by remember { mutableStateOf(false) }
+    var pomodoroShowResults by remember { mutableStateOf(false) }
+
+    val shouldShowBottomBar = when (currentTab) {
+        "pomodoro" -> !pomodoroShowPlanner && !pomodoroShowResults
+        "stopwatch" -> true
+        "statistics" -> true
+        else -> true
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,17 +77,25 @@ fun Focus(navController: NavController) {
             )
         },
         bottomBar = {
-            if (currentTab != "statistics") {
+            if (shouldShowBottomBar && currentTab != "statistics") {
                 Box(modifier = Modifier.alpha(if (isTimerRunning.value) 0.5f else 1f)) {
-                    FocusBottomNavigation(current = currentTab) { selectedTab ->
-                        if (!isTimerRunning.value) currentTab = selectedTab
-                    }
+                    FocusBottomNavigation(
+                        current = currentTab,
+                        onTabSelected = { selectedTab ->
+                            if (!isTimerRunning.value) currentTab = selectedTab
+                        }
+                    )
                 }
             }
         }
     ) { padding ->
         when (currentTab) {
-            "pomodoro" -> Pomodoro(modifier = Modifier.padding(padding), isRunning = isTimerRunning)
+            "pomodoro" -> Pomodoro(
+                modifier = Modifier.padding(padding),
+                isRunning = isTimerRunning,
+                onShowPlannerChange = { pomodoroShowPlanner = it },
+                onShowResultsChange = { pomodoroShowResults = it }
+            )
             "stopwatch" -> Stopwatch(modifier = Modifier.padding(padding))
             "statistics" -> {
                 Text("Statistics ", modifier = Modifier.padding(padding))

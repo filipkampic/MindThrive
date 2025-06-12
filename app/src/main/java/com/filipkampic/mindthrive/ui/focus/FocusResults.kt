@@ -58,9 +58,9 @@ fun FocusResults(
             Text("Sessions: $it", color = Peach)
         }
 
-        activityName?.takeIf { it.isNotBlank() }?.let {
+        activityName?.takeIf { it.isNotBlank() }?.split("|")?.forEachIndexed { index, activity ->
             Spacer(Modifier.height(8.dp))
-            Text("Activity: $it", color = Peach)
+            Text("Activity ${index + 1}: $activity", color = Peach)
         }
 
         Spacer(Modifier.height(32.dp))
