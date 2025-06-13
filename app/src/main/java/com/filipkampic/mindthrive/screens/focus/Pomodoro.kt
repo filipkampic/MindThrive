@@ -61,6 +61,7 @@ fun Pomodoro(
     isRunning: MutableState<Boolean>,
     onShowPlannerChange: (Boolean) -> Unit,
     onShowResultsChange: (Boolean) -> Unit,
+    isAlarmEnabled: Boolean,
     viewModel: FocusViewModel
 ) {
     val focusManager = LocalFocusManager.current
@@ -155,8 +156,10 @@ fun Pomodoro(
             }
 
             if (timeLeft == 0) {
-                mediaPlayer.seekTo(0)
-                mediaPlayer.start()
+                if (isAlarmEnabled) {
+                    mediaPlayer.seekTo(0)
+                    mediaPlayer.start()
+                }
 
                 if (!isOnBreak && currentSession == sessionCount) {
                     completedSessions++
@@ -195,6 +198,7 @@ fun Pomodoro(
                     showResults = false
                     resetAllStates()
                     plannedActivities = null
+                    viewModel.pomodoroPlannedActivities = null
 
                     viewModel.pomodoroSessionPlans.clear()
                     repeat(sessionCount) { viewModel.pomodoroSessionPlans.add("") }

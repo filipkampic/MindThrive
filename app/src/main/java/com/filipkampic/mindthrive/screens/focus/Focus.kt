@@ -1,6 +1,6 @@
 package com.filipkampic.mindthrive.screens.focus
 
-import androidx.compose.foundation.interaction.FocusInteraction
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -10,8 +10,10 @@ import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.focus.FocusBottomNavigation
@@ -22,6 +24,7 @@ import com.filipkampic.mindthrive.viewmodel.FocusViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Focus(navController: NavController) {
+    val context = LocalContext.current
     val focusViewModel: FocusViewModel = viewModel()
 
     var currentTab by rememberSaveable { mutableStateOf("pomodoro") }
@@ -36,6 +39,13 @@ fun Focus(navController: NavController) {
         "stopwatch" -> true
         "statistics" -> true
         else -> true
+    }
+
+    var menuExpanded by remember { mutableStateOf(false) }
+    val isAlarmEnabled by focusViewModel::isAlarmEnabled
+
+    LaunchedEffect(Unit) {
+        focusViewModel.observeAlarmEnabled(context)
     }
 
     Scaffold(
@@ -68,8 +78,37 @@ fun Focus(navController: NavController) {
                             Icon(Icons.Default.PieChart, contentDescription = "Statistics")
                         }
                     }
-                    IconButton(onClick = { /* TODO: hamburger meni */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    Box {
+                        IconButton(
+                            onClick = { menuExpanded = true },
+                            enabled = !isTimerRunning.value
+                        ) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More")
+                        }
+
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                            modifier = Modifier.background(Peach)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(
+                                            checked = isAlarmEnabled,
+                                            onCheckedChange = {
+                                                focusViewModel.saveAlarmEnabled(context, it)
+                                            },
+                                            colors = CheckboxDefaults.colors(checkedColor = DarkBlue, uncheckedColor = DarkBlue)
+                                        )
+                                        Text("Enable Alarm", color = DarkBlue)
+                                    }
+                                },
+                                onClick = {
+                                    focusViewModel.saveAlarmEnabled(context, !isAlarmEnabled)
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -100,6 +139,7 @@ fun Focus(navController: NavController) {
                 isRunning = isTimerRunning,
                 onShowPlannerChange = { pomodoroShowPlanner = it },
                 onShowResultsChange = { pomodoroShowResults = it },
+                isAlarmEnabled = isAlarmEnabled,
                 viewModel = focusViewModel
             )
             "stopwatch" -> Stopwatch(
