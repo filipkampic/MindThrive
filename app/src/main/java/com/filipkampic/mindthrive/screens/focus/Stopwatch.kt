@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.filipkampic.mindthrive.ui.focus.ActivityNameInput
@@ -48,6 +51,7 @@ fun Stopwatch(modifier: Modifier = Modifier) {
     var time by rememberSaveable { mutableIntStateOf(0) }
     var activityName by rememberSaveable { mutableStateOf("") }
     var totalTimeInSeconds by rememberSaveable { mutableIntStateOf(0) }
+    var triedToStartWithoutActivity by remember { mutableStateOf(false) }
 
     val minutes = time / 60
     val seconds = time % 60
@@ -75,7 +79,7 @@ fun Stopwatch(modifier: Modifier = Modifier) {
             FocusResults(
                 title = "Deep Work Complete",
                 totalTime = totalTimeInSeconds,
-                activityName = activityName,
+                activityName = "Activity: $activityName",
                 onDone = {
                     showResults = false
                     activityName = ""
@@ -90,7 +94,7 @@ fun Stopwatch(modifier: Modifier = Modifier) {
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(152.dp))
 
                 FocusTimer(timeText = timeText, ringColor = Peach)
 
@@ -98,27 +102,49 @@ fun Stopwatch(modifier: Modifier = Modifier) {
 
                 ActivityNameInput(
                     value = activityName,
-                    onValueChange = { activityName = it },
+                    onValueChange = {
+                        activityName = it
+                        if (triedToStartWithoutActivity && it.isNotBlank()) {
+                            triedToStartWithoutActivity = false
+                        }
+                    },
                     isReadOnly = false
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
                 if (!isRunning) {
-                    IconButton(
-                        onClick = {
-                            isRunning = true
-                            isPaused = false
-                            time = 0
-                        },
-                        modifier = Modifier.size(64.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Start",
-                            modifier = Modifier.fillMaxSize(),
-                            tint = Peach
-                        )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(
+                            onClick = {
+                                if (activityName.isBlank()) {
+                                    triedToStartWithoutActivity = true
+                                } else {
+                                    isRunning = true
+                                    isPaused = false
+                                    time = 0
+                                    triedToStartWithoutActivity = false
+                                }
+                            },
+                            modifier = Modifier.size(64.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Start",
+                                modifier = Modifier.fillMaxSize(),
+                                tint = Peach
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .height(20.dp)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (triedToStartWithoutActivity) {
+                                Text(text = "Please enter an activity first", color = Color.Red)
+                            }
+                        }
                     }
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {

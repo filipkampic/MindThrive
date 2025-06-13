@@ -48,9 +48,11 @@ fun FocusResults(
         )
 
         Spacer(Modifier.height(16.dp))
+
         Text("Deep Work Complete!", color = Peach, fontSize = 24.sp)
 
         Spacer(Modifier.height(8.dp))
+
         Text("Time: $timeFormatted", color = Peach)
 
         sessions?.let {
@@ -58,12 +60,20 @@ fun FocusResults(
             Text("Sessions: $it", color = Peach)
         }
 
-        activityName?.takeIf { it.isNotBlank() }?.split("|")?.forEachIndexed { index, activity ->
-            Spacer(Modifier.height(8.dp))
-            Text("Activity ${index + 1}: $activity", color = Peach)
+        activityName?.takeIf { it.isNotBlank() }?.let { names ->
+            if (names.startsWith("Activity:")) {
+                Spacer(Modifier.height(8.dp))
+                Text(text = names, color = Peach)
+            } else {
+                names.split("|").forEachIndexed { index, activity ->
+                    Spacer(Modifier.height(8.dp))
+                    Text("Activity ${index + 1}: $activity", color = Peach)
+                }
+            }
         }
 
         Spacer(Modifier.height(32.dp))
+
         Button(onClick = onDone, colors = ButtonDefaults.buttonColors(containerColor = Peach)) {
             Text("Return", color = DarkBlue)
         }

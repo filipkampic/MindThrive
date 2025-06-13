@@ -61,7 +61,7 @@ fun Pomodoro(
 ) {
     val focusManager = LocalFocusManager.current
 
-    val durationOptions = listOf(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120)
+    val durationOptions = listOf(1, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120)
     val sessionsOptions = listOf(1, 2, 3, 4, 5, 6)
     val breakOptions = (1..15).toList()
 
@@ -74,6 +74,7 @@ fun Pomodoro(
     val breakDuration = breakOptions[selectedBreakIndex]
 
     var currentSession by rememberSaveable { mutableIntStateOf(1) }
+    var completedSessions by rememberSaveable { mutableIntStateOf(0) }
     var isOnBreak by rememberSaveable { mutableStateOf(false) }
     var isPaused by rememberSaveable { mutableStateOf(false) }
     var isWaitingForNextPhase by rememberSaveable { mutableStateOf(false) }
@@ -104,6 +105,7 @@ fun Pomodoro(
 
     fun resetAllStates() {
         currentSession = 1
+        completedSessions = 0
         isOnBreak = false
         isPaused = false
         isWaitingForNextPhase = false
@@ -151,11 +153,15 @@ fun Pomodoro(
 
             if (timeLeft == 0) {
                 if (!isOnBreak && currentSession == sessionCount) {
+                    completedSessions++
                     isRunning.value = false
                     isWaitingForNextPhase = false
                     isReset = true
                     showResults = true
                 } else {
+                    if (!isOnBreak) {
+                        completedSessions++
+                    }
                     isPaused = true
                     isWaitingForNextPhase = true
                 }
@@ -177,8 +183,8 @@ fun Pomodoro(
             FocusResults(
                 title = "Deep Work Complete",
                 totalTime = totalTimeInSeconds,
-                sessions = sessionCount,
-                activityName = plannedActivities?.joinToString("|"),
+                sessions = completedSessions,
+                activityName = plannedActivities?.take(completedSessions)?.joinToString("|"),
                 onDone = {
                     showResults = false
                     resetAllStates()
@@ -447,10 +453,16 @@ fun Pomodoro(
                                 isPaused = false
                                 isWaitingForNextPhase = false
                                 isReset = true
+
+                                if (totalTimeInSeconds > 0) {
+                                    showResults = true
+                                } else {
+                                    timeLeft = sessionDuration * 60
+                                    visualInitialTime = timeLeft
+                                }
+
                                 currentSession = 1
                                 isOnBreak = false
-                                timeLeft = sessionDuration * 60
-                                visualInitialTime = timeLeft
                             },
                             modifier = Modifier.size(48.dp)
                         ) {
@@ -517,9 +529,19 @@ fun Pomodoro(
                         IconButton(
                             onClick = {
                                 isRunning.value = false
+                                isPaused = false
+                                isWaitingForNextPhase = false
                                 isReset = true
-                                timeLeft = sessionDuration * 60
-                                visualInitialTime = timeLeft
+
+                                if (totalTimeInSeconds > 0) {
+                                    showResults = true
+                                } else {
+                                    timeLeft = sessionDuration * 60
+                                    visualInitialTime = timeLeft
+                                }
+
+                                currentSession = 1
+                                isOnBreak = false
                             },
                             modifier = Modifier.size(64.dp)
                         ) {
