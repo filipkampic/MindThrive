@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.screens.focus
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,7 +33,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,8 +42,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import com.filipkampic.mindthrive.R
 import com.filipkampic.mindthrive.ui.focus.FocusResults
 import com.filipkampic.mindthrive.ui.focus.FocusTimer
 import com.filipkampic.mindthrive.ui.focus.SessionPlanner
@@ -101,6 +103,9 @@ fun Pomodoro(
 
     var showResults by rememberSaveable { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val mediaPlayer = remember { MediaPlayer.create(context, R.raw.alarm_sound)}
+
     fun resetAllStates() {
         currentSession = 1
         completedSessions = 0
@@ -150,6 +155,9 @@ fun Pomodoro(
             }
 
             if (timeLeft == 0) {
+                mediaPlayer.seekTo(0)
+                mediaPlayer.start()
+
                 if (!isOnBreak && currentSession == sessionCount) {
                     completedSessions++
                     isRunning.value = false
