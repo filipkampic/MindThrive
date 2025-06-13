@@ -40,16 +40,20 @@ import com.filipkampic.mindthrive.ui.focus.FocusResults
 import com.filipkampic.mindthrive.ui.focus.FocusTimer
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
+import com.filipkampic.mindthrive.viewmodel.FocusViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun Stopwatch(modifier: Modifier = Modifier) {
+fun Stopwatch(
+    modifier: Modifier = Modifier,
+    viewModel: FocusViewModel
+) {
     val focusManager = LocalFocusManager.current
 
     var isRunning by rememberSaveable { mutableStateOf(false) }
     var isPaused by rememberSaveable { mutableStateOf(false) }
     var time by rememberSaveable { mutableIntStateOf(0) }
-    var activityName by rememberSaveable { mutableStateOf("") }
+    var activityName = viewModel.stopwatchActivityName
     var totalTimeInSeconds by rememberSaveable { mutableIntStateOf(0) }
     var triedToStartWithoutActivity by remember { mutableStateOf(false) }
 
@@ -101,9 +105,9 @@ fun Stopwatch(modifier: Modifier = Modifier) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ActivityNameInput(
-                    value = activityName,
+                    value = viewModel.stopwatchActivityName,
                     onValueChange = {
-                        activityName = it
+                        viewModel.stopwatchActivityName = it
                         if (triedToStartWithoutActivity && it.isNotBlank()) {
                             triedToStartWithoutActivity = false
                         }

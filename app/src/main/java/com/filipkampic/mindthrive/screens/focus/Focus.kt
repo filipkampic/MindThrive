@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.screens.focus
 
+import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,14 +12,18 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.focus.FocusBottomNavigation
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
+import com.filipkampic.mindthrive.viewmodel.FocusViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Focus(navController: NavController) {
+    val focusViewModel: FocusViewModel = viewModel()
+
     var currentTab by rememberSaveable { mutableStateOf("pomodoro") }
 
     val isTimerRunning = remember { mutableStateOf(false) }
@@ -94,9 +99,13 @@ fun Focus(navController: NavController) {
                 modifier = Modifier.padding(padding),
                 isRunning = isTimerRunning,
                 onShowPlannerChange = { pomodoroShowPlanner = it },
-                onShowResultsChange = { pomodoroShowResults = it }
+                onShowResultsChange = { pomodoroShowResults = it },
+                viewModel = focusViewModel
             )
-            "stopwatch" -> Stopwatch(modifier = Modifier.padding(padding))
+            "stopwatch" -> Stopwatch(
+                modifier = Modifier.padding(padding),
+                viewModel = focusViewModel
+            )
             "statistics" -> {
                 Text("Statistics ", modifier = Modifier.padding(padding))
             }

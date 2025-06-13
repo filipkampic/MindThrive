@@ -49,6 +49,7 @@ import com.filipkampic.mindthrive.ui.focus.FocusTimer
 import com.filipkampic.mindthrive.ui.focus.SessionPlanner
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
+import com.filipkampic.mindthrive.viewmodel.FocusViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -57,7 +58,8 @@ fun Pomodoro(
     modifier: Modifier = Modifier,
     isRunning: MutableState<Boolean>,
     onShowPlannerChange: (Boolean) -> Unit,
-    onShowResultsChange: (Boolean) -> Unit
+    onShowResultsChange: (Boolean) -> Unit,
+    viewModel: FocusViewModel
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -65,9 +67,9 @@ fun Pomodoro(
     val sessionsOptions = listOf(1, 2, 3, 4, 5, 6)
     val breakOptions = (1..15).toList()
 
-    var selectedDurationIndex by rememberSaveable { mutableIntStateOf(3) }
-    var selectedSessionIndex by rememberSaveable { mutableIntStateOf(3) }
-    var selectedBreakIndex by rememberSaveable { mutableIntStateOf(4) }
+    var selectedDurationIndex by viewModel::pomodoroDurationIndex
+    var selectedSessionIndex by viewModel::pomodoroSessionIndex
+    var selectedBreakIndex by viewModel::pomodoroBreakIndex
 
     val sessionDuration = durationOptions[selectedDurationIndex]
     val sessionCount = sessionsOptions[selectedSessionIndex]
@@ -92,12 +94,8 @@ fun Pomodoro(
     else 0f
 
     var showPlanner by remember { mutableStateOf(false) }
-    val sessionPlans = remember {
-        mutableStateListOf<String>().apply {
-            repeat(sessionCount) { add("") }
-        }
-    }
-    var plannedActivities by remember { mutableStateOf<List<String>?>(null) }
+    val sessionPlans = viewModel.pomodoroSessionPlans
+    var plannedActivities = viewModel.pomodoroPlannedActivities
     val activityName = plannedActivities?.getOrNull(currentSession - 1).orEmpty()
     var triedToStartWithoutPlanning by remember { mutableStateOf(false) }
 
@@ -189,6 +187,9 @@ fun Pomodoro(
                     showResults = false
                     resetAllStates()
                     plannedActivities = null
+
+                    viewModel.pomodoroSessionPlans.clear()
+                    repeat(sessionCount) { viewModel.pomodoroSessionPlans.add("") }
                 }
             )
         } else {
@@ -196,9 +197,9 @@ fun Pomodoro(
                 SessionPlanner(
                     sessionCount = sessionCount,
                     sessionPlans = sessionPlans,
-                    onSessionPlansChanged = { index, value -> sessionPlans[index] = value },
+                    onSessionPlansChanged = { index, value -> viewModel.pomodoroSessionPlans[index] = value },
                     onPlanConfirmed = {
-                        plannedActivities = sessionPlans.toList()
+                        viewModel.pomodoroPlannedActivities = sessionPlans.toList()
                         triedToStartWithoutPlanning = false
                         showPlanner = false
                         isReset = true
