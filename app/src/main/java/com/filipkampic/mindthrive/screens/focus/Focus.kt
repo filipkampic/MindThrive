@@ -146,9 +146,10 @@ fun Focus(navController: NavController) {
                 modifier = Modifier.padding(padding),
                 viewModel = focusViewModel
             )
-            "statistics" -> {
-                Text("Statistics ", modifier = Modifier.padding(padding))
-            }
+            "statistics" -> Statistics(
+                modifier = Modifier.padding(padding),
+                viewModel = focusViewModel
+            )
         }
     }
 }

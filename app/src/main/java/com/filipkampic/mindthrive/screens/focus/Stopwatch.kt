@@ -53,7 +53,7 @@ fun Stopwatch(
     var isRunning by rememberSaveable { mutableStateOf(false) }
     var isPaused by rememberSaveable { mutableStateOf(false) }
     var time by rememberSaveable { mutableIntStateOf(0) }
-    var activityName = viewModel.stopwatchActivityName
+    val activityName = viewModel.stopwatchActivityName
     var totalTimeInSeconds by rememberSaveable { mutableIntStateOf(0) }
     var triedToStartWithoutActivity by remember { mutableStateOf(false) }
 
@@ -85,8 +85,8 @@ fun Stopwatch(
                 totalTime = totalTimeInSeconds,
                 activityName = "Activity: $activityName",
                 onDone = {
+                    viewModel.stopwatchActivityName = ""
                     showResults = false
-                    activityName = ""
                 }
             )
         } else {
@@ -170,6 +170,8 @@ fun Stopwatch(
                                 isPaused = false
                                 time = 0
                                 showResults = true
+                                viewModel.logFocusSession(totalTimeInSeconds)
+                                viewModel.addFocusToPreferences(totalTimeInSeconds)
                             },
                             modifier = Modifier.size(64.dp)
                         ) {

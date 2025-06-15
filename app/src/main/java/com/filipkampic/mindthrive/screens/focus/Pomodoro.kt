@@ -167,6 +167,7 @@ fun Pomodoro(
                     isWaitingForNextPhase = false
                     isReset = true
                     showResults = true
+                    viewModel.logFocusSession(totalTimeInSeconds)
                 } else {
                     if (!isOnBreak) {
                         completedSessions++
@@ -468,6 +469,8 @@ fun Pomodoro(
                                 isReset = true
 
                                 if (totalTimeInSeconds > 0) {
+                                    viewModel.logFocusSession(totalTimeInSeconds)
+                                    viewModel.addFocusToPreferences(totalTimeInSeconds)
                                     showResults = true
                                 } else {
                                     timeLeft = sessionDuration * 60
@@ -547,6 +550,8 @@ fun Pomodoro(
                                 isReset = true
 
                                 if (totalTimeInSeconds > 0) {
+                                    viewModel.logFocusSession(totalTimeInSeconds)
+                                    viewModel.addFocusToPreferences(totalTimeInSeconds)
                                     showResults = true
                                 } else {
                                     timeLeft = sessionDuration * 60

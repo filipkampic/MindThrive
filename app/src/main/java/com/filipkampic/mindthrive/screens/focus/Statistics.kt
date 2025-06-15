@@ -1,180 +1,169 @@
 package com.filipkampic.mindthrive.screens.focus
 
+import android.annotation.SuppressLint
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.filipkampic.mindthrive.ui.focus.StatisticCard
+import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Peach
+import com.filipkampic.mindthrive.viewmodel.FocusViewModel
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import com.filipkampic.mindthrive.model.focus.FocusPeriod
+import com.patrykandpatrick.vico.compose.axis.axisLabelComponent
+import com.patrykandpatrick.vico.compose.axis.horizontal.bottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.startAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.core.entry.FloatEntry
+import com.patrykandpatrick.vico.core.entry.entryModelOf
+import com.patrykandpatrick.vico.core.chart.line.LineChart.LineSpec
+import java.text.SimpleDateFormat
+import java.util.Date
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("RememberReturnType", "SimpleDateFormat")
 @Composable
-fun Statistics(navController: NavController) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
+fun Statistics(
+    modifier: Modifier = Modifier,
+    viewModel: FocusViewModel
+) {
+    val entries by viewModel.focusEntries
+    val now = System.currentTimeMillis()
 
-    var activityName by rememberSaveable { mutableStateOf("") }
-    var selectedTask by rememberSaveable { mutableStateOf<String?>(null) }
+    val today = remember(entries) {
+        entries.filter { entry ->
+            entry.timestamp >= now - 24 * 60 * 60 * 1000
+        }.sumOf { entry->
+            entry.durationSeconds }
+    }
 
-    var sessionCount by rememberSaveable { mutableStateOf(4) }
-    var sessionDuration by rememberSaveable { mutableStateOf(25) }
-    var breakDuration by rememberSaveable { mutableStateOf(5) }
+    val total by viewModel.totalFocusFromPrefs.collectAsState(initial = 0)
 
-    var currentSession by rememberSaveable { mutableStateOf(1) }
+    var selectedPeriod by remember { mutableStateOf(FocusPeriod.WEEK)}
+    val data = viewModel.getFocusPerDay(selectedPeriod)
 
-    var isRunning by rememberSaveable { mutableStateOf(false) }
+    val xLabels = data.keys.toList()
+    val yValues = data.values.map { (it / 60f * 10).roundToInt() / 10f }
+    val labelComponent = axisLabelComponent(
+        color = Peach
+    )
+    val entriesList = yValues.mapIndexed { index, value ->
+        FloatEntry(index.toFloat(), value)
+    }.let { list ->
+        if (list.size == 1) list + FloatEntry(1f, list[0].y) else list
+    }
+    val chartModel = entryModelOf(entriesList)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                title = { Text("Statistics") },
-                actions = {
-                    IconButton(onClick = { /* TODO: hamburger meni */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
-                }
-            )
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(DarkBlue)
+            .padding(16.dp)
+    ) {
+        Spacer(Modifier.height(16.dp))
+
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            StatisticCard("Focus Today", today, modifier = Modifier.weight(1f))
+            Spacer(Modifier.width(16.dp))
+            StatisticCard("Total Focus", total, modifier = Modifier.weight(1f))
         }
-    ) { padding ->
+
+        Spacer(Modifier.height(24.dp))
+
+        Text("Focus Record", color = Peach)
+
+        Spacer(Modifier.height(16.dp))
+
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(vertical = 16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = if (isRunning) "24:37" else "${sessionDuration.toString().padStart(2, '0')}:00",
-                    style = MaterialTheme.typography.displayLarge
+            if (entriesList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No data available", color = Peach)
+                }
+            } else {
+                Chart(
+                    chart = lineChart(
+                        lines = listOf(
+                            LineSpec(
+                                lineColor = Peach.toArgb(),
+                                lineThicknessDp = 2f
+                            )
+                        )
+                    ),
+                    model = chartModel,
+                    startAxis = startAxis(
+                        label = labelComponent,
+                        title = "Minutes",
+                        titleComponent = axisLabelComponent(color = Peach)
+                    ),
+                    bottomAxis = bottomAxis(
+                        valueFormatter = { i, _ -> xLabels.getOrNull(i.toInt()) ?: "" },
+                        label = labelComponent
+                    )
                 )
             }
         }
 
-        OutlinedTextField(
-            value = activityName,
-            onValueChange = { activityName = it },
-            label = { Text("Activity name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Text(
-            text = "Session $currentSession of $sessionCount",
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
-        var taskExpanded by remember { mutableStateOf(false) }
-        val tasks = listOf("Math HW", "Read Book", "Clean Desk")
-
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(
-                onClick = { taskExpanded = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(selectedTask ?: "Select task")
-            }
-            DropdownMenu(
-                expanded = taskExpanded,
-                onDismissRequest = { taskExpanded = false }
-            ) {
-                tasks.forEach { task ->
-                    DropdownMenuItem(
-                        text = { Text(task) },
-                        onClick = {
-                            selectedTask = task
-                            taskExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            Text("Duration: $sessionDuration min")
-            Slider(
-                value = sessionDuration.toFloat(),
-                onValueChange = { sessionDuration = it.toInt() },
-                valueRange = 5f..60f,
-                steps = 11
-            )
-
-            Text("Sessions: $sessionCount")
-            Slider(
-                value = sessionCount.toFloat(),
-                onValueChange = { sessionCount = it.toInt() },
-                valueRange = 1f..10f,
-                steps = 8
-            )
-
-            Text("Break: $breakDuration min")
-            Slider(
-                value = breakDuration.toFloat(),
-                onValueChange = { breakDuration = it.toInt() },
-                valueRange = 1f..30f,
-                steps = 14
-            )
-        }
-
-        Button(
-            onClick = { isRunning = !isRunning },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Text(if (isRunning) "Pause" else "Start")
-        }
+        Spacer(Modifier.height(16.dp))
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            OutlinedButton(onClick = { /* TODO */ }) {
-                Text("Ambient Sound")
-            }
-            OutlinedButton(onClick = { /* TODO */ }) {
-                Text("Block Notifications")
+            FocusPeriod.entries.forEach { period ->
+                Text(
+                    text = period.label,
+                    color = if (period == selectedPeriod) Peach else Color.LightGray,
+                    modifier = Modifier
+                        .clickable { selectedPeriod = period }
+                        .padding(8.dp)
+                )
             }
         }
+
+        val groupedByDay = entries.groupBy { entry ->
+            SimpleDateFormat("yyyy-MM-dd").format(Date(entry.timestamp))
+        }
+        val dailyTotals = groupedByDay.map { (_, dayEntries) ->
+            dayEntries.sumOf { it.durationSeconds }
+        }
+        val average = if (dailyTotals.isNotEmpty()) dailyTotals.sum() / dailyTotals.size else 0
+        val averageMinutes = floor(average / 60f).toInt()
+
+        Text("Daily Average: ${averageMinutes}m", color = Peach)
+
     }
 }
