@@ -144,7 +144,8 @@ fun Focus(navController: NavController) {
             )
             "stopwatch" -> Stopwatch(
                 modifier = Modifier.padding(padding),
-                viewModel = focusViewModel
+                viewModel = focusViewModel,
+                isRunning = isTimerRunning
             )
             "statistics" -> Statistics(
                 modifier = Modifier.padding(padding),

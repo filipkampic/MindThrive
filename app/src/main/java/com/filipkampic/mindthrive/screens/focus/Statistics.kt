@@ -76,6 +76,15 @@ fun Statistics(
     }
     val chartModel = entryModelOf(entriesList)
 
+    val groupedByDay = entries.groupBy { entry ->
+        SimpleDateFormat("yyyy-MM-dd").format(Date(entry.timestamp))
+    }
+    val dailyTotals = groupedByDay.map { (_, dayEntries) ->
+        dayEntries.sumOf { it.durationSeconds }
+    }
+    val average = if (dailyTotals.isNotEmpty()) dailyTotals.sum() / dailyTotals.size else 0
+    val averageMinutes = floor(average / 60f).toInt()
+
 
     Column(
         modifier = modifier
@@ -96,9 +105,14 @@ fun Statistics(
 
         Spacer(Modifier.height(24.dp))
 
-        Text("Focus Record", color = Peach)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Focus History", color = Peach)
+        }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
         Column(
             modifier = Modifier
@@ -154,16 +168,13 @@ fun Statistics(
             }
         }
 
-        val groupedByDay = entries.groupBy { entry ->
-            SimpleDateFormat("yyyy-MM-dd").format(Date(entry.timestamp))
-        }
-        val dailyTotals = groupedByDay.map { (_, dayEntries) ->
-            dayEntries.sumOf { it.durationSeconds }
-        }
-        val average = if (dailyTotals.isNotEmpty()) dailyTotals.sum() / dailyTotals.size else 0
-        val averageMinutes = floor(average / 60f).toInt()
+        Spacer(Modifier.height(24.dp))
 
-        Text("Daily Average: ${averageMinutes}m", color = Peach)
-
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Daily Average: ${averageMinutes}m", color = Peach)
+        }
     }
 }

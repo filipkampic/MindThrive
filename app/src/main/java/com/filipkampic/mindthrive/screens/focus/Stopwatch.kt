@@ -24,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,11 +47,12 @@ import kotlinx.coroutines.delay
 @Composable
 fun Stopwatch(
     modifier: Modifier = Modifier,
-    viewModel: FocusViewModel
+    viewModel: FocusViewModel,
+    isRunning: MutableState<Boolean>
 ) {
     val focusManager = LocalFocusManager.current
 
-    var isRunning by rememberSaveable { mutableStateOf(false) }
+    var isRunningState by rememberSaveable { mutableStateOf(false) }
     var isPaused by rememberSaveable { mutableStateOf(false) }
     var time by rememberSaveable { mutableIntStateOf(0) }
     val activityName = viewModel.stopwatchActivityName
@@ -63,8 +65,12 @@ fun Stopwatch(
 
     var showResults by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(isRunning, isPaused) {
-        while (isRunning && !isPaused) {
+    LaunchedEffect(isRunningState) {
+        isRunning.value = isRunningState
+    }
+
+    LaunchedEffect(isRunningState, isPaused) {
+        while (isRunningState && !isPaused) {
             delay(1000)
             time++
             totalTimeInSeconds++
@@ -87,6 +93,7 @@ fun Stopwatch(
                 onDone = {
                     viewModel.stopwatchActivityName = ""
                     showResults = false
+                    isRunningState = false
                 }
             )
         } else {
@@ -117,14 +124,14 @@ fun Stopwatch(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                if (!isRunning) {
+                if (!isRunningState) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         IconButton(
                             onClick = {
                                 if (activityName.isBlank()) {
                                     triedToStartWithoutActivity = true
                                 } else {
-                                    isRunning = true
+                                    isRunningState = true
                                     isPaused = false
                                     time = 0
                                     triedToStartWithoutActivity = false
@@ -166,7 +173,7 @@ fun Stopwatch(
 
                         IconButton(
                             onClick = {
-                                isRunning = false
+                                isRunningState = false
                                 isPaused = false
                                 time = 0
                                 showResults = true
