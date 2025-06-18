@@ -5,20 +5,23 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.filipkampic.mindthrive.data.habitTracker.HabitDao
 import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.model.TimeBlockTypeConverters
+import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.notes.Note
 import com.filipkampic.mindthrive.model.notes.NoteFolder
 import com.filipkampic.mindthrive.model.tasks.Category
 
 @TypeConverters(TimeBlockTypeConverters::class)
-@Database(entities = [TimeBlock::class, Task::class, Category::class, Note::class, NoteFolder::class], version=7, exportSchema = false)
+@Database(entities = [TimeBlock::class, Task::class, Category::class, Note::class, NoteFolder::class, Habit::class], version=8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun timeBlockDao(): TimeBlockDao
     abstract fun taskDao(): TaskDao
     abstract fun categoryDao(): CategoryDao
     abstract fun noteDao(): NoteDao
+    abstract fun habitDao(): HabitDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
