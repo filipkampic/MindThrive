@@ -5,7 +5,6 @@ import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModelFactory
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.Application
-import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -44,7 +43,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
@@ -89,6 +88,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.TimePickerDialog
 import com.filipkampic.mindthrive.ui.theme.Peach
 import kotlinx.coroutines.delay
 import scheduleTimeBlockNotification
@@ -167,7 +167,7 @@ fun TimeManagement(navController: NavController, date: String) {
                     modifier = Modifier.offset(y = 16.dp)
                 ) {
                     Icon(
-                        Icons.Default.ArrowBack,
+                        Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Peach,
                         modifier = Modifier.size(32.dp)
@@ -297,7 +297,7 @@ fun TimeManagement(navController: NavController, date: String) {
                     val allTimes = (todaysTimeBlocks.flatMap { listOfNotNull(it.start?.toLocalTime(), it.end?.toLocalTime()) } + LocalTime.of(0, 0) + LocalTime.of(23, 59)).distinct().sorted()
                     val timeIntervals = allTimes.zipWithNext()
 
-                    itemsIndexed(timeIntervals, key = { index, pair -> pair.first.toString() }) { _, (start, end) ->
+                    itemsIndexed(timeIntervals, key = { _, pair -> pair.first.toString() }) { _, (start, end) ->
                         val blockStartDateTime = LocalDateTime.of(currentDate, start)
                         val blockEndDateTime = LocalDateTime.of(currentDate, end)
 
@@ -644,55 +644,9 @@ fun AddTimeBlockDialog(
         .minOrNull()
     var end by remember { mutableStateOf(timeBlockToEdit?.end?.toLocalTime() ?: (nextTimeBlockStart ?: LocalTime.of(0, 0))) }
     var description by remember { mutableStateOf(timeBlockToEdit?.description ?: "") }
-    var openEndPicker by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
-    val openStartPicker = remember { mutableStateOf(false) }
-
-    val customTheme = remember { context.resources.getIdentifier("CustomTimePickerTheme", "style", context.packageName) }
-
-    fun showTimePicker(isStart: Boolean, initialHour: Int, initialMinute: Int) {
-        val listener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
-            if (isStart) {
-                start = LocalTime.of(hour, minute)
-                openStartPicker.value = false
-            } else {
-                end = LocalTime.of(hour, minute)
-                openEndPicker = false
-            }
-        }
-        val dialog = TimePickerDialog(context, customTheme, listener, initialHour, initialMinute, true).apply {
-            setCanceledOnTouchOutside(true)
-            setCancelable(true)
-            setOnCancelListener {
-                if (isStart) {
-                    openStartPicker.value = false
-                } else {
-                    openEndPicker = false
-                }
-            }
-            setOnDismissListener {
-                if (isStart) {
-                    openStartPicker.value = false
-                } else {
-                    openEndPicker = false
-                }
-            }
-        }
-        dialog.show()
-    }
-
-    LaunchedEffect(openStartPicker.value) {
-        if (openStartPicker.value) {
-            showTimePicker(true, start.hour, start.minute)
-        }
-    }
-
-    LaunchedEffect(openEndPicker) {
-        if (openEndPicker) {
-            showTimePicker(false, end?.hour ?: 0, end?.minute ?: 0)
-        }
-    }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onCancel,
@@ -755,7 +709,7 @@ fun AddTimeBlockDialog(
                         modifier = Modifier
                             .weight(1f)
                             .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                            .clickable { openStartPicker.value = true }
+                            .clickable { showStartPicker = true }
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Column {
@@ -775,7 +729,7 @@ fun AddTimeBlockDialog(
                         modifier = Modifier
                             .weight(1f)
                             .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                            .clickable { openEndPicker = true }
+                            .clickable { showEndPicker = true }
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Column {
@@ -806,6 +760,30 @@ fun AddTimeBlockDialog(
         },
         containerColor = Peach
     )
+
+    if (showStartPicker) {
+        TimePickerDialog(
+            initialHour = start.hour,
+            initialMinute = start.minute,
+            onDismiss = { showStartPicker = false },
+            onTimeSelected = { hour, minute ->
+                start = LocalTime.of(hour, minute)
+                showStartPicker = false
+            }
+        )
+    }
+
+    if (showEndPicker) {
+        TimePickerDialog(
+            initialHour = end.hour,
+            initialMinute = end.minute,
+            onDismiss = { showEndPicker = false },
+            onTimeSelected = { hour, minute ->
+                end = LocalTime.of(hour, minute)
+                showEndPicker = false
+            }
+        )
+    }
 }
 
 @Composable

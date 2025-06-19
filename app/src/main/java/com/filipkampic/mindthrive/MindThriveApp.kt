@@ -21,19 +21,23 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.TaskRepository
+import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
+import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.screens.Calendar
 import com.filipkampic.mindthrive.screens.focus.Focus
 import com.filipkampic.mindthrive.screens.Goals
-import com.filipkampic.mindthrive.screens.HabitTracker
+import com.filipkampic.mindthrive.screens.habitTracker.HabitTracker
 import com.filipkampic.mindthrive.screens.HomeScreen
 import com.filipkampic.mindthrive.screens.notes.Notes
 import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.habitTracker.YesOrNoHabit
 import com.filipkampic.mindthrive.screens.notes.NoteEditor
 import com.filipkampic.mindthrive.screens.notes.NoteFolder
 import com.filipkampic.mindthrive.screens.tasks.EisenhowerMatrix
+import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 
 val Context.dataStore: androidx.datastore.core.DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
@@ -104,6 +108,26 @@ fun MindThriveApp() {
                     }
                 }
                 composable("focus") { Focus(navController) }
+                composable("yesOrNoHabit") {
+                    val localContext = LocalContext.current
+                    val db = AppDatabase.getDatabase(localContext)
+                    val repo = HabitRepository(db.habitDao())
+                    val viewModel = remember { HabitViewModel(repo) }
+
+                    YesOrNoHabit(
+                        navController = navController,
+                        onSave = { name, frequency, reminder, description ->
+                            viewModel.insertHabit(
+                                Habit(
+                                    name = name,
+                                    frequency = frequency,
+                                    reminder = reminder ?: "",
+                                    description = description ?: ""
+                                )
+                            )
+                        }
+                    )
+                }
                 composable("habitTracker") { HabitTracker(navController) }
                 composable("goals") { Goals(navController) }
             }

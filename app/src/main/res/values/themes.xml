@@ -15,27 +15,4 @@
         <item name="postSplashScreenTheme">@style/Theme.MindThrive</item>
     </style>
 
-    <style name="CustomTimePickerTheme" parent="android:Theme.DeviceDefault.Dialog">
-        <item name="android:background">@color/dark_blue</item>
-        <item name="android:textColorPrimary">@color/peach</item>
-        <item name="android:textColorSecondary">@color/peach</item>
-        <item name="android:colorBackground">@color/peach</item>
-        <item name="android:buttonBarPositiveButtonStyle">@style/CustomButtonStyle</item>
-        <item name="android:buttonBarNegativeButtonStyle">@style/CustomButtonStyle</item>
-        <item name="android:divider">@color/peach</item>
-    </style>
-
-    <style name="CustomTimePickerDialog" parent="android:Theme.DeviceDefault.Dialog">
-        <item name="android:background">@color/dark_blue</item>
-        <item name="android:textColorPrimary">@color/peach</item>
-        <item name="android:textColorSecondary">@color/peach</item>
-        <item name="android:colorAccent">@color/peach</item>
-        <item name="android:divider">@color/peach</item>
-    </style>
-
-    <style name="CustomButtonStyle" parent="android:Widget.Material.Button">
-        <item name="android:textColor">@color/peach</item>
-        <item name="android:backgroundTint">@color/dark_blue</item>
-    </style>
-
 </resources>

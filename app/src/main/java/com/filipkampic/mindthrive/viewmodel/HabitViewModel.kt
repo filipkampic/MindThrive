@@ -24,6 +24,10 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         repository.markAllDone()
     }
 
+    fun insertHabit(habit: Habit) = viewModelScope.launch {
+        repository.insertHabit(habit)
+    }
+
     fun startCreatingHabit(isYesOrNo: Boolean) {
         /* TODO: Start Creating Habit */
     }

@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.screens
+package com.filipkampic.mindthrive.screens.habitTracker
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -153,7 +153,7 @@ fun HabitTracker(navController: NavController) {
                         Button(
                             onClick = {
                                 showHabitTypeDialog = false
-                                viewModel.startCreatingHabit(true)
+                                navController.navigate("yesOrNoHabit")
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Peach,
