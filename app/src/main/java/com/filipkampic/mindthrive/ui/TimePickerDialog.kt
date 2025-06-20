@@ -30,7 +30,8 @@ fun TimePickerDialog(
     initialHour: Int,
     initialMinute: Int,
     onDismiss: () -> Unit,
-    onTimeSelected: (Int, Int) -> Unit
+    onTimeSelected: (Int, Int) -> Unit,
+    onRemove: (() -> Unit)? = null
 ) {
     val state = rememberTimePickerState(
         initialHour = initialHour,
@@ -72,14 +73,17 @@ fun TimePickerDialog(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = if (onRemove != null) Arrangement.SpaceBetween else Arrangement.End
                     ) {
-                        TextButton(onClick = {
-                            onTimeSelected(-1, -1)
-                            onDismiss()
-                        }) {
-                            Text("Remove", color = Peach)
+                        if (onRemove != null) {
+                            TextButton(onClick = {
+                                onTimeSelected(-1, -1)
+                                onDismiss()
+                            }) {
+                                Text("Remove", color = Peach)
+                            }
                         }
+
                         Row {
                             TextButton(onClick = onDismiss) {
                                 Text("Cancel", color = Peach)

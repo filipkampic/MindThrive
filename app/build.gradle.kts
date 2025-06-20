@@ -81,4 +81,5 @@ dependencies {
     implementation("com.patrykandpatrick.vico:compose:1.13.0")
     implementation("com.patrykandpatrick.vico:core:1.13.0")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.androidx.work.runtime.ktx)
 }

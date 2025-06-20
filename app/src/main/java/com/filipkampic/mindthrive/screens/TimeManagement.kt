@@ -91,7 +91,6 @@ import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.TimePickerDialog
 import com.filipkampic.mindthrive.ui.theme.Peach
 import kotlinx.coroutines.delay
-import scheduleTimeBlockNotification
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -219,7 +218,6 @@ fun TimeManagement(navController: NavController, date: String) {
                                             date = timeBlock.date.plusDays(1)
                                         )
                                         viewModel.insertTimeBlock(newTimeBlock)
-                                        scheduleTimeBlockNotification(appContext, newTimeBlock)
                                     }
                                 }
                             }
@@ -478,7 +476,6 @@ fun TimeManagement(navController: NavController, date: String) {
                         viewModel.updateTimeBlock(newTimeBlock)
                     } else {
                         viewModel.insertTimeBlock(newTimeBlock)
-                        scheduleTimeBlockNotification(context, newTimeBlock)
                     }
                     showDialog = false
                     editingTimeBlock = null

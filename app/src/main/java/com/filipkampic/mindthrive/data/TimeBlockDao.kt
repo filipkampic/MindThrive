@@ -4,6 +4,7 @@ import androidx.room.*
 import com.filipkampic.mindthrive.model.TimeBlock
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Dao
 interface TimeBlockDao {
@@ -34,4 +35,6 @@ interface TimeBlockDao {
 """)
     fun getTimeBlocksInRange(startOfDay: String, endOfDay: String): Flow<List<TimeBlock>>
 
+    @Query("SELECT * FROM timeBlocks WHERE start > :now")
+    suspend fun getAllFutureTimeBlocks(now: String = LocalDateTime.now().toString()): List<TimeBlock>
 }

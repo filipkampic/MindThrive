@@ -208,6 +208,9 @@ fun YesOrNoHabit(
                             } else {
                                 String.format("%02d:%02d", hour, minute)
                             }
+                        },
+                        onRemove = {
+                            reminderTime = null
                         }
                     )
                 }

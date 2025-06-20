@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import scheduleTimeBlockNotification
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -24,7 +25,6 @@ import java.time.format.DateTimeFormatter
 class TimeBlockViewModel(application: Application) : AndroidViewModel(application) {
     private val timeBlockDao = AppDatabase.getDatabase(application).timeBlockDao()
     private val _timeBlocks = MutableStateFlow<List<TimeBlock>>(emptyList())
-    val timeBlocks: StateFlow<List<TimeBlock>> = _timeBlocks
     private val _currentDate = MutableStateFlow(LocalDate.now())
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,7 +38,6 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
             list.sortedBy { it.start }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
 
     init {
         loadTimeBlocks(LocalDate.now())
@@ -67,8 +66,8 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
             if (overlapStart < overlapEnd) {
                 TimeBlock(
                     id = timeBlock.id,
-                    name = timeBlock.name ?: "",
-                    description = timeBlock.description ?: "",
+                    name = timeBlock.name,
+                    description = timeBlock.description,
                     start = overlapStart,
                     end = overlapEnd,
                     date = date
@@ -82,12 +81,14 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
     fun insertTimeBlock(timeBlock: TimeBlock) {
         viewModelScope.launch {
             timeBlockDao.insertTimeBlock(timeBlock)
+            scheduleTimeBlockNotification(getApplication(), timeBlock)
         }
     }
 
     fun updateTimeBlock(timeBlock: TimeBlock) {
         viewModelScope.launch {
             timeBlockDao.updateTimeBlock(timeBlock)
+            scheduleTimeBlockNotification(getApplication(), timeBlock)
         }
     }
 
@@ -103,9 +104,9 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
 }
 
 class TimeBlockViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    override fun <T: ViewModel> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TimeBlockViewModel::class.java)) {
-            @Suppress("UNCHECKED.Cast")
+            @Suppress("UNCHECKED_CAST")
             return TimeBlockViewModel(application) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

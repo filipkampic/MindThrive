@@ -23,6 +23,7 @@ import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.TaskRepository
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
+import com.filipkampic.mindthrive.notification.habitTracker.scheduleHabitReminder
 import com.filipkampic.mindthrive.screens.Calendar
 import com.filipkampic.mindthrive.screens.focus.Focus
 import com.filipkampic.mindthrive.screens.Goals
@@ -55,6 +56,8 @@ fun MindThriveApp() {
         val date = intent?.getStringExtra("date")
         if (target == "time" && date != null) {
             navController.navigate("time/$date")
+        } else if (target == "habit") {
+            navController.navigate("habitTracker")
         }
     }
 
@@ -108,6 +111,7 @@ fun MindThriveApp() {
                     }
                 }
                 composable("focus") { Focus(navController) }
+                composable("habitTracker") { HabitTracker(navController) }
                 composable("yesOrNoHabit") {
                     val localContext = LocalContext.current
                     val db = AppDatabase.getDatabase(localContext)
@@ -117,18 +121,18 @@ fun MindThriveApp() {
                     YesOrNoHabit(
                         navController = navController,
                         onSave = { name, frequency, reminder, description ->
-                            viewModel.insertHabit(
-                                Habit(
-                                    name = name,
-                                    frequency = frequency,
-                                    reminder = reminder ?: "",
-                                    description = description ?: ""
-                                )
+                            val habit = Habit(
+                                name = name,
+                                frequency = frequency,
+                                reminder = reminder ?: "",
+                                description = description ?: ""
                             )
+
+                            viewModel.insertHabit(habit)
+                            scheduleHabitReminder(context = context, habit = habit)
                         }
                     )
                 }
-                composable("habitTracker") { HabitTracker(navController) }
                 composable("goals") { Goals(navController) }
             }
         }

@@ -1,20 +1,26 @@
-package com.filipkampic.mindthrive.notification
+package com.filipkampic.mindthrive.notification.timeManagement
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.filipkampic.mindthrive.R
 import com.filipkampic.mindthrive.main.MainActivity
 import java.time.LocalDate
 
-class TimeBlockReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        val blockName = intent.getStringExtra("BLOCK_NAME") ?: "Time Block"
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+class TimeBlockNotificationWorker(
+    appContext: Context,
+    workerParams: WorkerParameters
+) : Worker(appContext, workerParams) {
+
+    override fun doWork(): Result {
+        val blockName = inputData.getString("BLOCK_NAME") ?: return Result.failure()
+
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val channel = NotificationChannel(
             "time_block_channel",
@@ -23,22 +29,26 @@ class TimeBlockReceiver : BroadcastReceiver() {
         )
         notificationManager.createNotificationChannel(channel)
 
-        val openIntent = Intent(context, MainActivity::class.java).apply {
+        val intent = Intent(applicationContext, MainActivity::class.java).apply {
             putExtra("navigate_to", "time")
             putExtra("date", LocalDate.now().toString())
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        val openPendingIntent = PendingIntent.getActivity(context, 0, openIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        val notification = NotificationCompat.Builder(context, "time_block_channel")
+        val pendingIntent = PendingIntent.getActivity(
+            applicationContext, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(applicationContext, "time_block_channel")
             .setContentTitle("MindThrive Reminder")
             .setContentText("It's time for: $blockName")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
-            .setContentIntent(openPendingIntent)
+            .setContentIntent(pendingIntent)
             .build()
 
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+
+        return Result.success()
     }
 }
