@@ -34,6 +34,7 @@ import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.habitTracker.HabitDetail
 import com.filipkampic.mindthrive.screens.habitTracker.MeasurableHabit
 import com.filipkampic.mindthrive.screens.habitTracker.YesOrNoHabit
 import com.filipkampic.mindthrive.screens.notes.NoteEditor
@@ -113,10 +114,27 @@ fun MindThriveApp() {
                 }
                 composable("focus") { Focus(navController) }
                 composable("habitTracker") { HabitTracker(navController) }
+                composable("habitDetail/{habitId}") { backStackEntry ->
+                    val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
+
+                    val db = AppDatabase.getDatabase(context)
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val viewModel = remember { HabitViewModel(repo) }
+
+                    HabitDetail(
+                        habitId = habitId,
+                        viewModel = viewModel,
+                        navController = navController,
+                        onDelete = { /* TODO */ },
+                        onEdit = { /* TODO */ },
+                        onStats = { /* TODO */ }
+                    )
+                }
+
                 composable("yesOrNoHabit") {
                     val localContext = LocalContext.current
                     val db = AppDatabase.getDatabase(localContext)
-                    val repo = HabitRepository(db.habitDao())
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
                     YesOrNoHabit(
@@ -137,7 +155,7 @@ fun MindThriveApp() {
                 composable("measurableHabit") {
                     val localContext = LocalContext.current
                     val db = AppDatabase.getDatabase(localContext)
-                    val repo = HabitRepository(db.habitDao())
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
                     MeasurableHabit(

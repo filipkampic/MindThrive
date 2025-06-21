@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.ui.habitTracker
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,12 +22,14 @@ import com.filipkampic.mindthrive.ui.theme.Peach
 @Composable
 fun HabitItem(
     habit: Habit,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Peach),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -39,7 +42,10 @@ fun HabitItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(habit.name, color = DarkBlue)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable(enabled = false) {}
+            ) {
                 Text(habit.streak.toString(), color = DarkBlue)
                 Checkbox(
                     checked = habit.isDoneToday,
@@ -53,5 +59,4 @@ fun HabitItem(
             }
         }
     }
-
 }

@@ -58,7 +58,7 @@ fun HabitTracker(navController: NavController) {
     val context = LocalContext.current
     val repository = remember {
         val db = AppDatabase.getDatabase(context)
-        HabitRepository(db.habitDao())
+        HabitRepository(db.habitDao(), db.habitCheckDao())
     }
     val viewModel: HabitViewModel = viewModel(
         factory = HabitViewModelFactory(repository)
@@ -131,7 +131,11 @@ fun HabitTracker(navController: NavController) {
                     .padding(bottom = 80.dp)
             ) {
                 items(habits) { habit ->
-                    HabitItem(habit = habit, onToggle = { viewModel.toggleHabit(habit) })
+                    HabitItem(
+                        habit = habit,
+                        onToggle = { viewModel.toggleHabit(habit) },
+                        onClick = { navController.navigate("habitDetail/${habit.id}")}
+                    )
                 }
             }
         }
