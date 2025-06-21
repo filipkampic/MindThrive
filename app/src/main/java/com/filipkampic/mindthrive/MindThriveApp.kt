@@ -34,6 +34,7 @@ import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.habitTracker.MeasurableHabit
 import com.filipkampic.mindthrive.screens.habitTracker.YesOrNoHabit
 import com.filipkampic.mindthrive.screens.notes.NoteEditor
 import com.filipkampic.mindthrive.screens.notes.NoteFolder
@@ -133,6 +134,34 @@ fun MindThriveApp() {
                         }
                     )
                 }
+                composable("measurableHabit") {
+                    val localContext = LocalContext.current
+                    val db = AppDatabase.getDatabase(localContext)
+                    val repo = HabitRepository(db.habitDao())
+                    val viewModel = remember { HabitViewModel(repo) }
+
+                    MeasurableHabit(
+                        navController = navController,
+                        onSave = { name, unit, target, frequency, targetType, reminder, description ->
+                            val habit = Habit(
+                                name = name,
+                                unit = unit?.ifBlank { null },
+                                target = target?.toIntOrNull(),
+                                targetType = targetType,
+                                frequency = frequency,
+                                reminder = reminder ?: "",
+                                description = description,
+                                isMeasurable = true,
+                                isDoneToday = false,
+                                streak = 0
+                            )
+
+                            viewModel.insertHabit(habit)
+                            scheduleHabitReminder(context = localContext, habit = habit)
+                        }
+                    )
+                }
+
                 composable("goals") { Goals(navController) }
             }
         }

@@ -168,7 +168,7 @@ fun HabitTracker(navController: NavController) {
                         Button(
                             onClick = {
                                 showHabitTypeDialog = false
-                                viewModel.startCreatingHabit(false)
+                                navController.navigate("measurableHabit")
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Peach,
