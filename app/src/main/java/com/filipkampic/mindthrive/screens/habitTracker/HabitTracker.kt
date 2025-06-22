@@ -58,7 +58,7 @@ fun HabitTracker(navController: NavController) {
     val context = LocalContext.current
     val repository = remember {
         val db = AppDatabase.getDatabase(context)
-        HabitRepository(db.habitDao(), db.habitCheckDao())
+        HabitRepository(db.habitDao())
     }
     val viewModel: HabitViewModel = viewModel(
         factory = HabitViewModelFactory(repository)

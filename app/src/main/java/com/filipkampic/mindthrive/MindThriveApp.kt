@@ -118,7 +118,7 @@ fun MindThriveApp() {
                     val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
 
                     val db = AppDatabase.getDatabase(context)
-                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val repo = HabitRepository(db.habitDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
                     HabitDetail(
@@ -134,7 +134,7 @@ fun MindThriveApp() {
                 composable("yesOrNoHabit") {
                     val localContext = LocalContext.current
                     val db = AppDatabase.getDatabase(localContext)
-                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val repo = HabitRepository(db.habitDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
                     YesOrNoHabit(
@@ -155,7 +155,7 @@ fun MindThriveApp() {
                 composable("measurableHabit") {
                     val localContext = LocalContext.current
                     val db = AppDatabase.getDatabase(localContext)
-                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val repo = HabitRepository(db.habitDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
                     MeasurableHabit(
