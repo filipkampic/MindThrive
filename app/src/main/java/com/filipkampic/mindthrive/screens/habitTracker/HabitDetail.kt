@@ -1,49 +1,54 @@
 package com.filipkampic.mindthrive.screens.habitTracker
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.filipkampic.mindthrive.model.habitTracker.Habit
+import com.filipkampic.mindthrive.ui.habitTracker.HabitStatistics
+import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.MonthlyProgressOverview
+import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.WeeklyProgressOverview
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
-import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitDetail(
-    habitId: Int,
-    viewModel: HabitViewModel,
+    habit: Habit,
     navController: NavController,
     onDelete: () -> Unit,
-    onEdit: () -> Unit,
-    onStats: () -> Unit
+    onEdit: () -> Unit
 ) {
-    val habits by viewModel.habits.collectAsState()
-    val currentHabit = habits.find { it.id == habitId } ?: return
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Weekly Progress", "Monthly Progress")
 
     Scaffold(
+        containerColor = DarkBlue,
         topBar = {
             TopAppBar(
                 navigationIcon = {
@@ -52,47 +57,61 @@ fun HabitDetail(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onStats() }) {
-                        Icon(Icons.Default.PieChart, contentDescription = "Stats", tint = Peach)
-                    }
-                    IconButton(onClick = { onEdit() }) {
+                    IconButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Peach)
                     }
-                    IconButton(onClick = { onDelete() }) {
+                    IconButton(onClick = onDelete) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Peach)
                     }
                 },
                 title = {},
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBlue)
             )
-        },
-        containerColor = DarkBlue
-    ) { padding ->
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = DarkBlue,
+                contentColor = Peach,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                        color = Peach
+                    )
+                }
             ) {
-                Text(currentHabit.name, color = Peach, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (currentHabit.target != null) {
-                        Text("${currentHabit.target} ${currentHabit.unit ?: ""}", color = Peach)
-                    }
-                    Text(currentHabit.reminder?.ifBlank { "Off" } ?: "Off", color = Peach)
-                    Text(currentHabit.frequency ?: "", color = Peach)
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = {
+                            Text(
+                                title,
+                                color = if (selectedTab == index) Peach else Peach.copy(alpha = 0.6f)
+                            )
+                        }
+                    )
                 }
             }
 
-            if (!currentHabit.description.isNullOrBlank()) {
-                Text(currentHabit.description, color = Peach)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (selectedTab == 0) {
+                WeeklyProgressOverview(habitId = habit.id, isMeasurable = habit.isMeasurable)
+            } else {
+                MonthlyProgressOverview(habitId = habit.id, isMeasurable = habit.isMeasurable)
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            HabitStatistics(habit = habit)
         }
     }
 }

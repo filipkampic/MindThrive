@@ -121,14 +121,16 @@ fun MindThriveApp() {
                     val repo = HabitRepository(db.habitDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
-                    HabitDetail(
-                        habitId = habitId,
-                        viewModel = viewModel,
-                        navController = navController,
-                        onDelete = { /* TODO */ },
-                        onEdit = { /* TODO */ },
-                        onStats = { /* TODO */ }
-                    )
+                    val habit by viewModel.getHabitById(habitId).collectAsState(initial = null)
+
+                    habit?.let {
+                        HabitDetail(
+                            habit = it,
+                            navController = navController,
+                            onDelete = { /* TODO */ },
+                            onEdit = { /* TODO */ }
+                        )
+                    }
                 }
 
                 composable("yesOrNoHabit") {

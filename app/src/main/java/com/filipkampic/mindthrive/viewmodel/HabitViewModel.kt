@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -15,6 +16,10 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     val habits: StateFlow<List<Habit>> = repository.getHabits()
         .map { it.sortedBy { habit -> habit.id } }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun getHabitById(habitId: Int): Flow<Habit?> {
+        return repository.getHabitById(habitId)
+    }
 
     fun toggleHabit(habit: Habit) = viewModelScope.launch {
         val newIsDone = !habit.isDoneToday
