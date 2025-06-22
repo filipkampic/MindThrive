@@ -1,25 +1,22 @@
 package com.filipkampic.mindthrive.ui.habitTracker.habitOverview
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.filipkampic.mindthrive.ui.theme.Peach
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 
 @Composable
 fun MonthlyProgressOverview(
     habitId: Int,
     isMeasurable: Boolean
 ) {
-    Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-        Text("Monthly progress will be shown here.", color = Peach)
-    }
+    val viewModel: HabitViewModel = viewModel()
+    val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
+
     if (isMeasurable) {
-        WeeklyMeasurableOverview(habitId)
+        MonthlyMeasurableOverview(habitId = habitId)
     } else {
-        WeeklyYesOrNoOverview(habitId)
+        MonthlyYesOrNoOverview(checks = checks)
     }
 }

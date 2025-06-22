@@ -1,25 +1,32 @@
 package com.filipkampic.mindthrive.ui.habitTracker.habitOverview
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.filipkampic.mindthrive.ui.theme.Peach
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.filipkampic.mindthrive.viewmodel.HabitViewModel
+import java.time.LocalDate
 
 @Composable
 fun WeeklyProgressOverview(
     habitId: Int,
     isMeasurable: Boolean
 ) {
-    Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-        Text("Weekly progress will be shown here.", color = Peach)
+    val viewModel: HabitViewModel = viewModel()
+    val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
+
+    LaunchedEffect(checks) {
+        val today = LocalDate.now().toString()
+        val todayCheck = checks.find { it.date == today }
+        println("DEBUG >>> Check for today: $todayCheck")
     }
+
+
     if (isMeasurable) {
-        MonthlyMeasurableOverview(habitId)
+        WeeklyMeasurableOverview(habitId = habitId)
     } else {
-        MonthlyYesOrNoOverview(habitId)
+        WeeklyYesOrNoOverview(habitId = habitId, checks = checks)
     }
+
 }

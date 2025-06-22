@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -41,6 +42,7 @@ import com.filipkampic.mindthrive.screens.notes.NoteEditor
 import com.filipkampic.mindthrive.screens.notes.NoteFolder
 import com.filipkampic.mindthrive.screens.tasks.EisenhowerMatrix
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
+import com.filipkampic.mindthrive.viewmodel.HabitViewModelFactory
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 
 val Context.dataStore: androidx.datastore.core.DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
@@ -117,9 +119,26 @@ fun MindThriveApp() {
                 composable("habitDetail/{habitId}") { backStackEntry ->
                     val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
 
+                    val viewModel: HabitViewModel = viewModel()
+                    val habit by viewModel.getHabitById(habitId).collectAsState(initial = null)
+
+                    habit?.let {
+                        HabitDetail(
+                            habit = it,
+                            navController = navController,
+                            onDelete = { /* TODO */ },
+                            onEdit = { /* TODO */ }
+                        )
+                    }
+                }
+
+                composable("habitDetail/{habitId}") { backStackEntry ->
+                    val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
+
                     val db = AppDatabase.getDatabase(context)
-                    val repo = HabitRepository(db.habitDao())
-                    val viewModel = remember { HabitViewModel(repo) }
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val factory = HabitViewModelFactory(repo)
+                    val viewModel: HabitViewModel = viewModel(factory = factory)
 
                     val habit by viewModel.getHabitById(habitId).collectAsState(initial = null)
 
@@ -134,10 +153,10 @@ fun MindThriveApp() {
                 }
 
                 composable("yesOrNoHabit") {
-                    val localContext = LocalContext.current
-                    val db = AppDatabase.getDatabase(localContext)
-                    val repo = HabitRepository(db.habitDao())
-                    val viewModel = remember { HabitViewModel(repo) }
+                    val db = AppDatabase.getDatabase(context)
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val factory = HabitViewModelFactory(repo)
+                    val viewModel: HabitViewModel = viewModel(factory = factory)
 
                     YesOrNoHabit(
                         navController = navController,
@@ -154,10 +173,11 @@ fun MindThriveApp() {
                         }
                     )
                 }
+
                 composable("measurableHabit") {
                     val localContext = LocalContext.current
                     val db = AppDatabase.getDatabase(localContext)
-                    val repo = HabitRepository(db.habitDao())
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
                     val viewModel = remember { HabitViewModel(repo) }
 
                     MeasurableHabit(

@@ -1,9 +1,14 @@
 package com.filipkampic.mindthrive.data.habitTracker
 
+import android.util.Log
 import com.filipkampic.mindthrive.model.habitTracker.Habit
+import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
 import kotlinx.coroutines.flow.Flow
 
-class HabitRepository(private val habitDao: HabitDao) {
+class HabitRepository(
+    private val habitDao: HabitDao,
+    private val habitCheckDao: HabitCheckDao
+) {
     fun getHabits(): Flow<List<Habit>> = habitDao.getAllHabits()
 
     fun getHabitById(id: Int): Flow<Habit?> = habitDao.getHabitById(id)
@@ -11,4 +16,19 @@ class HabitRepository(private val habitDao: HabitDao) {
     suspend fun markAllDone() = habitDao.markAllDone()
 
     suspend fun insertHabit(habit: Habit) = habitDao.insertHabit(habit)
+
+    fun getAllChecksForHabit(habitId: Int): Flow<List<HabitCheck>> = habitCheckDao.getChecksForHabit(habitId)
+
+    suspend fun upsertHabitCheck(check: HabitCheck) {
+        Log.d("DEBUG", "Upserting check: $check")
+        habitCheckDao.upsertCheck(check)
+    }
+
+    suspend fun getCheck(habitId: Int, date: String): HabitCheck? {
+        return habitCheckDao.getCheck(habitId, date)
+    }
+
+    suspend fun insertCheck(check: HabitCheck) {
+        habitCheckDao.insertCheck(check)
+    }
 }
