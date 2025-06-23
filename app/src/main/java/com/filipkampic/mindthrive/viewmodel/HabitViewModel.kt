@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,12 +9,12 @@ import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
 import com.filipkampic.mindthrive.model.habitTracker.HabitStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.temporal.ChronoUnit
+import kotlin.math.roundToInt
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     private val _habits = MutableStateFlow<List<Habit>>(emptyList())
@@ -67,22 +66,35 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     }
 
     fun calculateHabitStats(checks: List<HabitCheck>): HabitStats {
-        val sortedChecks = checks.sortedBy { it.date }
+        val sortedChecks = checks.sortedByDescending { it.date }
+        val today = LocalDate.now()
 
-        var bestStreak = 0
         var currentStreak = 0
+        var bestStreak = 0
+        var tempStreak = 0
         var successCount = 0
 
-        for (check in sortedChecks) {
-            if (check.isChecked) {
+        val checkMap = sortedChecks.associateBy { LocalDate.parse(it.date) }
+
+        var date = today
+        while (true) {
+            val check = checkMap[date]
+            if (check?.isChecked == true) {
                 currentStreak++
-                successCount++
-                if (currentStreak > bestStreak) {
-                    bestStreak = currentStreak
-                }
+                date = date.minusDays(1)
             } else {
-                currentStreak = 0
+                break
             }
+        }
+
+        for (check in sortedChecks.reversed()) {
+            if (check.isChecked) {
+                tempStreak++
+                bestStreak = maxOf(bestStreak, tempStreak)
+            } else {
+                tempStreak = 0
+            }
+            if (check.isChecked) successCount++
         }
 
         val total = checks.size
