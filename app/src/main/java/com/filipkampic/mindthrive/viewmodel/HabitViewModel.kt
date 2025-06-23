@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
+import com.filipkampic.mindthrive.model.habitTracker.HabitStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -63,6 +64,31 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
     fun getAllChecksForHabit(habitId: Int): Flow<List<HabitCheck>> {
         return repository.getAllChecksForHabit(habitId)
+    }
+
+    fun calculateHabitStats(checks: List<HabitCheck>): HabitStats {
+        val sortedChecks = checks.sortedBy { it.date }
+
+        var bestStreak = 0
+        var currentStreak = 0
+        var successCount = 0
+
+        for (check in sortedChecks) {
+            if (check.isChecked) {
+                currentStreak++
+                successCount++
+                if (currentStreak > bestStreak) {
+                    bestStreak = currentStreak
+                }
+            } else {
+                currentStreak = 0
+            }
+        }
+
+        val total = checks.size
+        val successRate = if (total > 0) (successCount * 100) / total else 0
+
+        return HabitStats(currentStreak, bestStreak, successRate)
     }
 }
 

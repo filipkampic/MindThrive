@@ -6,17 +6,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import com.filipkampic.mindthrive.model.habitTracker.Habit
+import com.filipkampic.mindthrive.model.habitTracker.HabitStats
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
-fun HabitStatistics(habit: Habit) {
+fun HabitStatistics(stats: HabitStats) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Current streak: ${habit.streak}", color = Peach)
-        Text("Best streak: 0", color = Peach)
-        Text("Success rate: 0%", color = Peach)
+        Text("Current streak: ${stats.currentStreak}", color = Peach)
+        Text("Best streak: ${stats.bestStreak}", color = Peach)
+        Text("Success rate: ${stats.successRate}%", color = Peach)
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.ui.habitTracker.HabitStatistics
@@ -35,6 +37,7 @@ import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.MonthlyProgressO
 import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.WeeklyProgressOverview
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
+import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +49,10 @@ fun HabitDetail(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Weekly Progress", "Monthly Progress")
+
+    val viewModel: HabitViewModel = viewModel()
+    val checks by viewModel.getAllChecksForHabit(habit.id).collectAsState(initial = emptyList())
+    val stats = viewModel.calculateHabitStats(checks)
 
     Scaffold(
         containerColor = DarkBlue,
@@ -104,14 +111,18 @@ fun HabitDetail(
             Spacer(modifier = Modifier.height(24.dp))
 
             if (selectedTab == 0) {
-                WeeklyProgressOverview(habitId = habit.id, isMeasurable = habit.isMeasurable)
+                WeeklyProgressOverview(
+                    habitId = habit.id,
+                    isMeasurable = habit.isMeasurable,
+                    checks = checks
+                )
             } else {
                 MonthlyProgressOverview(habitId = habit.id, isMeasurable = habit.isMeasurable)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            HabitStatistics(habit = habit)
+            HabitStatistics(stats = stats)
         }
     }
 }
