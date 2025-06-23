@@ -8,6 +8,7 @@ import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -16,9 +17,17 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
-    val habits: StateFlow<List<Habit>> = repository.getHabits()
-        .map { it.sortedBy { habit -> habit.id } }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    private val _habits = MutableStateFlow<List<Habit>>(emptyList())
+    val habits: StateFlow<List<Habit>> = _habits
+
+    init {
+        viewModelScope.launch {
+            repository.getHabits().collect { list ->
+                val updated = list.map { repository.resetIsDoneTodayIfNeeded(it) }
+                _habits.value = updated
+            }
+        }
+    }
 
     fun getHabitById(habitId: Int): Flow<Habit?> {
         return repository.getHabitById(habitId)
@@ -30,7 +39,8 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
         val updatedHabit = habit.copy(
             isDoneToday = newIsDone,
-            streak = newStreak
+            streak = newStreak,
+            lastUpdated = LocalDate.now().toString()
         )
         repository.insertHabit(updatedHabit)
 

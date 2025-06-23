@@ -27,7 +27,7 @@ import com.filipkampic.mindthrive.model.tasks.Category
         Habit::class,
         HabitCheck::class
     ],
-    version=13,
+    version=14,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

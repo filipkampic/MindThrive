@@ -17,6 +17,7 @@ data class Habit(
 
     val isMeasurable: Boolean = false,
 
+    val lastUpdated: String? = null,
     val isDoneToday: Boolean = false,
     val streak: Int = 0,
     val bestStreak: Int = 0,

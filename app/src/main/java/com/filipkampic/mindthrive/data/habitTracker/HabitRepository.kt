@@ -4,6 +4,7 @@ import android.util.Log
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 class HabitRepository(
     private val habitDao: HabitDao,
@@ -30,5 +31,14 @@ class HabitRepository(
 
     suspend fun insertCheck(check: HabitCheck) {
         habitCheckDao.insertCheck(check)
+    }
+
+    suspend fun resetIsDoneTodayIfNeeded(habit: Habit): Habit {
+        val today = LocalDate.now().toString()
+        return if (habit.lastUpdated != today) {
+            val updated = habit.copy(isDoneToday = false, lastUpdated = today)
+            insertHabit(updated)
+            updated
+        } else habit
     }
 }
