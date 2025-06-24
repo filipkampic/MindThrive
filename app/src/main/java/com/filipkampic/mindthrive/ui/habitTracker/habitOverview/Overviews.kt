@@ -1,7 +1,6 @@
 package com.filipkampic.mindthrive.ui.habitTracker.habitOverview
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,12 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +28,8 @@ import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun WeeklyYesOrNoOverview(habitId: Int, checks: List<HabitCheck>) {
@@ -79,59 +81,100 @@ fun WeeklyYesOrNoOverview(habitId: Int, checks: List<HabitCheck>) {
     }
 }
 
-
 @Composable
 fun MonthlyYesOrNoOverview(checks: List<HabitCheck>) {
     val today = LocalDate.now()
     val firstDayOfMonth = today.withDayOfMonth(1)
     val daysInMonth = today.lengthOfMonth()
-    val startOffset = (firstDayOfMonth.dayOfWeek.value % 7)
+    val startDayOfWeek = firstDayOfMonth.dayOfWeek.value
 
     val days = buildList {
-        repeat(startOffset) { add(null) }
+        val daysToAddBeforeMonday = (startDayOfWeek - 1 + 7) % 7
+        repeat(daysToAddBeforeMonday) { add(null) }
         for (day in 1..daysInMonth) {
             add(LocalDate.of(today.year, today.month, day))
         }
     }
 
-    Column {
-        days.chunked(7).forEach { week ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                week.forEach { date ->
-                    val isChecked = date != null && checks.any { it.date == date.toString() && it.isChecked }
-                    val isToday = date == today
+    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when {
-                                    isChecked && isToday -> Peach
-                                    isChecked -> DarkBlue
-                                    isToday -> Peach.copy(alpha = 0.3f)
-                                    else -> LightGray
-                                }
-                            )
-                            .border(
-                                width = if (isToday) 2.dp else 0.dp,
-                                color = Peach,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isChecked) {
-                            Text("✓", color = Color.White, fontWeight = FontWeight.Bold)
-                        } else {
-                            Text(
-                                text = date?.dayOfMonth?.toString() ?: "",
-                                color = if (isToday) DarkBlue else Color.White
-                            )
+    Column(
+        modifier = Modifier
+            .width(302.dp)
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 4.dp),
+            contentAlignment = Alignment.TopStart
+        ) {
+            Text(
+                text = today.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)).replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.titleMedium,
+                color = Peach
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            daysOfWeek.forEach { day ->
+                Text(
+                    text = day,
+                    color = LightGray,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .padding(4.dp)
+                )
+            }
+        }
+
+        val weeks = days.chunked(7)
+        Column {
+            weeks.forEach { week ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp, horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    week.forEach { date ->
+                        val check = date?.let { d -> checks.find { it.date == d.toString() } }
+                        val isChecked = check?.isChecked == true
+                        val isToday = date == today
+
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .background(DarkBlue, shape = RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = date?.dayOfMonth?.toString() ?: "",
+                                    color = if (isToday) Peach else Color.White,
+                                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+                                )
+                                Text(
+                                    text = when {
+                                        isChecked -> "✓"
+                                        check != null && !isChecked -> "✘"
+                                        else -> ""
+                                    },
+                                    color = when {
+                                        isChecked -> Color(0xFF4CAF50)
+                                        check != null && !isChecked -> Color(0xFFFF5252)
+                                        else -> Color.Transparent
+                                    },
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                 }

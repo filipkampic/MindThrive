@@ -122,7 +122,7 @@ fun HabitDetail(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            HabitStatistics(stats = stats)
+            HabitStatistics(habit = habit, stats = stats)
         }
     }
 }
