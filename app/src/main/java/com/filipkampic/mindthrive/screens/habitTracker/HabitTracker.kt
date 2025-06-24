@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
@@ -27,9 +29,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,11 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
+import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.ui.habitTracker.HabitItem
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
@@ -67,6 +75,11 @@ fun HabitTracker(navController: NavController) {
 
     var showHabitTypeDialog by remember { mutableStateOf(false) }
     val currentDate = remember { LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.ENGLISH)) }
+
+    var showDialogForMeasurableHabit by remember { mutableStateOf<Habit?>(null) }
+    var inputText by remember { mutableStateOf("") }
+
+    val checks by viewModel.getAllChecks().collectAsState(initial = emptyList())
 
     Scaffold(
         topBar = {
@@ -134,7 +147,9 @@ fun HabitTracker(navController: NavController) {
                     HabitItem(
                         habit = habit,
                         onToggle = { viewModel.toggleHabit(habit) },
-                        onClick = { navController.navigate("habitDetail/${habit.id}")}
+                        onClick = { navController.navigate("habitDetail/${habit.id}")},
+                        onEnterAmount = { showDialogForMeasurableHabit = it },
+                        checks = checks
                     )
                 }
             }
@@ -185,5 +200,61 @@ fun HabitTracker(navController: NavController) {
                 }
             )
         }
+
+        if (showDialogForMeasurableHabit != null) {
+            AlertDialog(
+                onDismissRequest = { showDialogForMeasurableHabit = null },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val amount = inputText.toFloatOrNull()
+                        if (amount != null) {
+                            viewModel.saveMeasurableCheck(showDialogForMeasurableHabit!!, amount)
+                        }
+                        showDialogForMeasurableHabit = null
+                        inputText = ""
+                    }) {
+                        Text("Save", color = Peach)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDialogForMeasurableHabit = null },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Peach)
+                    ) {
+                        Text("Cancel")
+                    }
+                },
+                title = { Text("Enter amount", color = Peach) },
+                text = {
+                    CompositionLocalProvider(
+                        LocalTextSelectionColors provides TextSelectionColors(
+                            handleColor = Peach,
+                            backgroundColor = Peach.copy(alpha = 0.4f)
+                        )
+                    ) {
+                        TextField(
+                            value = inputText,
+                            onValueChange = { inputText = it },
+                            label = {
+                                Text(
+                                    "Amount (${showDialogForMeasurableHabit?.unit ?: ""})",
+                                    color = Peach
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = DarkBlue,
+                                unfocusedContainerColor = DarkBlue,
+                                focusedIndicatorColor = Peach,
+                                unfocusedIndicatorColor = Peach,
+                                cursorColor = Peach
+                            ),
+                            textStyle = TextStyle(color = Peach)
+                        )
+                    }
+                },
+                containerColor = DarkBlue
+            )
+        }
+
     }
 }

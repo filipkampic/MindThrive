@@ -8,5 +8,6 @@ data class HabitCheck(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val habitId: Int,
     val date: String,
-    val isChecked: Boolean
+    val isChecked: Boolean,
+    val amount: Float? = null
 )

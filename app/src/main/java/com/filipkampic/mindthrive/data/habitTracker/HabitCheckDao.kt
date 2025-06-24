@@ -20,4 +20,7 @@ interface HabitCheckDao {
 
     @Query("SELECT * FROM habit_checks WHERE habitId = :habitId AND date = :date LIMIT 1")
     suspend fun getCheck(habitId: Int, date: String): HabitCheck?
+
+    @Query("SELECT * FROM habit_checks")
+    fun getAllChecks(): Flow<List<HabitCheck>>
 }

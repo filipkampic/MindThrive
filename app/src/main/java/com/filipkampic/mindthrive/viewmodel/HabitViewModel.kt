@@ -12,9 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.YearMonth
-import java.time.temporal.ChronoUnit
-import kotlin.math.roundToInt
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     private val _habits = MutableStateFlow<List<Habit>>(emptyList())
@@ -102,6 +99,22 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
         return HabitStats(currentStreak, bestStreak, successRate)
     }
+
+    fun saveMeasurableCheck(habit: Habit, amount: Float) = viewModelScope.launch {
+        val today = LocalDate.now().toString()
+        val existingCheck = repository.getCheck(habit.id, today)
+
+        if (existingCheck == null) {
+            repository.insertCheck(HabitCheck(habitId = habit.id, date = today, isChecked = true, amount = amount))
+        } else {
+            repository.insertCheck(existingCheck.copy(isChecked = true, amount = amount))
+        }
+
+        val updatedHabit = habit.copy(isDoneToday = true, streak = habit.streak + 1)
+        repository.insertHabit(updatedHabit)
+    }
+
+    fun getAllChecks(): Flow<List<HabitCheck>> = repository.getAllChecks()
 }
 
 class HabitViewModelFactory(private val repository: HabitRepository) : ViewModelProvider.Factory {

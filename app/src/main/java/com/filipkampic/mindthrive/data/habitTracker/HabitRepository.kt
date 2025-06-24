@@ -41,4 +41,6 @@ class HabitRepository(
             updated
         } else habit
     }
+
+    fun getAllChecks(): Flow<List<HabitCheck>> = habitCheckDao.getAllChecks()
 }
