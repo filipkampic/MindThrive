@@ -62,7 +62,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         return repository.getAllChecksForHabit(habitId)
     }
 
-    fun calculateHabitStats(checks: List<HabitCheck>): HabitStats {
+    fun calculateHabitStats(checks: List<HabitCheck>, habit: Habit): HabitStats {
         val sortedChecks = checks.sortedByDescending { it.date }
         val today = LocalDate.now()
 
@@ -73,10 +73,19 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
         val checkMap = sortedChecks.associateBy { LocalDate.parse(it.date) }
 
+        fun isSuccessful(check: HabitCheck): Boolean {
+            return if (habit.isMeasurable) {
+                val target = habit.target ?: return false
+                (check.amount ?: 0f) >= target
+            } else {
+                check.isChecked
+            }
+        }
+
         var date = today
         while (true) {
             val check = checkMap[date]
-            if (check?.isChecked == true) {
+            if (check != null && isSuccessful(check)) {
                 currentStreak++
                 date = date.minusDays(1)
             } else {
@@ -85,13 +94,13 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         }
 
         for (check in sortedChecks.reversed()) {
-            if (check.isChecked) {
+            if (isSuccessful(check)) {
                 tempStreak++
+                successCount++
                 bestStreak = maxOf(bestStreak, tempStreak)
             } else {
                 tempStreak = 0
             }
-            if (check.isChecked) successCount++
         }
 
         val total = checks.size
@@ -100,9 +109,14 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         return HabitStats(currentStreak, bestStreak, successRate)
     }
 
+
     fun saveMeasurableCheck(habit: Habit, amount: Float) = viewModelScope.launch {
         val today = LocalDate.now().toString()
         val existingCheck = repository.getCheck(habit.id, today)
+        val target = habit.target ?: return@launch
+
+        val wasSuccessful = existingCheck?.let { (it.amount ?: 0f) >= target } ?: false
+        val isNowSuccessful = amount >= target
 
         if (existingCheck == null) {
             repository.insertCheck(HabitCheck(habitId = habit.id, date = today, isChecked = true, amount = amount))
@@ -110,7 +124,18 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
             repository.insertCheck(existingCheck.copy(isChecked = true, amount = amount))
         }
 
-        val updatedHabit = habit.copy(isDoneToday = true, streak = habit.streak + 1)
+        val newStreak = when {
+            !wasSuccessful && isNowSuccessful -> habit.streak + 1
+            wasSuccessful && !isNowSuccessful -> (habit.streak - 1).coerceAtLeast(0)
+            else -> habit.streak
+        }
+
+        val updatedHabit = habit.copy(
+            isDoneToday = isNowSuccessful,
+            streak = newStreak,
+            lastUpdated = today
+        )
+
         repository.insertHabit(updatedHabit)
     }
 

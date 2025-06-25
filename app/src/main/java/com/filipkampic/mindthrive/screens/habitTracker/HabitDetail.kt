@@ -52,7 +52,7 @@ fun HabitDetail(
 
     val viewModel: HabitViewModel = viewModel()
     val checks by viewModel.getAllChecksForHabit(habit.id).collectAsState(initial = emptyList())
-    val stats = viewModel.calculateHabitStats(checks)
+    val stats = viewModel.calculateHabitStats(checks, habit)
 
     Scaffold(
         containerColor = DarkBlue,
