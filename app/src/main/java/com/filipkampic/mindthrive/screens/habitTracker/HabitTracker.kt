@@ -237,7 +237,7 @@ fun HabitTracker(navController: NavController) {
                             onValueChange = { inputText = it },
                             label = {
                                 Text(
-                                    "Amount (${showDialogForMeasurableHabit?.unit ?: ""})",
+                                    "Amount",
                                     color = Peach
                                 )
                             },

@@ -61,15 +61,9 @@ fun HabitItem(
                 ) {
                     if (todayCheck?.amount != null) {
                         Text(
-                            text = buildString {
-                                val amount = todayCheck.amount
-                                append(
-                                    if (amount % 1.0 == 0.0) amount.toInt().toString()
-                                    else amount.toString()
-                                )
-                                append(" ${habit.unit ?: ""}")
-                            },
-                            color = DarkBlue
+                            text = "${if (todayCheck.amount % 1 == 0f) todayCheck.amount.toInt() else todayCheck.amount} / ${habit.target ?: "-"} ${habit.unit ?: ""}",
+                            color = DarkBlue,
+                            modifier = Modifier.padding(end = 8.dp)
                         )
                     }
                     IconButton(onClick = { onEnterAmount(habit) }) {
