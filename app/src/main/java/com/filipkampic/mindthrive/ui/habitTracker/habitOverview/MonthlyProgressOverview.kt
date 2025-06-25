@@ -15,7 +15,7 @@ fun MonthlyProgressOverview(
     val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
 
     if (isMeasurable) {
-        MonthlyMeasurableOverview(habitId = habitId)
+        MonthlyMeasurableOverview(habitId = habitId, checks = checks)
     } else {
         MonthlyYesOrNoOverview(checks = checks)
     }
