@@ -12,6 +12,7 @@ import com.filipkampic.mindthrive.model.habitTracker.parseFrequency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -226,40 +227,41 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         val today = LocalDate.now().toString()
         val existingCheck = repository.getCheck(habit.id, today)
 
-        val wasSuccessful = existingCheck?.let { check ->
-            val amountValue = check.amount ?: return@let false
-            when (habit.targetType?.lowercase()) {
-                "at most" -> amountValue <= (habit.target?.toFloat() ?: Float.MAX_VALUE)
-                else -> amountValue >= (habit.target?.toFloat() ?: 0f)
-
-            }
-        } ?: false
-
-        val isNowSuccessful = when (habit.targetType?.lowercase()) {
-            "at most" -> amount <= (habit.target?.toFloat() ?: Float.MAX_VALUE)
-            else -> amount >= (habit.target?.toFloat() ?: 0f)
-        }
-
         if (existingCheck == null) {
-            repository.insertCheck(HabitCheck(habitId = habit.id, date = today, isChecked = true, amount = amount))
+            repository.insertCheck(
+                HabitCheck(
+                    habitId = habit.id,
+                    date = today,
+                    isChecked = true,
+                    amount = amount
+                )
+            )
         } else {
-            repository.insertCheck(existingCheck.copy(isChecked = true, amount = amount))
+            repository.insertCheck(
+                existingCheck.copy(
+                    isChecked = true,
+                    amount = amount
+                )
+            )
         }
 
-        val newStreak = when {
-            !wasSuccessful && isNowSuccessful -> habit.streak + 1
-            wasSuccessful && !isNowSuccessful -> (habit.streak - 1).coerceAtLeast(0)
-            else -> habit.streak
-        }
+        val checks = repository.getAllChecksForHabit(habit.id).first()
+        val stats = calculateHabitStats(checks, habit)
 
         val updatedHabit = habit.copy(
-            isDoneToday = isNowSuccessful,
-            streak = newStreak,
-            lastUpdated = today
+            streak = stats.currentStreak,
+            bestStreak = stats.bestStreak,
+            successRate = stats.successRate
         )
 
-        repository.insertHabit(updatedHabit)
+        if (habit.streak != stats.currentStreak ||
+            habit.bestStreak != stats.bestStreak ||
+            habit.successRate != stats.successRate
+        ) {
+            repository.updateHabit(updatedHabit)
+        }
     }
+
 
     fun syncHabitStreaksWithChecks(checks: List<HabitCheck>) = viewModelScope.launch {
         _habits.value.forEach { habit ->

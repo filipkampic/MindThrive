@@ -43,4 +43,8 @@ class HabitRepository(
     }
 
     fun getAllChecks(): Flow<List<HabitCheck>> = habitCheckDao.getAllChecks()
+
+    suspend fun updateHabit(habit: Habit) {
+        habitDao.editHabit(habit)
+    }
 }

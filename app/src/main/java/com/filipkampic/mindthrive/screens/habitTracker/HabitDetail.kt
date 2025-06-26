@@ -54,8 +54,7 @@ import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 fun HabitDetail(
     habit: Habit,
     navController: NavController,
-    onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onDelete: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Weekly Progress", "Monthly Progress")
@@ -78,7 +77,13 @@ fun HabitDetail(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onEdit) {
+                    IconButton(onClick = {
+                        if (habit.isMeasurable) {
+                            navController.navigate("edit_measurable/${habit.id}")
+                        } else {
+                            navController.navigate("edit_yesOrNo/${habit.id}")
+                        }
+                    }) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Peach)
                     }
                     IconButton(onClick = onDelete) {
@@ -218,7 +223,7 @@ fun HabitDetail(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            HabitStatistics(habit = habit, stats = stats)
+            HabitStatistics(habit = habit, viewModel = viewModel)
 
             Spacer(modifier = Modifier.height(16.dp))
         }

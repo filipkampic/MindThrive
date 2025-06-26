@@ -126,8 +126,7 @@ fun MindThriveApp() {
                         HabitDetail(
                             habit = it,
                             navController = navController,
-                            onDelete = { /* TODO */ },
-                            onEdit = { /* TODO */ }
+                            onDelete = { /* TODO */ }
                         )
                     }
                 }
@@ -146,8 +145,7 @@ fun MindThriveApp() {
                         HabitDetail(
                             habit = it,
                             navController = navController,
-                            onDelete = { /* TODO */ },
-                            onEdit = { /* TODO */ }
+                            onDelete = { /* TODO */ }
                         )
                     }
                 }
@@ -198,6 +196,64 @@ fun MindThriveApp() {
 
                             viewModel.insertHabit(habit)
                             scheduleHabitReminder(context = localContext, habit = habit)
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_yesOrNo/{habitId}",
+                    arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val habitId = backStackEntry.arguments?.getInt("habitId")
+                    val db = AppDatabase.getDatabase(context)
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val factory = HabitViewModelFactory(repo)
+                    val viewModel: HabitViewModel = viewModel(factory = factory)
+                    val habit by viewModel.getHabitById(habitId ?: -1).collectAsState(initial = null)
+
+                    YesOrNoHabit(
+                        navController = navController,
+                        habit = habit,
+                        onSave = { name, frequency, reminderTime, description ->
+                            viewModel.insertHabit(
+                                habit!!.copy(
+                                    name = name,
+                                    frequency = frequency,
+                                    reminder = reminderTime,
+                                    description = description
+                                )
+                            )
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(
+                    route = "edit_measurable/{habitId}",
+                    arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val habitId = backStackEntry.arguments?.getInt("habitId")
+                    val db = AppDatabase.getDatabase(context)
+                    val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
+                    val factory = HabitViewModelFactory(repo)
+                    val viewModel: HabitViewModel = viewModel(factory = factory)
+                    val habit by viewModel.getHabitById(habitId ?: -1).collectAsState(initial = null)
+
+                    MeasurableHabit(
+                        navController = navController,
+                        habit = habit,
+                        onSave = { name, unit, target, frequency, targetType, reminderTime, description ->
+                            viewModel.insertHabit(
+                                habit!!.copy(
+                                    name = name,
+                                    unit = unit,
+                                    target = target?.toIntOrNull(),
+                                    frequency = frequency,
+                                    targetType = targetType,
+                                    reminder = reminderTime,
+                                    description = description
+                                )
+                            )
+                            navController.popBackStack()
                         }
                     )
                 }

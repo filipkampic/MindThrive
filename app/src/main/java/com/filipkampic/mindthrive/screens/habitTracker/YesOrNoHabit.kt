@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -30,6 +31,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.ui.TimePickerDialog
 import com.filipkampic.mindthrive.ui.habitTracker.FrequencyDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
@@ -51,16 +54,28 @@ import java.util.Calendar
 @Composable
 fun YesOrNoHabit(
     navController: NavController,
+    habit: Habit? = null,
     onSave: (String, String, String?, String?) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
 
-    var name by remember { mutableStateOf("") }
-    var frequency by remember { mutableStateOf("Every day") }
-    var reminderTime by remember { mutableStateOf<String?>(null) }
-    var description by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(habit?.name ?: "") }
+    var frequency by remember { mutableStateOf(habit?.frequency ?: "Every day") }
+    var reminderTime by remember { mutableStateOf(habit?.reminder) }
+    var description by remember { mutableStateOf(habit?.description ?: "") }
 
     var showFrequencyDialog by remember { mutableStateOf(false) }
+
+    val isEditMode = habit != null
+
+    LaunchedEffect(habit) {
+        habit?.let {
+            name = it.name
+            frequency = it.frequency ?: "Every day"
+            reminderTime = it.reminder
+            description = it.description ?: ""
+        }
+    }
 
     CompositionLocalProvider(
         LocalTextSelectionColors provides TextSelectionColors(
@@ -81,7 +96,13 @@ fun YesOrNoHabit(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = {},
+                    title = {
+                        Text(
+                            text = if (isEditMode) "Edit Habit" else "New Habit",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Peach
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
