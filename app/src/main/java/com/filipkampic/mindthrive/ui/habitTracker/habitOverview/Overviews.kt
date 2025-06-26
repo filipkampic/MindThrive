@@ -238,10 +238,16 @@ fun WeeklyMeasurableOverview(
                 val check = checks.find { it.date == date.toString() }
                 val isToday = date == today
                 val amount = check?.amount
+
+                val isSuccess = when (habit?.targetType?.lowercase()) {
+                    "at most" -> amount != null && amount <= (habit?.target?.toFloat() ?: Float.MAX_VALUE)
+                    else -> amount != null && amount >= (habit?.target?.toFloat() ?: 0f)
+                }
+
                 val color = when {
                     amount == null -> Peach
-                    habit?.target != null && amount >= habit!!.target!! -> Color.Green
-                    else -> Color.Red
+                    isSuccess -> Color(0xFF4CAF50)
+                    else -> Color(0xFFFF5252)
                 }
 
                 Box(
@@ -343,10 +349,16 @@ fun MonthlyMeasurableOverview(
                         val amountText = amount?.let {
                             if (it % 1.0 == 0.0) it.toInt().toString() else it.toString()
                         } ?: ""
+
+                        val isSuccess = when (habit?.targetType?.lowercase()) {
+                            "at most" -> amount != null && amount <= (habit?.target?.toFloat() ?: Float.MAX_VALUE)
+                            else -> amount != null && amount >= (habit?.target?.toFloat() ?: 0f)
+                        }
+
                         val color = when {
                             amount == null -> Peach
-                            habit?.target != null && amount >= habit!!.target!! -> Color.Green
-                            else -> Color.Red
+                            isSuccess -> Color(0xFF4CAF50)
+                            else -> Color(0xFFFF5252)
                         }
 
 
