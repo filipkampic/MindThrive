@@ -93,12 +93,6 @@ fun HabitTracker(navController: NavController) {
                     IconButton(onClick = { navController.navigate("habitStats") }) {
                         Icon(Icons.Default.PieChart, contentDescription = "Stats")
                     }
-                    IconButton(onClick = { /* TODO: Filter */ }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                    }
-                    IconButton(onClick = { /* TODO: Menu */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DarkBlue,
@@ -130,9 +124,6 @@ fun HabitTracker(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(currentDate, style = MaterialTheme.typography.headlineMedium, color = Peach)
-                Button(onClick = { viewModel.markAllDone() }, colors = ButtonDefaults.buttonColors(containerColor = Peach)) {
-                    Text("Mark All Done", color = DarkBlue)
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

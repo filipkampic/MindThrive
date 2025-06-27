@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +28,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -35,9 +37,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -48,21 +52,25 @@ import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.WeeklyProgressOv
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitDetail(
     habitId: Int,
     navController: NavController,
-    onDelete: () -> Unit
+    onDelete: (Habit) -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Weekly Progress", "Monthly Progress")
+    val coroutineScope = rememberCoroutineScope()
 
     val viewModel: HabitViewModel = viewModel()
     val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
     val habits by viewModel.habits.collectAsState()
     val habit = habits.find { it.id == habitId } ?: return
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(checks) {
         viewModel.syncHabitStreaksWithChecks(checks)
@@ -87,7 +95,7 @@ fun HabitDetail(
                     }) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Peach)
                     }
-                    IconButton(onClick = onDelete) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Peach)
                     }
                 },
@@ -228,5 +236,39 @@ fun HabitDetail(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    coroutineScope.launch {
+                        onDelete(habit)
+                        navController.popBackStack()
+                    }
+                }) {
+                    Text("Delete", color = Peach)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel", color = Color.White)
+                }
+            },
+            title = {
+                Text(text = "Delete habit?", color = Peach)
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to delete this habit?",
+                    color = Color.White
+                )
+            },
+            containerColor = DarkBlue,
+            titleContentColor = Peach,
+            textContentColor = Color.White
+        )
     }
 }

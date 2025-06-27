@@ -1,6 +1,7 @@
 package com.filipkampic.mindthrive.data.habitTracker
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -24,4 +25,7 @@ interface HabitDao {
 
     @Query("UPDATE habits SET isDoneToday = 1, streak = streak + 1 WHERE isDoneToday = 0")
     suspend fun markAllDone()
+
+    @Delete
+    suspend fun delete(habit: Habit)
 }

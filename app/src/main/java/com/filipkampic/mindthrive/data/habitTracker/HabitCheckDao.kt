@@ -23,4 +23,7 @@ interface HabitCheckDao {
 
     @Query("SELECT * FROM habit_checks")
     fun getAllChecks(): Flow<List<HabitCheck>>
+
+    @Query("DELETE FROM habit_checks WHERE habitId = :habitId")
+    suspend fun deleteChecksByHabitId(habitId: Int)
 }

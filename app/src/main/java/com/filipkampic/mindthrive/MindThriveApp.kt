@@ -145,7 +145,9 @@ fun MindThriveApp() {
                         HabitDetail(
                             habitId = habitId,
                             navController = navController,
-                            onDelete = { /* TODO */ }
+                            onDelete = { habitToDelete ->
+                                viewModel.deleteHabit(habitToDelete)
+                            }
                         )
                     }
                 }
@@ -158,6 +160,7 @@ fun MindThriveApp() {
 
                     YesOrNoHabit(
                         navController = navController,
+                        allHabits = viewModel.habits.collectAsState().value,
                         onSave = { name, frequency, reminder, description ->
                             val habit = Habit(
                                 name = name,
@@ -180,6 +183,7 @@ fun MindThriveApp() {
 
                     MeasurableHabit(
                         navController = navController,
+                        allHabits = viewModel.habits.collectAsState().value,
                         onSave = { name, unit, target, frequency, targetType, reminder, description ->
                             val habit = Habit(
                                 name = name,
@@ -214,6 +218,7 @@ fun MindThriveApp() {
                     YesOrNoHabit(
                         navController = navController,
                         habit = habit,
+                        allHabits = viewModel.habits.collectAsState().value,
                         onSave = { name, frequency, reminderTime, description ->
                             viewModel.insertHabit(
                                 habit!!.copy(
@@ -240,7 +245,7 @@ fun MindThriveApp() {
 
                     MeasurableHabit(
                         navController = navController,
-                        habit = habit,
+                        habit = habit,allHabits = viewModel.habits.collectAsState().value,
                         onSave = { name, unit, target, frequency, targetType, reminderTime, description ->
                             viewModel.insertHabit(
                                 habit!!.copy(

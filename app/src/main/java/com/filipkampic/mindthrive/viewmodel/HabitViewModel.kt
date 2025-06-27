@@ -51,14 +51,15 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         }
     }
 
-    fun markAllDone() = viewModelScope.launch {
-        repository.markAllDone()
-    }
-
     fun insertHabit(habit: Habit) = viewModelScope.launch {
         repository.insertHabit(habit)
     }
 
+    fun deleteHabit(habit: Habit) = viewModelScope.launch {
+        repository.deleteHabit(habit)
+        repository.deleteChecksForHabit(habit.id)
+    }
+    
     fun getAllChecksForHabit(habitId: Int): Flow<List<HabitCheck>> {
         return repository.getAllChecksForHabit(habitId)
     }

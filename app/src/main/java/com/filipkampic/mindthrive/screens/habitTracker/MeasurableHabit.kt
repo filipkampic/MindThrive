@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -38,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,6 +60,7 @@ import java.util.Calendar
 fun MeasurableHabit(
     navController: NavController,
     habit: Habit? = null,
+    allHabits: List<Habit>,
     onSave: (
         name: String,
         unit: String?,
@@ -81,6 +85,8 @@ fun MeasurableHabit(
     var showTimePicker by remember { mutableStateOf(false) }
 
     val isEditMode = habit != null
+
+    var showDialogMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(habit) {
         habit?.let {
@@ -131,6 +137,22 @@ fun MeasurableHabit(
                     },
                     actions = {
                         IconButton(onClick = {
+                            if (name.isBlank()) {
+                                showDialogMessage = "Habit name cannot be empty"
+                                return@IconButton
+                            }
+
+                            if (target.isBlank()) {
+                                showDialogMessage = "Target cannot be empty"
+                                return@IconButton
+                            }
+
+                            val isDuplicate = allHabits.any { it.name.equals(name, ignoreCase = true) && it.id != habit?.id }
+                            if (isDuplicate) {
+                                showDialogMessage = "Habit with this name already exists"
+                                return@IconButton
+                            }
+
                             onSave(name, unit.ifBlank { null }, target.ifBlank { null }, frequency, targetType, reminderTime, description)
                             navController.popBackStack()
                         }) {
@@ -303,6 +325,20 @@ fun MeasurableHabit(
                         onRemove = {
                             reminderTime = null
                         }
+                    )
+                }
+
+                showDialogMessage?.let { message ->
+                    AlertDialog(
+                        onDismissRequest = { showDialogMessage = null },
+                        confirmButton = {
+                            TextButton(onClick = { showDialogMessage = null }) {
+                                Text("OK", color = Peach)
+                            }
+                        },
+                        title = { Text("Validation Error", color = Color.White) },
+                        text = { Text(message, color = Color.White) },
+                        containerColor = DarkBlue
                     )
                 }
             }
