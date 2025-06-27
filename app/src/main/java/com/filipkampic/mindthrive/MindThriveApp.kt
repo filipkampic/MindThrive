@@ -100,7 +100,7 @@ fun MindThriveApp() {
                     )
                 }
                 composable("notes") { Notes(navController) }
-                composable("editNote") { NoteEditor(navController, noteId = null) }
+                composable("addNote") { NoteEditor(navController, noteId = null) }
                 composable("editNote/{noteId}") { backStackEntry ->
                     val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
                     NoteEditor(navController = navController, noteId = noteId)
@@ -124,7 +124,7 @@ fun MindThriveApp() {
 
                     habit?.let {
                         HabitDetail(
-                            habit = it,
+                            habitId = habitId,
                             navController = navController,
                             onDelete = { /* TODO */ }
                         )
@@ -143,7 +143,7 @@ fun MindThriveApp() {
 
                     habit?.let {
                         HabitDetail(
-                            habit = it,
+                            habitId = habitId,
                             navController = navController,
                             onDelete = { /* TODO */ }
                         )

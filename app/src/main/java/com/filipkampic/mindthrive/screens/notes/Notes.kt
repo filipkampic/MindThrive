@@ -194,7 +194,7 @@ fun Notes(navController: NavController) {
             contentAlignment = Alignment.BottomEnd
         ) {
             FloatingActionButton(
-                onClick = { navController.navigate("editNote") },
+                onClick = { navController.navigate("addNote") },
                 modifier = Modifier.padding(16.dp),
                 containerColor = Peach
             ) {

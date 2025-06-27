@@ -52,6 +52,7 @@ import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.ui.habitTracker.HabitItem
+import com.filipkampic.mindthrive.ui.habitTracker.calculateHabitStats
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
@@ -71,15 +72,13 @@ fun HabitTracker(navController: NavController) {
     val viewModel: HabitViewModel = viewModel(
         factory = HabitViewModelFactory(repository)
     )
-    val habits by viewModel.habits.collectAsState()
+    val habits by viewModel.habits.collectAsState(initial = emptyList())
 
     var showHabitTypeDialog by remember { mutableStateOf(false) }
     val currentDate = remember { LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.ENGLISH)) }
 
     var showDialogForMeasurableHabit by remember { mutableStateOf<Habit?>(null) }
     var inputText by remember { mutableStateOf("") }
-
-    val checks by viewModel.getAllChecks().collectAsState(initial = emptyList())
 
     Scaffold(
         topBar = {
@@ -144,12 +143,14 @@ fun HabitTracker(navController: NavController) {
                     .padding(bottom = 80.dp)
             ) {
                 items(habits) { habit ->
+                    val habitChecks by viewModel.getAllChecksForHabit(habit.id).collectAsState(initial = emptyList())
+
                     HabitItem(
                         habit = habit,
                         onToggle = { viewModel.toggleHabit(habit) },
                         onClick = { navController.navigate("habitDetail/${habit.id}")},
                         onEnterAmount = { showDialogForMeasurableHabit = it },
-                        checks = checks
+                        checks = habitChecks
                     )
                 }
             }

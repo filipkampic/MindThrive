@@ -52,7 +52,7 @@ import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitDetail(
-    habit: Habit,
+    habitId: Int,
     navController: NavController,
     onDelete: () -> Unit
 ) {
@@ -60,8 +60,9 @@ fun HabitDetail(
     val tabs = listOf("Weekly Progress", "Monthly Progress")
 
     val viewModel: HabitViewModel = viewModel()
-    val checks by viewModel.getAllChecksForHabit(habit.id).collectAsState(initial = emptyList())
-    val stats = viewModel.calculateHabitStats(checks, habit)
+    val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
+    val habits by viewModel.habits.collectAsState()
+    val habit = habits.find { it.id == habitId } ?: return
 
     LaunchedEffect(checks) {
         viewModel.syncHabitStreaksWithChecks(checks)
