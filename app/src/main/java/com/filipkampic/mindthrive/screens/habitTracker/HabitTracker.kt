@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,7 @@ import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
+import com.filipkampic.mindthrive.notification.habitTracker.scheduleHabitReminder
 import com.filipkampic.mindthrive.ui.habitTracker.HabitItem
 import com.filipkampic.mindthrive.ui.habitTracker.calculateHabitStats
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
@@ -79,6 +81,12 @@ fun HabitTracker(navController: NavController) {
 
     var showDialogForMeasurableHabit by remember { mutableStateOf<Habit?>(null) }
     var inputText by remember { mutableStateOf("") }
+
+    LaunchedEffect(habits) {
+        habits.filter { !it.reminder.isNullOrBlank() }.forEach { habit ->
+            scheduleHabitReminder(context, habit)
+        }
+    }
 
     Scaffold(
         topBar = {

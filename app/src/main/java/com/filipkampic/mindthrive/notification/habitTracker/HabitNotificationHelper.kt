@@ -20,6 +20,9 @@ fun scheduleHabitReminder(context: Context, habit: Habit) {
     if (delay < 0) delay += Duration.ofDays(1).toMillis()
 
     val data = workDataOf("HABIT_NAME" to habit.name)
+    val workManager = WorkManager.getInstance(context)
+
+    workManager.cancelAllWorkByTag("habit_reminder_${habit.id}")
 
     val request = OneTimeWorkRequestBuilder<HabitReminderWorker>()
         .setInitialDelay(delay, TimeUnit.MILLISECONDS)
@@ -27,5 +30,5 @@ fun scheduleHabitReminder(context: Context, habit: Habit) {
         .addTag("habit_reminder_${habit.id}")
         .build()
 
-    WorkManager.getInstance(context).enqueue(request)
+    workManager.enqueue(request)
 }

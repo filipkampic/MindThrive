@@ -62,56 +62,12 @@ fun HomeScreen(navController: NavController) {
             .background(DarkBlue)
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = { navController.navigate("profile") },
-                modifier = Modifier.offset(y = 16.dp)
-            ) {
-                Icon(
-                    modifier = Modifier.size(32.dp),
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile",
-                    tint = Peach
-                )
-            }
-            Row {
-                IconButton(
-                    onClick = { navController.navigate("settings") },
-                    modifier = Modifier.offset(y = 16.dp)
-                ) {
-                    Icon(
-                        modifier = Modifier.size(32.dp),
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = Peach
-                    )
-                }
-                IconButton(
-                    onClick = {/* TODO: Open Menu */},
-                    modifier = Modifier.offset(y = 16.dp)
-                ) {
-                    Icon(
-                        modifier = Modifier.size(32.dp),
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = Peach
-                    )
-                }
-            }
-        }
-
         Text(
-            text = "Welcome, Filip 👋",
+            text = "Ready to thrive?",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = Peach,
-            modifier = Modifier.padding(top = 32.dp)
+            modifier = Modifier.padding(top = 64.dp)
         )
 
         val cards = listOf(
