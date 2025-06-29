@@ -43,9 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.ui.habitTracker.HabitStatistics
 import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.MonthlyProgressOverview
 import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.WeeklyProgressOverview
@@ -59,13 +57,12 @@ import kotlinx.coroutines.launch
 fun HabitDetail(
     habitId: Int,
     navController: NavController,
-    onDelete: (Habit) -> Unit
+    viewModel: HabitViewModel
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Weekly Progress", "Monthly Progress")
     val coroutineScope = rememberCoroutineScope()
 
-    val viewModel: HabitViewModel = viewModel()
     val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
     val habits by viewModel.habits.collectAsState()
     val habit = habits.find { it.id == habitId } ?: return
@@ -245,7 +242,7 @@ fun HabitDetail(
                 TextButton(onClick = {
                     showDeleteDialog = false
                     coroutineScope.launch {
-                        onDelete(habit)
+                        viewModel.deleteHabit(habit)
                         navController.popBackStack()
                     }
                 }) {

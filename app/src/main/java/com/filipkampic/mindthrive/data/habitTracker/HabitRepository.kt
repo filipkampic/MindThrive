@@ -45,4 +45,8 @@ class HabitRepository(
     suspend fun deleteChecksForHabit(habitId: Int) {
         habitCheckDao.deleteChecksByHabitId(habitId)
     }
+
+    suspend fun updateHabitsOrder(updated: List<Habit>) {
+        habitDao.updateHabits(updated.mapIndexed { index, habit -> habit.copy(position = index) })
+    }
 }

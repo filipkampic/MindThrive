@@ -21,5 +21,7 @@ data class Habit(
     val isDoneToday: Boolean = false,
     val streak: Int = 0,
     val bestStreak: Int = 0,
-    val successRate: Int = 0
+    val successRate: Int = 0,
+
+    val position: Int = 0
 )

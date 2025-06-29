@@ -18,11 +18,13 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     private val _habits = MutableStateFlow<List<Habit>>(emptyList())
     val habits: StateFlow<List<Habit>> = _habits
 
+    private val _habitList = MutableStateFlow<List<Habit>>(emptyList())
+
     init {
         viewModelScope.launch {
             repository.getHabits().collect { list ->
                 val updated = list.map { repository.resetIsDoneTodayIfNeeded(it) }
-                _habits.value = updated
+                _habits.value = updated.sortedBy { it.position }
             }
         }
     }
@@ -59,7 +61,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         repository.deleteHabit(habit)
         repository.deleteChecksForHabit(habit.id)
     }
-    
+
     fun getAllChecksForHabit(habitId: Int): Flow<List<HabitCheck>> {
         return repository.getAllChecksForHabit(habitId)
     }
@@ -124,6 +126,13 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                 )
                 repository.insertHabit(updatedHabit)
             }
+        }
+    }
+
+    fun moveHabits(updatedList: List<Habit>) {
+        _habitList.value = updatedList
+        viewModelScope.launch {
+            repository.updateHabitsOrder(updatedList)
         }
     }
 }

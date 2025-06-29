@@ -126,7 +126,7 @@ fun MindThriveApp() {
                         HabitDetail(
                             habitId = habitId,
                             navController = navController,
-                            onDelete = { /* TODO */ }
+                            viewModel = viewModel
                         )
                     }
                 }
@@ -145,9 +145,7 @@ fun MindThriveApp() {
                         HabitDetail(
                             habitId = habitId,
                             navController = navController,
-                            onDelete = { habitToDelete ->
-                                viewModel.deleteHabit(habitToDelete)
-                            }
+                            viewModel = viewModel
                         )
                     }
                 }
