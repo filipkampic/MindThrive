@@ -13,6 +13,8 @@ fun scheduleTimeBlockNotification(context: Context, timeBlock: TimeBlock) {
         .toMillis()
         .let { if (it < 0) 0 else it }
 
+    if (delayMillis <= 0) return
+
     val workRequest = OneTimeWorkRequestBuilder<TimeBlockNotificationWorker>()
         .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
         .setInputData(

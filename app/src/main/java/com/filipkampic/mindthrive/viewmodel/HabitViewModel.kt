@@ -1,5 +1,6 @@
 package com.filipkampic.mindthrive.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -134,6 +136,41 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         viewModelScope.launch {
             repository.updateHabitsOrder(updatedList)
         }
+    }
+
+    private fun isSuccessful(check: HabitCheck, habit: Habit): Boolean {
+        return if (habit.isMeasurable) {
+            val amount = check.amount ?: 0f
+            val target = (habit.target ?: Int.MAX_VALUE).toFloat()
+            amount >= target
+        } else {
+            check.isChecked
+        }
+    }
+
+    suspend fun calculateOverallStats(): Triple<Int, Pair<String, Int>, Int> {
+        val habits = repository.getHabits().firstOrNull().orEmpty()
+        val totalHabits = habits.size
+        var longestStreak = 0
+        var longestStreakName = ""
+        var totalSuccesses = 0
+        var totalChecks = 0
+
+        for (habit in habits) {
+            val checks = repository.getAllChecksForHabit(habit.id).firstOrNull().orEmpty()
+            val stats = calculateHabitStats(checks, habit)
+
+            if (stats.bestStreak > longestStreak) {
+                longestStreak = stats.bestStreak
+                longestStreakName = habit.name
+            }
+
+            totalSuccesses += checks.count { check -> return@count isSuccessful(check, habit) }
+            totalChecks += checks.size
+        }
+
+        val successRate = if (totalChecks == 0) 0 else ((totalSuccesses.toDouble() / totalChecks) * 100).toInt()
+        return Triple(totalHabits, longestStreakName to longestStreak, successRate)
     }
 }
 

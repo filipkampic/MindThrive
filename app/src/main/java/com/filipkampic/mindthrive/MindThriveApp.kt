@@ -36,6 +36,7 @@ import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
 import com.filipkampic.mindthrive.screens.habitTracker.HabitDetail
+import com.filipkampic.mindthrive.screens.habitTracker.HabitStats
 import com.filipkampic.mindthrive.screens.habitTracker.MeasurableHabit
 import com.filipkampic.mindthrive.screens.habitTracker.YesOrNoHabit
 import com.filipkampic.mindthrive.screens.notes.NoteEditor
@@ -260,7 +261,9 @@ fun MindThriveApp() {
                         }
                     )
                 }
-
+                composable("habitStats") {
+                    HabitStats(navController = navController)
+                }
                 composable("goals") { Goals(navController) }
             }
         }
