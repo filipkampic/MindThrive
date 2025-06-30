@@ -25,9 +25,9 @@ import com.filipkampic.mindthrive.data.TaskRepository
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.notification.habitTracker.scheduleHabitReminder
+import com.filipkampic.mindthrive.screens.goals.AddGoal
 import com.filipkampic.mindthrive.screens.Calendar
 import com.filipkampic.mindthrive.screens.focus.Focus
-import com.filipkampic.mindthrive.screens.Goals
 import com.filipkampic.mindthrive.screens.habitTracker.HabitTracker
 import com.filipkampic.mindthrive.screens.HomeScreen
 import com.filipkampic.mindthrive.screens.notes.Notes
@@ -35,6 +35,7 @@ import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.goals.Goals
 import com.filipkampic.mindthrive.screens.habitTracker.HabitDetail
 import com.filipkampic.mindthrive.screens.habitTracker.HabitStats
 import com.filipkampic.mindthrive.screens.habitTracker.MeasurableHabit
@@ -264,7 +265,9 @@ fun MindThriveApp() {
                 composable("habitStats") {
                     HabitStats(navController = navController)
                 }
+
                 composable("goals") { Goals(navController) }
+                composable("addGoal") { AddGoal(navController)}
             }
         }
     }

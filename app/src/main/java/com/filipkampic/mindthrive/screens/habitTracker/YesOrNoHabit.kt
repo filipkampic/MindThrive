@@ -261,8 +261,8 @@ fun YesOrNoHabit(
                                 Text("OK", color = Peach)
                             }
                         },
-                        title = { Text("Validation Error", color = Color.White) },
-                        text = { Text(message, color = Color.White) },
+                        title = { Text("Validation Error", color = Peach) },
+                        text = { Text(message, color = Peach) },
                         containerColor = DarkBlue
                     )
                 }
