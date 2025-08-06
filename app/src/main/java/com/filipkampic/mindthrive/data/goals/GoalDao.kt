@@ -27,7 +27,7 @@ interface GoalDao {
     fun getAllCategories(): Flow<List<String>>
 
     @Query("SELECT * FROM goals WHERE id = :id")
-    suspend fun getGoalById(id: Int): Goal?
+    fun getGoalById(id: Int): Flow<Goal?>
 
     @Query("SELECT * FROM goals")
     suspend fun getAllGoalsOnce(): List<Goal>

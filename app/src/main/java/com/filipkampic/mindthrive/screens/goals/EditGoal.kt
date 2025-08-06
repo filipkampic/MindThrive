@@ -13,7 +13,7 @@ import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModelFactory
 
 @Composable
-fun AddGoal(navController: NavController) {
+fun EditGoal(goalId: Int, navController: NavController) {
     val context = LocalContext.current
     val repository = remember {
         val db = AppDatabase.getDatabase(context)
@@ -21,11 +21,14 @@ fun AddGoal(navController: NavController) {
     }
     val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(repository))
     val categories by viewModel.categories.collectAsState()
+    val goal by viewModel.getGoalById(goalId).collectAsState(initial = null)
 
-    GoalForm(
-        initialGoal = null,
-        categories = categories,
-        onSave = { goal -> viewModel.insertGoal(goal) },
-        navController = navController
-    )
+    goal?.let {
+        GoalForm(
+            initialGoal = it,
+            categories = categories,
+            onSave = { updated -> viewModel.updateGoal(updated.copy(id = it.id)) },
+            navController = navController
+        )
+    }
 }

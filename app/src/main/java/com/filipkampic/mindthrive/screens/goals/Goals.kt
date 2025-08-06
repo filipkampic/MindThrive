@@ -175,7 +175,9 @@ fun Goals(navController: NavController) {
             }
 
             items(goals) { goal ->
-                GoalCard(goal = goal, onClick = { /* TODO */ })
+                GoalCard(goal = goal, onClick = {
+                    navController.navigate("goalDetails/${goal.id}")
+                })
             }
         }
     }

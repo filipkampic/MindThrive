@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,8 +46,24 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
         }
     }
 
-    suspend fun goalNameExists(name: String): Boolean {
-        return repository.getAllGoalsOnce().any { it.name.equals(name, ignoreCase = true) }
+    fun updateGoal(goal: Goal) {
+        viewModelScope.launch {
+            repository.update(goal)
+        }
+    }
+
+    fun deleteGoal(goal: Goal) {
+        viewModelScope.launch {
+            repository.delete(goal)
+        }
+    }
+
+    fun getGoalById(goalId: Int) : Flow<Goal?> {
+        return repository.getGoalById(goalId)
+    }
+
+    suspend fun goalNameExists(name: String, excludeId: Int? = null) : Boolean {
+        return repository.getAllGoalsOnce().any { it.name.equals(name, ignoreCase = true) && it.id != excludeId }
     }
 }
 

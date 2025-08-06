@@ -14,7 +14,7 @@ class GoalRepository(private val dao: GoalDao) {
 
     suspend fun delete(goal: Goal) = dao.delete(goal)
 
-    suspend fun getGoalById(id: Int): Goal? = dao.getGoalById(id)
+    fun getGoalById(id: Int): Flow<Goal?> = dao.getGoalById(id)
 
     suspend fun getAllGoalsOnce() : List<Goal> {
         return dao.getAllGoalsOnce()

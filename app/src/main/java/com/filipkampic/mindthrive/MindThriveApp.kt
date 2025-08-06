@@ -35,6 +35,8 @@ import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.screens.goals.EditGoal
+import com.filipkampic.mindthrive.screens.goals.GoalDetails
 import com.filipkampic.mindthrive.screens.goals.Goals
 import com.filipkampic.mindthrive.screens.habitTracker.HabitDetail
 import com.filipkampic.mindthrive.screens.habitTracker.HabitStats
@@ -267,7 +269,22 @@ fun MindThriveApp() {
                 }
 
                 composable("goals") { Goals(navController) }
+
+                composable("goalDetails/{goalId}") { backStackEntry ->
+                    val goalId = backStackEntry.arguments?.getString("goalId")?.toIntOrNull()
+                    goalId?.let {
+                        GoalDetails(goalId = it, navController = navController)
+                    }
+                }
+
                 composable("addGoal") { AddGoal(navController)}
+
+                composable("editGoal/{goalId}") { backStackEntry ->
+                    val goalId = backStackEntry.arguments?.getString("goalId")?.toIntOrNull()
+                    goalId?.let {
+                        EditGoal(goalId = it, navController = navController)
+                    }
+                }
             }
         }
     }

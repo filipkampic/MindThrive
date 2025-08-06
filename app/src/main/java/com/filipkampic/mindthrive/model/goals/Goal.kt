@@ -10,7 +10,7 @@ data class Goal(
     val name: String,
     val motivation: String?,
     val reward: String?,
-    val deadLine: LocalDate,
+    val deadline: LocalDate,
     val category: String,
     val progress: Float = 0f
 )
