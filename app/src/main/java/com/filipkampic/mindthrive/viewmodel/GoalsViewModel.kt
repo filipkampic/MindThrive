@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
     private val _selectedCategory = MutableStateFlow("All")
@@ -60,6 +62,18 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     fun getGoalById(goalId: Int) : Flow<Goal?> {
         return repository.getGoalById(goalId)
+    }
+
+    fun isDeadlinePassed(deadline: LocalDate?) : Boolean {
+        if (deadline == null) return false
+        return LocalDate.now().isAfter(deadline)
+    }
+
+    fun calculateDaysRemaining(deadline: LocalDate?): Long {
+        if (deadline == null) return Long.MAX_VALUE
+        val today = LocalDate.now()
+        if (today.isAfter(deadline)) { return 0 }
+        return ChronoUnit.DAYS.between(today, deadline)
     }
 
     suspend fun goalNameExists(name: String, excludeId: Int? = null) : Boolean {

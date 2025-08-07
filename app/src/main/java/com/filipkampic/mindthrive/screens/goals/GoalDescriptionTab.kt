@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,7 +71,21 @@ fun GoalDescriptionTab(
             }
 
             Text("Deadline", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-            Text(it.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")), color = Peach)
+            if (viewModel.isDeadlinePassed(it.deadline)) {
+                Text(
+                    text = "DEADLINE PASSED",
+                    color = Color.Red,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = it.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")),
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            } else {
+                Text(it.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")), color = Peach)
+            }
 
             Text("Category", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Text(it.category.ifBlank { "General" }, color = Peach)

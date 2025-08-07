@@ -175,7 +175,14 @@ fun Goals(navController: NavController) {
             }
 
             items(goals) { goal ->
-                GoalCard(goal = goal, onClick = {
+                val daysLeft = viewModel.calculateDaysRemaining(goal.deadline)
+                val isOverdue = viewModel.isDeadlinePassed(goal.deadline)
+
+                GoalCard(
+                    goal = goal,
+                    daysLeft = daysLeft,
+                    isOverdue = isOverdue,
+                    onClick = {
                     navController.navigate("goalDetails/${goal.id}")
                 })
             }

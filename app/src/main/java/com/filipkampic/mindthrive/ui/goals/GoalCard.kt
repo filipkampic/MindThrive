@@ -12,22 +12,21 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.filipkampic.mindthrive.model.goals.Goal
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 @Composable
 fun GoalCard(
     goal: Goal,
+    daysLeft: Long,
+    isOverdue: Boolean,
     onClick: () -> Unit
 ) {
-    val daysLeft = ChronoUnit.DAYS.between(LocalDate.now(), goal.deadline).coerceAtLeast(0)
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -44,8 +43,13 @@ fun GoalCard(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "$daysLeft days left",
-            color = DarkBlue,
+            text = when {
+                isOverdue -> "Deadline Passed"
+                daysLeft == 0L -> "Deadline Today"
+                daysLeft == 1L -> "1 day left"
+                else -> "$daysLeft days left"
+            },
+            color = if (isOverdue) Color.Red else DarkBlue,
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(8.dp))
