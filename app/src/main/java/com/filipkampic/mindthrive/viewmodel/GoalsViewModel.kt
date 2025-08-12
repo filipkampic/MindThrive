@@ -5,12 +5,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
+import com.filipkampic.mindthrive.model.goals.GoalStep
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -78,6 +80,47 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     suspend fun goalNameExists(name: String, excludeId: Int? = null) : Boolean {
         return repository.getAllGoalsOnce().any { it.name.equals(name, ignoreCase = true) && it.id != excludeId }
+    }
+
+    fun getSteps(goalId: Int): Flow<List<GoalStep>> = repository.getStepsForGoal(goalId)
+
+    fun toggleStepCompleted(step: GoalStep) {
+        viewModelScope.launch {
+            repository.updateStep(step.copy(isCompleted = !step.isCompleted))
+        }
+    }
+
+    fun addStep(goalId: Int, name: String, description: String?) {
+        viewModelScope.launch {
+            val currentSteps: List<GoalStep> = repository.getStepsForGoal(goalId).first()
+            val nextOrder = currentSteps.size
+            val newStep = GoalStep(
+                goalId = goalId,
+                name = name,
+                description = description,
+                isCompleted = false,
+                order = nextOrder
+            )
+            repository.insertStep(newStep)
+        }
+    }
+
+    fun updateStep(step: GoalStep) {
+        viewModelScope.launch {
+            repository.updateStep(step)
+        }
+    }
+
+    fun deleteStep(step: GoalStep) {
+        viewModelScope.launch {
+            repository.deleteStep(step)
+        }
+    }
+
+    fun updateStepsOrder(orderedSteps: List<GoalStep>) {
+        viewModelScope.launch {
+            repository.updateSteps(orderedSteps)
+        }
     }
 }
 

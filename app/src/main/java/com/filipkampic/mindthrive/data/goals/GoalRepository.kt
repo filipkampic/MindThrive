@@ -1,22 +1,33 @@
 package com.filipkampic.mindthrive.data.goals
 
 import com.filipkampic.mindthrive.model.goals.Goal
+import com.filipkampic.mindthrive.model.goals.GoalStep
 import kotlinx.coroutines.flow.Flow
 
-class GoalRepository(private val dao: GoalDao) {
-    fun getAllGoals(): Flow<List<Goal>> = dao.getAllGoals()
+class GoalRepository(private val goalDao: GoalDao, private val goalStepDao: GoalStepDao) {
+    fun getAllGoals(): Flow<List<Goal>> = goalDao.getAllGoals()
 
-    fun getAllCategories(): Flow<List<String>> = dao.getAllCategories()
+    fun getAllCategories(): Flow<List<String>> = goalDao.getAllCategories()
 
-    suspend fun insert(goal: Goal) = dao.insert(goal)
+    suspend fun insert(goal: Goal) = goalDao.insert(goal)
 
-    suspend fun update(goal: Goal) = dao.update(goal)
+    suspend fun update(goal: Goal) = goalDao.update(goal)
 
-    suspend fun delete(goal: Goal) = dao.delete(goal)
+    suspend fun delete(goal: Goal) = goalDao.delete(goal)
 
-    fun getGoalById(id: Int): Flow<Goal?> = dao.getGoalById(id)
+    fun getGoalById(id: Int): Flow<Goal?> = goalDao.getGoalById(id)
 
     suspend fun getAllGoalsOnce() : List<Goal> {
-        return dao.getAllGoalsOnce()
+        return goalDao.getAllGoalsOnce()
     }
+
+    fun getStepsForGoal(goalId: Int): Flow<List<GoalStep>> = goalStepDao.getStepsForGoal(goalId)
+
+    suspend fun insertStep(step: GoalStep) = goalStepDao.insert(step)
+
+    suspend fun updateStep(step: GoalStep) = goalStepDao.update(step)
+
+    suspend fun deleteStep(step: GoalStep) = goalStepDao.delete(step)
+
+    suspend fun updateSteps(steps: List<GoalStep>) = goalStepDao.updateSteps(steps)
 }

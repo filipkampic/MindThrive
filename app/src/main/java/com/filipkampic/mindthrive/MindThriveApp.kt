@@ -35,6 +35,7 @@ import com.filipkampic.mindthrive.screens.Profile
 import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
+import com.filipkampic.mindthrive.ui.goals.AddStepDialog
 import com.filipkampic.mindthrive.screens.goals.EditGoal
 import com.filipkampic.mindthrive.screens.goals.GoalDetails
 import com.filipkampic.mindthrive.screens.goals.Goals

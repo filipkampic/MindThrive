@@ -37,7 +37,7 @@ fun GoalDescriptionTab(
 ) {
     val context = LocalContext.current
     val viewModel: GoalsViewModel = viewModel(
-        factory = GoalsViewModelFactory(GoalRepository(AppDatabase.getDatabase(context).goalDao()))
+        factory = GoalsViewModelFactory(GoalRepository(AppDatabase.getDatabase(context).goalDao(), AppDatabase.getDatabase(context).goalStepDao()))
     )
 
     val goal by viewModel.getGoalById(goalId).collectAsState(initial = null)
