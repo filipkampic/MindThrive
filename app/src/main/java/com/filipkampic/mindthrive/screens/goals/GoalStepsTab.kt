@@ -152,7 +152,7 @@ fun GoalStepsTab(goalId: Int) {
 
                             Checkbox(
                                 checked = step.isCompleted,
-                                onCheckedChange = { viewModel.toggleStepCompleted(step) },
+                                onCheckedChange = { isCheckedValue -> viewModel.updateGoalStepCompletion(step, isCheckedValue) },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Peach,
                                     uncheckedColor = Peach.copy(alpha = 0.7f),

@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.goals.GoalRepository
+import com.filipkampic.mindthrive.model.goals.GoalProgress
 import com.filipkampic.mindthrive.ui.goals.GoalCard
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
@@ -177,14 +178,22 @@ fun Goals(navController: NavController) {
             items(goals) { goal ->
                 val daysLeft = viewModel.calculateDaysRemaining(goal.deadline)
                 val isOverdue = viewModel.isDeadlinePassed(goal.deadline)
+                val progress by viewModel.goalProgress(goal.id).collectAsState(
+                    initial = GoalProgress(0, 0, 0f)
+                )
+                val isCompleted by viewModel.goalCompleted(goal.id).collectAsState(initial = false)
 
                 GoalCard(
                     goal = goal,
                     daysLeft = daysLeft,
                     isOverdue = isOverdue,
+                    hasSteps = progress.total > 0,
+                    progress = progress.ratio,
+                    isCompleted = isCompleted,
                     onClick = {
-                    navController.navigate("goalDetails/${goal.id}")
-                })
+                        navController.navigate("goalDetails/${goal.id}")
+                    }
+                )
             }
         }
     }

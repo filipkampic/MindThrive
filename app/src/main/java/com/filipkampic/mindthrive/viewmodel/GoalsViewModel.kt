@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
 import com.filipkampic.mindthrive.model.goals.GoalNote
+import com.filipkampic.mindthrive.model.goals.GoalProgress
 import com.filipkampic.mindthrive.model.goals.GoalStep
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -88,12 +90,6 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     fun getSteps(goalId: Int): Flow<List<GoalStep>> = repository.getStepsForGoal(goalId)
 
-    fun toggleStepCompleted(step: GoalStep) {
-        viewModelScope.launch {
-            repository.updateStep(step.copy(isCompleted = !step.isCompleted))
-        }
-    }
-
     fun addStep(goalId: Int, name: String, description: String?) {
         viewModelScope.launch {
             val currentSteps: List<GoalStep> = repository.getStepsForGoal(goalId).first()
@@ -125,6 +121,24 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
         viewModelScope.launch {
             repository.updateSteps(orderedSteps)
         }
+    }
+
+    fun updateGoalStepCompletion(step: GoalStep, isCompleted: Boolean) {
+        viewModelScope.launch {
+            val updatedStep = step.copy(isCompleted = isCompleted)
+            repository.updateStep(updatedStep)
+        }
+    }
+
+    fun goalProgress(goalId: Int) = getSteps(goalId).map { steps ->
+        val total = steps.size
+        val done = steps.count { it.isCompleted }
+        val ratio = if (total == 0) 0f else done.toFloat() / total
+        GoalProgress(done, total, ratio)
+    }
+
+    fun goalCompleted(goalId: Int) = getSteps(goalId).map { steps ->
+        steps.isNotEmpty() && steps.all { it.isCompleted }
     }
 
     fun getNotes(goalId: Int): Flow<List<GoalNote>> = repository.getGoalNotes(goalId)

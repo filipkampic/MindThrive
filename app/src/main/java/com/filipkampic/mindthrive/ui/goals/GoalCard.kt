@@ -2,15 +2,19 @@ package com.filipkampic.mindthrive.ui.goals
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -25,6 +29,9 @@ fun GoalCard(
     goal: Goal,
     daysLeft: Long,
     isOverdue: Boolean,
+    hasSteps: Boolean,
+    progress: Float,
+    isCompleted: Boolean,
     onClick: () -> Unit
 ) {
     Column(
@@ -42,22 +49,49 @@ fun GoalCard(
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = when {
-                isOverdue -> "Deadline Passed"
-                daysLeft == 0L -> "Deadline Today"
-                daysLeft == 1L -> "1 day left"
-                else -> "$daysLeft days left"
-            },
-            color = if (isOverdue) Color.Red else DarkBlue,
-            fontSize = 14.sp
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = when {
+                    isCompleted && !isOverdue -> "Completed"
+                    isCompleted && isOverdue -> "Completed late"
+                    isOverdue -> "Deadline Passed"
+                    daysLeft == 0L -> "Deadline Today"
+                    daysLeft == 1L -> "1 day left"
+                    else -> "$daysLeft days left"
+                },
+                color = when {
+                    isCompleted && !isOverdue -> Color(0xFF2E7D32)
+                    isCompleted && isOverdue -> Color(0xFFF57C00)
+                    isOverdue -> Color.Red
+                    else -> DarkBlue
+                },
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            if (hasSteps) {
+                Text(
+                    text = "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkBlue
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
-        LinearProgressIndicator(
-            progress = { goal.progress },
-            modifier = Modifier.fillMaxWidth(),
-            color = DarkBlue,
-            trackColor = DarkBlue.copy(alpha = 0.3f),
-        )
+        if (hasSteps) {
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = DarkBlue,
+                trackColor = DarkBlue.copy(alpha = 0.3f),
+            )
+        }
     }
 }
