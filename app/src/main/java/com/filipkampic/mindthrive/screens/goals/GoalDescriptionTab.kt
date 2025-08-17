@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,9 +37,11 @@ fun GoalDescriptionTab(
     navController: NavController,
 ) {
     val context = LocalContext.current
-    val viewModel: GoalsViewModel = viewModel(
-        factory = GoalsViewModelFactory(GoalRepository(AppDatabase.getDatabase(context).goalDao(), AppDatabase.getDatabase(context).goalStepDao()))
-    )
+    val repository = remember {
+        val db = AppDatabase.getDatabase(context)
+        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao())
+    }
+    val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(repository))
 
     val goal by viewModel.getGoalById(goalId).collectAsState(initial = null)
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
+import com.filipkampic.mindthrive.model.goals.GoalNote
 import com.filipkampic.mindthrive.model.goals.GoalStep
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,9 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
         combine(repository.getAllGoals(), selectedCategory) { goals, category ->
             if (category == "All") goals else goals.filter { it.category == category }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _selectedGoalNote = MutableStateFlow<GoalNote?>(null)
+    val selectedGoalNote: StateFlow<GoalNote?> = _selectedGoalNote.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -121,6 +125,48 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
         viewModelScope.launch {
             repository.updateSteps(orderedSteps)
         }
+    }
+
+    fun getNotes(goalId: Int): Flow<List<GoalNote>> = repository.getGoalNotes(goalId)
+
+    fun upsertNote(goalId: Int, id: Int?, title: String, text: String) {
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            if (id == null) {
+                repository.insertGoalNote(
+                    GoalNote(
+                        goalId = goalId,
+                        title = title.trim(),
+                        text = text.trim(),
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                )
+            } else {
+                val existing = repository.getGoalNote(id) ?: return@launch
+                repository.updateGoalNote(
+                    existing.copy(
+                        title = title.trim(),
+                        text = text.trim(),
+                        updatedAt = now
+                    )
+                )
+            }
+        }
+    }
+
+    fun deleteNote(note: GoalNote) {
+        viewModelScope.launch { repository.deleteGoalNote(note) }
+    }
+
+    fun loadGoalNote(noteId: Int) {
+        viewModelScope.launch {
+            _selectedGoalNote.value = repository.getGoalNote(noteId)
+        }
+    }
+
+    fun clearSelectedGoalNote() {
+        _selectedGoalNote.value = null
     }
 }
 

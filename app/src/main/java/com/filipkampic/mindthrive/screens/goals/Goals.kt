@@ -56,7 +56,7 @@ fun Goals(navController: NavController) {
     val context = LocalContext.current
     val repository = remember {
         val db = AppDatabase.getDatabase(context)
-        GoalRepository(db.goalDao(), db.goalStepDao())
+        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao())
     }
     val viewModel: GoalsViewModel = viewModel(
         factory = GoalsViewModelFactory(repository)

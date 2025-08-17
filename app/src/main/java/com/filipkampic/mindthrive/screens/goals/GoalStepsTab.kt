@@ -52,8 +52,12 @@ import org.burnoutcrew.reorderable.reorderable
 @Composable
 fun GoalStepsTab(goalId: Int) {
     val context = LocalContext.current
+    val repository = remember {
+        val db = AppDatabase.getDatabase(context)
+        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao())
+    }
     val viewModel: GoalsViewModel = viewModel(
-        factory = GoalsViewModelFactory(GoalRepository(AppDatabase.getDatabase(context).goalDao(), AppDatabase.getDatabase(context).goalStepDao()))
+        factory = GoalsViewModelFactory(repository)
     )
 
     val stepsStateList = remember { mutableStateListOf<GoalStep>() }

@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.filipkampic.mindthrive.data.goals.GoalDao
+import com.filipkampic.mindthrive.data.goals.GoalNoteDao
 import com.filipkampic.mindthrive.data.goals.GoalStepDao
 import com.filipkampic.mindthrive.data.habitTracker.HabitCheckDao
 import com.filipkampic.mindthrive.data.habitTracker.HabitDao
@@ -13,6 +14,7 @@ import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.model.TimeBlockTypeConverters
 import com.filipkampic.mindthrive.model.goals.Goal
+import com.filipkampic.mindthrive.model.goals.GoalNote
 import com.filipkampic.mindthrive.model.goals.GoalStep
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
@@ -31,9 +33,10 @@ import com.filipkampic.mindthrive.model.tasks.Category
         Habit::class,
         HabitCheck::class,
         Goal::class,
-        GoalStep::class
+        GoalStep::class,
+        GoalNote::class
     ],
-    version=21,
+    version=22,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -45,6 +48,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun habitCheckDao(): HabitCheckDao
     abstract fun goalDao(): GoalDao
     abstract fun goalStepDao(): GoalStepDao
+    abstract fun goalNoteDao(): GoalNoteDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null

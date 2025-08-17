@@ -38,6 +38,7 @@ import com.filipkampic.mindthrive.screens.TimeManagementWrapper
 import com.filipkampic.mindthrive.ui.goals.AddStepDialog
 import com.filipkampic.mindthrive.screens.goals.EditGoal
 import com.filipkampic.mindthrive.screens.goals.GoalDetails
+import com.filipkampic.mindthrive.screens.goals.GoalNoteEditor
 import com.filipkampic.mindthrive.screens.goals.Goals
 import com.filipkampic.mindthrive.screens.habitTracker.HabitDetail
 import com.filipkampic.mindthrive.screens.habitTracker.HabitStats
@@ -285,6 +286,27 @@ fun MindThriveApp() {
                     goalId?.let {
                         EditGoal(goalId = it, navController = navController)
                     }
+                }
+
+                composable(
+                    route = "goalNoteEditor/{goalId}?noteId={noteId}",
+                    arguments = listOf(
+                        navArgument("goalId") { type = NavType.IntType },
+                        navArgument("noteId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        }
+                    )
+                ) { backStackEntry ->
+                    val goalId = backStackEntry.arguments?.getInt("goalId") ?: return@composable
+                    val noteIdArg = backStackEntry.arguments?.getInt("noteId") ?: -1
+                    val noteId: Int? = if (noteIdArg == -1) null else noteIdArg
+
+                    GoalNoteEditor(
+                        goalId = goalId,
+                        noteId = noteId,
+                        navController = navController
+                    )
                 }
             }
         }
