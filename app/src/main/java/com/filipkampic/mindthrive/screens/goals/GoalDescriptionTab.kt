@@ -6,14 +6,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +49,9 @@ fun GoalDescriptionTab(
 
     val goal by viewModel.getGoalById(goalId).collectAsState(initial = null)
 
-    goal?.let {
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+    goal?.let { g ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -54,7 +60,7 @@ fun GoalDescriptionTab(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = it.name,
+                text = g.name,
                 style = MaterialTheme.typography.titleLarge.copy(
                     color = Peach,
                     fontWeight = FontWeight.Bold,
@@ -63,40 +69,40 @@ fun GoalDescriptionTab(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
-            it.motivation?.takeIf { it.isNotBlank() }?.let { m ->
+            g.motivation?.takeIf { it.isNotBlank() }?.let { m ->
                 Text("Motivation", color = Peach, style  = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Text(m, color = Peach)
             }
 
-            it.reward?.takeIf { it.isNotBlank() }?.let { r ->
+            g.reward?.takeIf { it.isNotBlank() }?.let { r ->
                 Text("Reward", color = Peach, style  = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Text(r, color = Peach)
             }
 
             Text("Deadline", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-            if (viewModel.isDeadlinePassed(it.deadline)) {
+            if (viewModel.isDeadlinePassed(g.deadline)) {
                 Text(
                     text = "DEADLINE PASSED",
                     color = Color.Red,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = it.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")),
+                    text = g.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")),
                     color = Color.Red,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             } else {
-                Text(it.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")), color = Peach)
+                Text(g.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")), color = Peach)
             }
 
             Text("Category", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-            Text(it.category.ifBlank { "General" }, color = Peach)
+            Text(g.category.ifBlank { "General" }, color = Peach)
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
                     onClick = {
-                        navController.navigate("editGoal/${it.id}")
+                        navController.navigate("editGoal/${g.id}")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Peach, contentColor = DarkBlue)
                 ) {
@@ -104,15 +110,50 @@ fun GoalDescriptionTab(
                 }
 
                 Button(
-                    onClick = {
-                        viewModel.deleteGoal(it)
-                        navController.popBackStack()
-                    },
+                    onClick = { showDeleteConfirmDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Peach, contentColor = DarkBlue)
                 ) {
                     Text("Delete")
                 }
             }
         }
+
+        if (showDeleteConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmDialog = false },
+                title = { Text("Confirm Deletion", color = DarkBlue) },
+                text = {
+                    Text(
+                        "Are you sure you want to delete this goal?",
+                        color = DarkBlue.copy(alpha = 0.8f)
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteGoal(g)
+                            showDeleteConfirmDialog = false
+                            navController.popBackStack()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DarkBlue,
+                            contentColor = Peach
+                        )
+                    ) { Text("Delete") }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteConfirmDialog = false },
+                        colors = ButtonDefaults.textButtonColors(contentColor = DarkBlue)
+                    ) {
+                        Text("Cancel")
+                    }
+                },
+                containerColor = Peach,
+                titleContentColor = DarkBlue,
+                textContentColor = DarkBlue
+            )
+        }
+
     }
 }

@@ -30,7 +30,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -268,8 +267,8 @@ fun GoalNoteEditor(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
+                        containerColor = DarkBlue,
+                        contentColor = Peach
                     )
                 ) {
                     Text("Delete")
@@ -280,11 +279,15 @@ fun GoalNoteEditor(
                     onClick = {
                         showDeleteConfirmDialog = false
                         noteToDelete = null
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = DarkBlue)
                 ) {
-                    Text("Cancel", color = DarkBlue)
+                    Text("Cancel")
                 }
-            }
+            },
+            containerColor = Peach,
+            titleContentColor = DarkBlue,
+            textContentColor = DarkBlue
         )
     }
 
