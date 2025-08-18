@@ -190,6 +190,7 @@ fun Goals(navController: NavController) {
                     hasSteps = progress.total > 0,
                     progress = progress.ratio,
                     isCompleted = isCompleted,
+                    isCompletedOnTime = goal.isCompletedOnTime,
                     onClick = {
                         navController.navigate("goalDetails/${goal.id}")
                     }

@@ -36,7 +36,7 @@ import com.filipkampic.mindthrive.model.tasks.Category
         GoalStep::class,
         GoalNote::class
     ],
-    version=22,
+    version=23,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

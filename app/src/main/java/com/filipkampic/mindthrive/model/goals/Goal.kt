@@ -12,5 +12,7 @@ data class Goal(
     val reward: String?,
     val deadline: LocalDate,
     val category: String,
-    val progress: Float = 0f
+    val progress: Float = 0f,
+    val completedAt: Long? = null,
+    val isCompletedOnTime: Boolean? = null
 )

@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
@@ -58,7 +60,26 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     fun updateGoal(goal: Goal) {
         viewModelScope.launch {
-            repository.update(goal)
+            val steps = repository.getStepsForGoal(goal.id).first()
+            val allDone = steps.isNotEmpty() && steps.all { it.isCompleted }
+
+            val adjusted = if (allDone) {
+                val completedAt = goal.completedAt ?: System.currentTimeMillis()
+                val onTime = goal.deadline.let { dl ->
+                    Instant.ofEpochMilli(completedAt)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate() <= dl
+                }
+
+                goal.copy(
+                    completedAt = completedAt,
+                    isCompletedOnTime = onTime
+                )
+            } else {
+                goal
+            }
+
+            repository.update(adjusted)
         }
     }
 
@@ -127,6 +148,22 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
         viewModelScope.launch {
             val updatedStep = step.copy(isCompleted = isCompleted)
             repository.updateStep(updatedStep)
+
+            val goalId = step.goalId
+            val steps = repository.getStepsForGoal(goalId).first()
+            val allDone = steps.isNotEmpty() && steps.all { it.isCompleted }
+
+            val goal = repository.getGoalById(goalId).first() ?: return@launch
+
+            if (allDone && goal.completedAt == null) {
+                val isOnTime = !isDeadlinePassed(goal.deadline)
+                repository.update(
+                    goal.copy(
+                        completedAt = System.currentTimeMillis(),
+                        isCompletedOnTime = isOnTime
+                    )
+                )
+            }
         }
     }
 

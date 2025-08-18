@@ -32,6 +32,7 @@ fun GoalCard(
     hasSteps: Boolean,
     progress: Float,
     isCompleted: Boolean,
+    isCompletedOnTime: Boolean?,
     onClick: () -> Unit
 ) {
     Column(
@@ -58,16 +59,15 @@ fun GoalCard(
         ) {
             Text(
                 text = when {
-                    isCompleted && !isOverdue -> "Completed"
-                    isCompleted && isOverdue -> "Completed late"
+                    isCompleted -> if (isCompletedOnTime == false) "Completed Late" else "Completed"
                     isOverdue -> "Deadline Passed"
                     daysLeft == 0L -> "Deadline Today"
                     daysLeft == 1L -> "1 day left"
                     else -> "$daysLeft days left"
                 },
                 color = when {
-                    isCompleted && !isOverdue -> Color(0xFF2E7D32)
-                    isCompleted && isOverdue -> Color(0xFFF57C00)
+                    isCompleted && isCompletedOnTime == false -> Color(0xFFF57C00)
+                    isCompleted -> Color(0xFF2E7D32)
                     isOverdue -> Color.Red
                     else -> DarkBlue
                 },
