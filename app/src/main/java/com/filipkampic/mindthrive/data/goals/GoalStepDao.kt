@@ -24,4 +24,10 @@ interface GoalStepDao {
 
     @Update
     suspend fun updateSteps(steps: List<GoalStep>)
+
+    @Query("DELETE FROM goalStep WHERE goalId = :goalId")
+    suspend fun deleteStepsForGoal(goalId: Int)
+
+    @Query("DELETE FROM goalStep WHERE goalId IN (SELECT id FROM goals WHERE category = :categoryName)")
+    suspend fun deleteStepsFromCategory(categoryName: String)
 }

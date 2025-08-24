@@ -23,6 +23,12 @@ interface GoalDao {
     @Update
     suspend fun update(goal: Goal)
 
+    @Query("UPDATE goals SET category = 'General' WHERE category = :categoryName")
+    suspend fun moveGoalsToGeneral(categoryName: String)
+
+    @Query("DELETE FROM goals WHERE category = :categoryName")
+    suspend fun deleteGoalsInCategory(categoryName: String)
+
     @Query("SELECT DISTINCT category FROM goals")
     fun getAllCategories(): Flow<List<String>>
 

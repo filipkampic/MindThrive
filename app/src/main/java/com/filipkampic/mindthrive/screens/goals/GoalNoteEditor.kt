@@ -75,7 +75,7 @@ fun GoalNoteEditor(
     val context = LocalContext.current
     val repository = remember {
         val db = AppDatabase.getDatabase(context)
-        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao())
+        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao(), db.goalCategoryDao())
     }
     val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(repository))
 

@@ -43,13 +43,15 @@ fun GoalDescriptionTab(
     val context = LocalContext.current
     val repository = remember {
         val db = AppDatabase.getDatabase(context)
-        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao())
+        GoalRepository(db.goalDao(), db.goalStepDao(), db.goalNoteDao(), db.goalCategoryDao())
     }
     val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(repository))
 
     val goal by viewModel.getGoalById(goalId).collectAsState(initial = null)
+    val isCompleted by viewModel.goalCompleted(goalId).collectAsState(initial = false)
 
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
 
     goal?.let { g ->
         Column(
@@ -80,21 +82,21 @@ fun GoalDescriptionTab(
             }
 
             Text("Deadline", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-            if (viewModel.isDeadlinePassed(g.deadline)) {
-                Text(
-                    text = "DEADLINE PASSED",
-                    color = Color.Red,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = g.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")),
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            } else {
-                Text(g.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")), color = Peach)
+
+            val deadlinePassed = viewModel.isDeadlinePassed(g.deadline)
+            val deadlineColor = when {
+                !isCompleted && deadlinePassed -> Color.Red
+                isCompleted && deadlinePassed -> Color(0xFFF57C00)
+                isCompleted && !deadlinePassed -> Color(0xFF2E7D32)
+                else -> Peach
             }
+
+            Text(
+                text = g.deadline.format(DateTimeFormatter.ofPattern("dd.MM.yyyy.")),
+                color = deadlineColor,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
 
             Text("Category", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Text(g.category.ifBlank { "General" }, color = Peach)

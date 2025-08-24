@@ -5,16 +5,21 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
+import com.filipkampic.mindthrive.model.goals.GoalCategory
 import com.filipkampic.mindthrive.model.goals.GoalNote
 import com.filipkampic.mindthrive.model.goals.GoalProgress
 import com.filipkampic.mindthrive.model.goals.GoalStep
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,26 +32,39 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
     private val _selectedCategory = MutableStateFlow("All")
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
 
-    private val _categories = MutableStateFlow<List<String>>(emptyList())
-    val categories: StateFlow<List<String>> = _categories.asStateFlow()
+    val categories: StateFlow<List<String>> = repository.getAllGoalCategories()
+        .map { rows ->
+            val uniqueCategories = rows.map { it.name.ifBlank { "General" } }
+            val allCategories = listOf("All", "General") + uniqueCategories.filterNot { it.equals("General", true) }
+            allCategories.distinctBy { it.lowercase() }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val activeGoals: StateFlow<List<Goal>> =
+        repository.getAllGoals().flatMapLatest { goals ->
+            if (goals.isEmpty()) flowOf(emptyList())
+            else combine(goals.map { g -> goalCompleted(g.id).map { done -> g to done }}) { pairs ->
+                pairs.filter { !it.second }.map { it.first }
+            }
+        }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val filteredGoals: StateFlow<List<Goal>> =
-        combine(repository.getAllGoals(), selectedCategory) { goals, category ->
+        combine(activeGoals, selectedCategory) { goals, category ->
             if (category == "All") goals else goals.filter { it.category == category }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val completedGoals: StateFlow<List<Goal>> =
+        repository.getAllGoals().flatMapLatest { goals ->
+            if (goals.isEmpty()) flowOf(emptyList())
+            else combine(goals.map { g -> goalCompleted(g.id).map { done -> g to done } }) { pairs ->
+                pairs.filter { it.second }.map { it.first }
+            }
+        }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _selectedGoalNote = MutableStateFlow<GoalNote?>(null)
     val selectedGoalNote: StateFlow<GoalNote?> = _selectedGoalNote.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            repository.getAllCategories().collect { list ->
-                val uniqueCategories = list.map { it.ifBlank { "General" } }.distinct()
-                val allCategories = listOf("All", "General") + uniqueCategories.filterNot { it == "General" }
-                _categories.value = allCategories
-            }
-        }
-    }
 
     fun selectCategory(category: String) {
         _selectedCategory.value = category
@@ -85,7 +103,7 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     fun deleteGoal(goal: Goal) {
         viewModelScope.launch {
-            repository.delete(goal)
+            repository.deleteGoalCascade(goal)
         }
     }
 
@@ -218,6 +236,59 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     fun clearSelectedGoalNote() {
         _selectedGoalNote.value = null
+    }
+
+    suspend fun addCategory(categoryName: String): String? {
+        if (categoryName.isBlank()) {
+            return "Category name cannot be empty."
+        }
+
+        if (categoryName.equals("All", true) || categoryName.equals("General", true)) {
+            return "\"All\" and \"General\" are reserved category names."
+        }
+
+        val existingCategory = repository.getCategoryByName(categoryName)
+        if (existingCategory != null) {
+            return "Category '$categoryName' already exists."
+        }
+
+        val newCategory = GoalCategory(name = categoryName)
+        repository.insertCategory(newCategory.name)
+
+        return null
+    }
+
+    suspend fun renameCategory(oldName: String, newNameRaw: String): String? {
+        val newName = newNameRaw.trim()
+        if (newName.isBlank()) return "Name cannot be empty"
+        if (newName.equals("All", true) || newName.equals("General", true)) return "Reserved name"
+        if (repository.getCategoryByName(newName) != null) return "Category already exists"
+
+        val category = repository.getCategoryByName(oldName) ?: return "Category not found"
+        repository.updateCategory(category.copy(name = newName))
+        repository.renameCategoryInGoals(oldName, newName)
+
+        if (_selectedCategory.value.equals(oldName, ignoreCase = true)) {
+            _selectedCategory.value = newName
+        }
+        return null
+    }
+
+    suspend fun deleteCategory(name: String, deleteGoals: Boolean): String? {
+        if (name.equals("All", true) || name.equals("General", true)) return "Cannot delete reserved category"
+
+        if (deleteGoals) {
+            repository.deleteCategoryAndGoalsCascade(name)
+        } else {
+            repository.moveGoalsFromCategoryToGeneral(name)
+            val category = repository.getCategoryByName(name) ?: return "Category not found"
+            repository.deleteCategory(category)
+        }
+
+        if (_selectedCategory.value.equals(name, ignoreCase = true)) {
+            _selectedCategory.value = "All"
+        }
+        return null
     }
 }
 

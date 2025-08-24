@@ -24,4 +24,10 @@ interface GoalNoteDao {
 
     @Delete
     suspend fun delete(note: GoalNote)
+
+    @Query("DELETE FROM goal_note WHERE goalId = :goalId")
+    suspend fun deleteNotesForGoal(goalId: Int)
+
+    @Query("DELETE FROM goal_note WHERE goalId IN (SELECT id FROM goals WHERE category = :categoryName)")
+    suspend fun deleteNotesFromCategory(categoryName: String)
 }
