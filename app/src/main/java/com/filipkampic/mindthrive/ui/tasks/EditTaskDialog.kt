@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.filipkampic.mindthrive.model.tasks.Priority
 import com.filipkampic.mindthrive.model.tasks.Task
+import com.filipkampic.mindthrive.ui.DatePickerDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
@@ -145,13 +146,13 @@ fun EditTaskDialog(
     )
 
     if (showDatePicker) {
-        DatePickerDialogContent(
+        DatePickerDialog(
+            initialDate = dueDate ?: LocalDate.now(),
+            onDismiss = { showDatePicker = false },
             onDateSelected = {
                 dueDate = it
                 showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false }
+            }
         )
     }
-
 }

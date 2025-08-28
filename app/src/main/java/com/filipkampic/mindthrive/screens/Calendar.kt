@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.filipkampic.mindthrive.ui.tasks.DatePickerDialogContent
+import com.filipkampic.mindthrive.ui.DatePickerDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
@@ -94,12 +94,12 @@ fun Calendar(navController: NavController) {
     var showDatePicker by remember { mutableStateOf(false) }
 
     if (showDatePicker) {
-        DatePickerDialogContent(
+        DatePickerDialog(
+            initialDate = LocalDate.of(currentMonth.year, currentMonth.month, 1),
+            onDismiss = { showDatePicker = false },
             onDateSelected = { selectedDate ->
                 currentMonth = YearMonth.of(selectedDate.year, selectedDate.month)
-                showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false }
+            }
         )
     }
 

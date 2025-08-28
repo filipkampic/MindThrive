@@ -50,7 +50,7 @@ import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
-import com.filipkampic.mindthrive.ui.tasks.DatePickerDialogContent
+import com.filipkampic.mindthrive.ui.DatePickerDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
@@ -253,12 +253,11 @@ fun GoalForm(
             }
 
             if (showDatePicker) {
-                DatePickerDialogContent(
+                DatePickerDialog(
+                    initialDate = selectedDate,
+                    onDismiss = { showDatePicker = false },
                     onDateSelected = {
                         selectedDate = it
-                        showDatePicker = false
-                    },
-                    onDismiss = {
                         showDatePicker = false
                     }
                 )
