@@ -13,21 +13,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +58,7 @@ fun CalendarPreview() {
     Calendar(navController = rememberNavController())
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Calendar(navController: NavController) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
@@ -100,145 +103,156 @@ fun Calendar(navController: NavController) {
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DarkBlue)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(
-                onClick = { navController.navigate("home") },
-                modifier = Modifier.offset(y = 16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = Peach,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Peach, RoundedCornerShape(12.dp))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous", tint = DarkBlue)
-            }
-            Text(
-                text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale.UK)} ${currentMonth.year}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkBlue,
-                modifier = Modifier.clickable { showDatePicker = true }
-            )
-            IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next", tint = DarkBlue)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    weekDays.forEach {
-                        Text(
-                            text = it,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Peach,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
-                        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Calendar") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("home") }) {
+                        Icon(Icons.Default.Home, contentDescription = "Home", tint = Peach)
                     }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = DarkBlue,
+                    navigationIconContentColor = Peach,
+                    titleContentColor = Peach,
+                    actionIconContentColor = Peach
+                )
+            )
+        },
+        containerColor = DarkBlue
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Peach, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Previous",
+                        tint = DarkBlue
+                    )
                 }
+                Text(
+                    text = "${
+                        currentMonth.month.getDisplayName(TextStyle.FULL, Locale.UK)
+                    } ${currentMonth.year}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkBlue,
+                    modifier = Modifier.clickable { showDatePicker = true }
+                )
+                IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Next",
+                        tint = DarkBlue
+                    )
+                }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(7),
-                    userScrollEnabled = false,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp)
-                ) {
-                    items(fullCalendar.size) { index ->
-                        val date = fullCalendar[index]
-                        val isCurrentMonth = date.month == currentMonth.month
-                        val isToday = date == today
-
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxWidth()
-                                .background(
-                                    color = if (isToday) DarkBlue.copy(alpha = 0.95f) else Peach,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .border(
-                                    width = if (isToday) 2.dp else 1.dp,
-                                    color = if (isToday) Peach else DarkBlue,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .clickable(enabled = isCurrentMonth) {
-                                    val formattedDate = date.toString()
-                                    if (formattedDate.isNotEmpty()) {
-                                        navController.navigate("time/$formattedDate")
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        weekDays.forEach {
                             Text(
-                                text = date.dayOfMonth.toString(),
-                                fontSize = 16.sp,
-                                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                                color = when {
-                                    isToday -> Peach
-                                    isCurrentMonth -> DarkBlue
-                                    else -> DarkBlue.copy(alpha = 0.4f)
-                                }
+                                text = it,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Peach,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(7),
+                        userScrollEnabled = false,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
+                    ) {
+                        items(fullCalendar.size) { index ->
+                            val date = fullCalendar[index]
+                            val isCurrentMonth = date.month == currentMonth.month
+                            val isToday = date == today
+
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .fillMaxWidth()
+                                    .background(
+                                        color = if (isToday) DarkBlue.copy(alpha = 0.95f) else Peach,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .border(
+                                        width = if (isToday) 2.dp else 1.dp,
+                                        color = if (isToday) Peach else DarkBlue,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable(enabled = isCurrentMonth) {
+                                        val formattedDate = date.toString()
+                                        if (formattedDate.isNotEmpty()) {
+                                            navController.navigate("time/$formattedDate")
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = date.dayOfMonth.toString(),
+                                    fontSize = 16.sp,
+                                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
+                                    color = when {
+                                        isToday -> Peach
+                                        isCurrentMonth -> DarkBlue
+                                        else -> DarkBlue.copy(alpha = 0.4f)
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                FloatingActionButton(
-                    onClick = { currentMonth = YearMonth.now() },
-                    containerColor = Peach,
-                    contentColor = DarkBlue,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .navigationBarsPadding()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomEnd
                 ) {
-                    Icon(imageVector = Icons.Default.Today, contentDescription = "Today")
+                    FloatingActionButton(
+                        onClick = { currentMonth = YearMonth.now() },
+                        containerColor = Peach,
+                        contentColor = DarkBlue,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .navigationBarsPadding()
+                    ) {
+                        Icon(imageVector = Icons.Default.Today, contentDescription = "Today")
+                    }
                 }
             }
         }

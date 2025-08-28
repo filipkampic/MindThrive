@@ -11,13 +11,12 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,11 +52,15 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,7 +75,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -96,6 +98,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -105,6 +109,7 @@ fun TimeManagementPreview(modifier: Modifier = Modifier) {
     TimeManagement(rememberNavController(), "2025-04-27")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TimeManagement(navController: NavController, date: String) {
@@ -144,70 +149,38 @@ fun TimeManagement(navController: NavController, date: String) {
         viewModel.loadTimeBlocks(currentDate)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DarkBlue)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.offset(y = 16.dp)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Peach,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Text(
-                    text = date,
-                    color = Peach,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Box {
-                    val expanded = remember { mutableStateOf(false) }
-                    IconButton(
-                        onClick = { expanded.value = true },
-                        modifier = Modifier.offset(y = 16.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "Menu",
-                            tint = Peach,
-                            modifier = Modifier.size(32.dp)
-                        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Time Management") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    var expanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Peach)
                     }
                     DropdownMenu(
-                        expanded = expanded.value,
-                        onDismissRequest = { expanded.value = false },
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
                         modifier = Modifier.background(Peach)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Duplicate Day") },
+                            text = { Text("Duplicate Day", color = DarkBlue) },
                             onClick = {
-                                expanded.value = false
+                                expanded = false
                                 val appContext = context.applicationContext
-                                val alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
+                                val alarmManager =
+                                    appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-                                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                        data = Uri.parse("package:" + appContext.packageName)
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                    }
+                                    val intent =
+                                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                            data = Uri.parse("package:" + appContext.packageName)
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
                                     appContext.startActivity(intent)
                                 } else {
                                     todaysTimeBlocks.forEach { timeBlock ->
@@ -223,17 +196,48 @@ fun TimeManagement(navController: NavController, date: String) {
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Clear All Time Blocks") },
+                            text = { Text("Clear All Time Blocks", color = DarkBlue) },
                             onClick = {
-                                expanded.value = false
+                                expanded = false
                                 todaysTimeBlocks.forEach { viewModel.deleteTimeBlock(it) }
                             }
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = DarkBlue,
+                    navigationIconContentColor = Peach,
+                    titleContentColor = Peach,
+                    actionIconContentColor = Peach
+                )
+            )
+        },
+        containerColor = DarkBlue
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 25.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = currentDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.UK),
+                    color = Peach,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Text(
+                    text = currentDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.UK)),
+                    color = Peach,
+                    fontSize = 14.sp
+                )
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
 
             if (todaysTimeBlocks.isEmpty()) {
                 Column(
@@ -302,8 +306,7 @@ fun TimeManagement(navController: NavController, date: String) {
                         val timeBlocksInBlock = todaysTimeBlocks.filter { timeBlock ->
                             val timeBlockStart = timeBlock.start
                             val timeBlockEnd = timeBlock.end
-                            timeBlockStart != null && timeBlockEnd != null &&
-                                    timeBlockStart < blockEndDateTime && timeBlockEnd > blockStartDateTime
+                            timeBlockStart != null && timeBlockEnd != null && timeBlockStart < blockEndDateTime && timeBlockEnd > blockStartDateTime
                         }
                         val isOverlap = timeBlocksInBlock.size > 1
 
@@ -426,7 +429,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             isDragging = false
                                                         },
                                                         onDrag = { change, dragAmount ->
-                                                            change.consumeAllChanges()
+                                                            change.consume()
                                                             if (todaysTimeBlocks.isEmpty() || draggedItemIndex.value != globalIndex) {
                                                                 return@detectDragGesturesAfterLongPress
                                                             }
@@ -465,45 +468,45 @@ fun TimeManagement(navController: NavController, date: String) {
                 }
             }
         }
+    }
 
-        if (showDialog) {
-            AddTimeBlockDialog(
-                defaultStart = defaultStartTime,
-                timeBlocks = todaysTimeBlocks,
-                timeBlockToEdit = editingTimeBlock,
-                onSave = { newTimeBlock ->
-                    if (editingTimeBlock != null) {
-                        viewModel.updateTimeBlock(newTimeBlock)
-                    } else {
-                        viewModel.insertTimeBlock(newTimeBlock)
-                    }
-                    showDialog = false
-                    editingTimeBlock = null
-                },
-                onDelete = {
-                    viewModel.deleteTimeBlock(it)
-                    showDialog = false
-                    editingTimeBlock = null
-                },
-                onCancel = {
-                    showDialog = false
-                    editingTimeBlock = null
-                },
-                currentDate = currentDate
-            )
-        }
-
-        if (showOverlapDialog) {
-            OverlapDialog(
-                overlappingTimeBlocks = selectedOverlappingTimeBlocks,
-                onDismiss = { showOverlapDialog = false },
-                onTimeBlockClick = { timeBlock ->
-                    editingTimeBlock = timeBlock
-                    showDialog = true
-                    showOverlapDialog = false
+    if (showDialog) {
+        AddTimeBlockDialog(
+            defaultStart = defaultStartTime,
+            timeBlocks = todaysTimeBlocks,
+            timeBlockToEdit = editingTimeBlock,
+            onSave = { newTimeBlock ->
+                if (editingTimeBlock != null) {
+                    viewModel.updateTimeBlock(newTimeBlock)
+                } else {
+                    viewModel.insertTimeBlock(newTimeBlock)
                 }
-            )
-        }
+                showDialog = false
+                editingTimeBlock = null
+            },
+            onDelete = {
+                viewModel.deleteTimeBlock(it)
+                showDialog = false
+                editingTimeBlock = null
+            },
+            onCancel = {
+                showDialog = false
+                editingTimeBlock = null
+            },
+            currentDate = currentDate
+        )
+    }
+
+    if (showOverlapDialog) {
+        OverlapDialog(
+            overlappingTimeBlocks = selectedOverlappingTimeBlocks,
+            onDismiss = { showOverlapDialog = false },
+            onTimeBlockClick = { timeBlock ->
+                editingTimeBlock = timeBlock
+                showDialog = true
+                showOverlapDialog = false
+            }
+        )
     }
 }
 
@@ -839,7 +842,6 @@ fun OverlapDialog(
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TimeManagementWrapper(navController: NavController, initialDate: String) {
     var currentDate by rememberSaveable {
@@ -865,27 +867,27 @@ fun TimeManagementWrapper(navController: NavController, initialDate: String) {
             targetState = currentDate,
             transitionSpec = {
                 if (targetState > initialState) {
-                    slideInHorizontally { width -> width } + fadeIn() with
-                            slideOutHorizontally { width -> -width } + fadeOut()
+                    (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                        slideOutHorizontally { width -> -width } + fadeOut())
                 } else {
-                    slideInHorizontally { width -> -width } + fadeIn() with
-                            slideOutHorizontally { width -> width } + fadeOut()
+                    (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
+                        slideOutHorizontally { width -> width } + fadeOut())
                 }.using(SizeTransform(clip = false))
             },
             modifier = Modifier.fillMaxSize(),
             label = "dateTransition"
         ) { targetDate ->
-                val context = LocalContext.current
+            val context = LocalContext.current
 
-                val viewModel: TimeBlockViewModel = viewModel(factory = TimeBlockViewModelFactory(context.applicationContext as Application))
-                LaunchedEffect(currentDate) {
-                    viewModel.setDate(currentDate)
-                }
+            val viewModel: TimeBlockViewModel = viewModel(factory = TimeBlockViewModelFactory(context.applicationContext as Application))
+            LaunchedEffect(currentDate) {
+                viewModel.setDate(currentDate)
+            }
 
-                TimeManagement(
-                    navController = navController,
-                    date = targetDate.toString()
-                )
+            TimeManagement(
+                navController = navController,
+                date = targetDate.toString()
+            )
         }
     }
 }

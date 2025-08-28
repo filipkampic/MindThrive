@@ -31,11 +31,8 @@ import com.filipkampic.mindthrive.screens.focus.Focus
 import com.filipkampic.mindthrive.screens.habitTracker.HabitTracker
 import com.filipkampic.mindthrive.screens.HomeScreen
 import com.filipkampic.mindthrive.screens.notes.Notes
-import com.filipkampic.mindthrive.screens.Profile
-import com.filipkampic.mindthrive.screens.Settings
 import com.filipkampic.mindthrive.screens.tasks.Tasks
 import com.filipkampic.mindthrive.screens.TimeManagementWrapper
-import com.filipkampic.mindthrive.ui.goals.AddStepDialog
 import com.filipkampic.mindthrive.screens.goals.EditGoal
 import com.filipkampic.mindthrive.screens.goals.GoalDetails
 import com.filipkampic.mindthrive.screens.goals.GoalNoteEditor
@@ -81,8 +78,6 @@ fun MindThriveApp() {
                 startDestination = "home"
             ) {
                 composable("home") { HomeScreen(navController) }
-                composable("profile") { Profile(navController) }
-                composable("settings") { Settings(navController) }
                 composable("calendar") { Calendar(navController) }
                 composable(
                     "time/{selectedDate}",
