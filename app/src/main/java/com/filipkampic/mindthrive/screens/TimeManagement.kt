@@ -41,13 +41,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -56,12 +55,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -648,6 +649,11 @@ fun AddTimeBlockDialog(
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
 
+    val textSelectionColors = TextSelectionColors(
+        handleColor = DarkBlue,
+        backgroundColor = DarkBlue.copy(alpha = 0.4f)
+    )
+
     AlertDialog(
         onDismissRequest = onCancel,
         confirmButton = {
@@ -671,91 +677,114 @@ fun AddTimeBlockDialog(
                     onSave(newTimeBlock)
                 }
             }) {
-                Icon(Icons.Default.Save, contentDescription = "Save")
+                Text("Save", color = DarkBlue)
             }
         },
         dismissButton = {
             Row {
                 if (timeBlockToEdit != null) {
-                    IconButton(onClick = { onDelete(timeBlockToEdit) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    TextButton(onClick = { onDelete(timeBlockToEdit) }) {
+                        Text("Delete", color = DarkBlue)
                     }
                 }
-                IconButton(onClick = onCancel) {
-                    Icon(Icons.Default.Close, contentDescription = "Cancel")
+                TextButton(onClick = onCancel) {
+                    Text("Cancel", color = DarkBlue)
                 }
             }
         },
         title = {
             Text(
                 if (timeBlockToEdit != null) "Edit Time Block" else "New Time Block",
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = DarkBlue
             )
         },
         text = {
             Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
+                CompositionLocalProvider(LocalTextSelectionColors provides textSelectionColors) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DarkBlue,
+                            unfocusedBorderColor = DarkBlue.copy(alpha = 0.4f),
+                            focusedLabelColor = DarkBlue,
+                            cursorColor = DarkBlue,
+                            focusedTextColor = DarkBlue,
+                            unfocusedTextColor = DarkBlue
+                        )
                     )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                            .clickable { showStartPicker = true }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = "Start",
-                                color = Color.Gray,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                            Text(
-                                text = start.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "N/A",
-                                fontSize = 16.sp
-                            )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                                .clickable { showStartPicker = true }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Start",
+                                    color = DarkBlue.copy(alpha = 0.7f),
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                Text(
+                                    text = start.format(DateTimeFormatter.ofPattern("HH:mm"))
+                                        ?: "N/A",
+                                    fontSize = 16.sp,
+                                    color = DarkBlue
+                                )
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                                .clickable { showEndPicker = true }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "End",
+                                    color = DarkBlue.copy(alpha = 0.7f),
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                Text(
+                                    text = end?.format(DateTimeFormatter.ofPattern("HH:mm"))
+                                        ?: "N/A",
+                                    fontSize = 16.sp,
+                                    color = DarkBlue
+                                )
+                            }
                         }
                     }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                            .clickable { showEndPicker = true }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = "End",
-                                color = Color.Gray,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                            Text(
-                                text = end?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "N/A",
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DarkBlue,
+                            unfocusedBorderColor = DarkBlue.copy(alpha = 0.4f),
+                            focusedLabelColor = DarkBlue,
+                            cursorColor = DarkBlue,
+                            focusedTextColor = DarkBlue,
+                            unfocusedTextColor = DarkBlue
+                        )
+                    )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description (optional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
-                    )
-                )
             }
         },
         containerColor = Peach
