@@ -32,10 +32,11 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
         .flatMapLatest { date ->
             val start = LocalDateTime.of(date, LocalTime.MIN)
             val end = LocalDateTime.of(date, LocalTime.MAX)
-            timeBlockDao.getTimeBlocksInRange(start.toString(), end.toString())
-        }
-        .map { list ->
-            list.sortedBy { it.start }
+            timeBlockDao
+                .getTimeBlocksInRange(start.toString(), end.toString())
+                .map { list ->
+                    splitTimeBlocksByDay(list, date).sortedBy { it.start }
+                }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -57,7 +58,7 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun splitTimeBlocksByDay(timeBlocks: List<TimeBlock>, date: LocalDate): List<TimeBlock> {
         val startOfDay = date.atStartOfDay()
-        val endOfDay = date.plusDays(1).atStartOfDay()
+        val endOfDay = date.atTime(23, 59)
 
         return timeBlocks.mapNotNull { timeBlock ->
             val overlapStart = maxOf(timeBlock.start ?: return@mapNotNull null, startOfDay)

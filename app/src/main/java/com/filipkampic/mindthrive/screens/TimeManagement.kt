@@ -282,7 +282,7 @@ fun TimeManagement(navController: NavController, date: String) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "00:00",
+                            "23:59",
                             color = Peach,
                             fontSize = 14.sp,
                             modifier = Modifier.width(60.dp)
