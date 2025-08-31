@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -94,6 +95,7 @@ fun Tasks(
     val showAddCategoryDialog = remember { mutableStateOf(false) }
     val newCategoryName = remember { mutableStateOf("") }
     val categoryError = remember { mutableStateOf<String?>(null) }
+    var showDialogMessage by remember { mutableStateOf<String?>(null) }
 
     val categoryToDelete = remember { mutableStateOf<String?>(null) }
     val deleteMode = remember { mutableStateOf(DeleteMode.REASSIGN) }
@@ -336,20 +338,23 @@ fun Tasks(
                     val trimmed = newCategoryName.value.trim()
                     val existing = customCategories.map { it.lowercase() }
 
-                    if (trimmed.isBlank()) {
-                        categoryError.value = null
-                        return@AddCategoryDialog
+                    when {
+                        trimmed.isBlank() -> {
+                            showDialogMessage = "Category name cannot be empty."
+                        }
+                        trimmed.equals("All", ignoreCase = true) || trimmed.equals("General", ignoreCase = true) -> {
+                            showDialogMessage = "\"All\" and \"General\" are reserved category names."
+                        }
+                        trimmed.lowercase() in existing -> {
+                            showDialogMessage = "Category '$trimmed' already exists."
+                        }
+                        else -> {
+                            viewModel.addCategory(trimmed)
+                            newCategoryName.value = ""
+                            categoryError.value = null
+                            showAddCategoryDialog.value = false
+                        }
                     }
-
-                    if (trimmed.lowercase() in existing) {
-                        categoryError.value = "Category already exists."
-                        return@AddCategoryDialog
-                    }
-
-                    viewModel.addCategory(trimmed)
-                    newCategoryName.value = ""
-                    categoryError.value = null
-                    showAddCategoryDialog.value = false
                 },
                 errorMessage = categoryError.value
             )
@@ -433,6 +438,25 @@ fun Tasks(
                     }
                 },
                 containerColor = Peach
+            )
+        }
+
+        showDialogMessage?.let { message ->
+            AlertDialog(
+                onDismissRequest = { showDialogMessage = null },
+                title = { Text("Validation Error", color = Peach) },
+                text = { Text(message, color = Peach) },
+                confirmButton = {
+                    TextButton(
+                        onClick = { showDialogMessage = null },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Peach)
+                    ) {
+                        Text("OK")
+                    }
+                },
+                containerColor = DarkBlue,
+                titleContentColor = Peach,
+                textContentColor = Peach
             )
         }
     }

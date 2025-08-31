@@ -110,12 +110,12 @@ fun TaskCard(
                         text = task.title,
                         style = if (compact) {
                             MaterialTheme.typography.labelMedium.copy(
-                                color = if (task.isDone) Color.Gray else MaterialTheme.colorScheme.onSurface,
+                                color = if (task.isDone) Color.Gray else DarkBlue,
                                 textDecoration = if (task.isDone) TextDecoration.LineThrough else null
                             )
                         } else {
                             MaterialTheme.typography.bodySmall.copy(
-                                color = if (task.isDone) Color.Gray else MaterialTheme.colorScheme.onSurface,
+                                color = if (task.isDone) Color.Gray else DarkBlue,
                                 textDecoration = if (task.isDone) TextDecoration.LineThrough else null
                             )
                         }

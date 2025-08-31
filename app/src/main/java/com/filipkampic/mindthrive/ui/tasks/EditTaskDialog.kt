@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +49,7 @@ fun EditTaskDialogPreview(modifier: Modifier = Modifier) {
         onDismiss = {}, onSave = {}, onDelete = {})
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
     task: Task,
@@ -70,7 +74,18 @@ fun EditTaskDialog(
                     onValueChange = { title = it },
                     label = { Text("Title", color = DarkBlue) },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = DarkBlue,
+                        unfocusedBorderColor = DarkBlue.copy(alpha = 0.6f),
+                        cursorColor = DarkBlue,
+                        focusedLabelColor = DarkBlue,
+                        unfocusedLabelColor = DarkBlue.copy(alpha = 0.8f),
+                        selectionColors = TextSelectionColors(
+                            handleColor = DarkBlue,
+                            backgroundColor = DarkBlue.copy(alpha = 0.3f)
+                        )
+                    )
                 )
 
                 Spacer(Modifier.height(8.dp))
