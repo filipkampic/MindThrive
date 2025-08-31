@@ -98,7 +98,11 @@ fun EisenhowerMatrix(
                                 onCheckedChange = { viewModel.setShowCompleted(it) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Peach,
-                                    uncheckedThumbColor = Color.LightGray
+                                    checkedTrackColor = DarkBlue,
+                                    uncheckedThumbColor = Color.LightGray,
+                                    uncheckedTrackColor = DarkBlue.copy(alpha = 0.4f),
+                                    checkedBorderColor = Peach,
+                                    uncheckedBorderColor = Peach
                                 )
                             )
                         }

@@ -119,8 +119,6 @@ fun TaskCard(
                                 textDecoration = if (task.isDone) TextDecoration.LineThrough else null
                             )
                         }
-
-
                     )
 
                     if (task.priority != Priority.NONE) {

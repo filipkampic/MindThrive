@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -90,6 +91,7 @@ fun Tasks(
     val tasks by viewModel.tasks.collectAsState()
     val editingTask = remember { mutableStateOf<Task?>(null)}
     val allTasks by viewModel.allTasks.collectAsState()
+    val taskToDelete = remember { mutableStateOf<Task?>(null) }
 
     val customCategories = viewModel.customCategories.collectAsState().value
     val showAddCategoryDialog = remember { mutableStateOf(false) }
@@ -315,10 +317,7 @@ fun Tasks(
                     viewModel.updateTask(it)
                     editingTask.value = null
                 },
-                onDelete = {
-                    viewModel.deleteTask(it)
-                    editingTask.value = null
-                }
+                onDelete = { taskToDelete.value = it }
             )
         }
 
@@ -357,6 +356,38 @@ fun Tasks(
                     }
                 },
                 errorMessage = categoryError.value
+            )
+        }
+
+        if (taskToDelete.value != null) {
+            AlertDialog(
+                onDismissRequest = { taskToDelete.value = null },
+                title = { Text("Confirm Deletion", color = DarkBlue) },
+                text = { Text("Are you sure you want to delete this task?", color = DarkBlue.copy(alpha = 0.8f)) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteTask(taskToDelete.value!!)
+                            taskToDelete.value = null
+                            editingTask.value = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DarkBlue,
+                            contentColor = Peach
+                        )
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { taskToDelete.value = null },
+                        colors = ButtonDefaults.textButtonColors(contentColor = DarkBlue)
+                    ) {
+                        Text("Cancel")
+                    }
+                },
+                containerColor = Peach
             )
         }
 
