@@ -506,13 +506,17 @@ fun TimeManagement(navController: NavController, date: String) {
 private fun reflowTimeBlocks(timeBlocks: List<TimeBlock>, baseDate: LocalDate): List<TimeBlock> {
     if (timeBlocks.isEmpty()) return timeBlocks
 
+    val durationById: Map<String, Duration> = timeBlocks
+        .filter { it.start != null && it.end != null }
+        .associate { it.id to Duration.between(it.start, it.end) }
+
     val newTimeBlocks = mutableListOf<TimeBlock>()
     var currentTime = LocalDateTime.of(baseDate, LocalTime.of(0, 0))
 
     timeBlocks.forEachIndexed { index, timeBlock ->
         if (timeBlock.start == null || timeBlock.end == null) return@forEachIndexed
 
-        val originalDuration = Duration.between(timeBlock.start, timeBlock.end)
+        val fixedDuration = durationById[timeBlock.id] ?: Duration.between(timeBlock.start, timeBlock.end)
 
         if (index > 0 && newTimeBlocks.isNotEmpty()) {
             currentTime = newTimeBlocks.last().end ?: currentTime
@@ -520,7 +524,7 @@ private fun reflowTimeBlocks(timeBlocks: List<TimeBlock>, baseDate: LocalDate): 
 
         val newTimeBlock = timeBlock.copy(
             start = currentTime,
-            end = currentTime.plus(originalDuration),
+            end = currentTime.plus(fixedDuration),
             date = baseDate
         )
 
