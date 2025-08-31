@@ -437,17 +437,9 @@ fun TimeManagement(navController: NavController, date: String) {
                                                             dragOffset.value += dragAmount.y
 
                                                             val avgHeight = if (timeBlockHeights.isNotEmpty()) timeBlockHeights.average().toFloat() else defaultCardHeightPx
-                                                            val positionOffset = dragOffset.value / avgHeight
-                                                            var newIndex = (globalIndex + positionOffset.roundToInt()).coerceIn(0, localTimeBlockList.size - 1)
-
-                                                            if (newIndex == globalIndex) {
-                                                                hoveredIndex.value = null
-                                                            } else {
-                                                                if (newIndex > globalIndex) {
-                                                                    newIndex = (newIndex - 1).coerceAtLeast(0)
-                                                                }
-                                                                hoveredIndex.value = newIndex
-                                                            }
+                                                            val positionOffset = (dragOffset.value / avgHeight).roundToInt()
+                                                            val target = (globalIndex + positionOffset).coerceIn(0, localTimeBlockList.lastIndex)
+                                                            hoveredIndex.value = if (target != globalIndex) target else null
                                                         }
                                                     )
                                                 },
