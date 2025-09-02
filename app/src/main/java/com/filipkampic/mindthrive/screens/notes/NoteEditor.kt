@@ -5,7 +5,6 @@ import android.app.Application
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -48,7 +47,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -69,6 +67,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Red
@@ -89,9 +88,13 @@ import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.NotesViewModel
 import com.filipkampic.mindthrive.viewmodel.NotesViewModelFactory
 import jp.wasabeef.richeditor.RichEditor
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @SuppressLint("RememberReturnType", "ClickableViewAccessibility")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun NoteEditor(
     navController: NavController,
@@ -105,6 +108,9 @@ fun NoteEditor(
     var selectedFolderId by remember { mutableStateOf<Int?>(null) }
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
+    var editingNoteId by remember { mutableStateOf(noteId) }
+    var baseline by remember { mutableStateOf(Triple("", "", null as Int?)) }
+    var hasBaseline by remember { mutableStateOf(false) }
 
     val editorRef = remember { mutableStateOf<RichEditor?>(null) }
     val activeStyles = remember { mutableStateMapOf<String, Boolean>() }
@@ -126,13 +132,22 @@ fun NoteEditor(
         backgroundColor = Peach.copy(alpha = 0.4f)
     )
 
-    CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
-        val hasChanges = (title != (note?.title ?: "")) || (content != (note?.content ?: ""))
-        val showExitDialog = remember { mutableStateOf(false) }
-        BackHandler(enabled = hasChanges && !showExitDialog.value) {
-            showExitDialog.value = true
-        }
+    LaunchedEffect(Unit) {
+        snapshotFlow { Triple(title, content, selectedFolderId) }
+            .debounce(500)
+            .distinctUntilChanged()
+            .collectLatest { (title, content, folderId) ->
+                if (!hasBaseline) return@collectLatest
+                if (Triple(title, content, folderId) == baseline) return@collectLatest
+                if (title.isBlank() && content.isBlank()) return@collectLatest
 
+                val id = viewModel.upsertNoteAutosave(editingNoteId, title, content, folderId)
+                editingNoteId = id
+                baseline = Triple(title, content, folderId)
+            }
+    }
+
+    CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
         LaunchedEffect(note) {
             if (note != null && selectedFolderId == null) {
                 selectedFolderId = note!!.folderId
@@ -154,13 +169,7 @@ fun NoteEditor(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            if (hasChanges) {
-                                showExitDialog.value = true
-                            } else {
-                                navController.popBackStack()
-                            }
-                        }) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
@@ -197,18 +206,6 @@ fun NoteEditor(
                         containerColor = if (isEditing) Color(0xFF052236) else DarkBlue
                     )
                 )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        viewModel.saveNote(noteId, title, content, selectedFolderId)
-                        navController.popBackStack()
-                    },
-                    containerColor = Peach,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = "Save", tint = DarkBlue)
-                }
             },
             containerColor = DarkBlue,
             content = { padding ->
@@ -475,37 +472,18 @@ fun NoteEditor(
             }
         )
 
-        LaunchedEffect(note) {
+        LaunchedEffect(note?.id) {
             note?.let { noteVal ->
                 title = noteVal.title
                 content = noteVal.content
+                editingNoteId = noteVal.id
+                baseline = Triple(noteVal.title, noteVal.content, noteVal.folderId)
+                hasBaseline = true
                 editorRef.value?.let { editor ->
                     editor.setHtml(noteVal.content)
                     editor.post { editor.refreshDecorations() }
                 }
             }
-        }
-
-        if (showExitDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showExitDialog.value = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showExitDialog.value = false
-                        navController.popBackStack()
-                    }) {
-                        Text("Exit", color = Peach)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showExitDialog.value = false }) {
-                        Text("Cancel", color = Peach)
-                    }
-                },
-                title = { Text("Unsaved Changes", color = Peach) },
-                text = { Text("You have unsaved changes. Are you sure you want to exit?", color = Peach) },
-                containerColor = DarkBlue
-            )
         }
 
         if (showDeleteDialog) {

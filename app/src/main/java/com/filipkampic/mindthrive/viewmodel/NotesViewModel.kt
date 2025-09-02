@@ -10,6 +10,7 @@ import com.filipkampic.mindthrive.data.NotesPreferences
 import com.filipkampic.mindthrive.model.notes.Note
 import com.filipkampic.mindthrive.model.notes.NoteFolder
 import com.filipkampic.mindthrive.model.notes.NotesSortOption
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class NotesViewModel(
     private val noteDao: NoteDao,
@@ -157,26 +159,43 @@ class NotesViewModel(
         }
     }
 
-    fun saveNote(noteId: Int?, title: String, content: String, folderId: Int? = null) {
-        viewModelScope.launch {
-            if (noteId == null) {
+    suspend fun upsertNoteAutosave(
+        currentId: Int?,
+        title: String,
+        content: String,
+        folderId: Int?
+    ): Int {
+        return withContext(Dispatchers.IO) {
+            val now = System.currentTimeMillis()
+            if (currentId == null) {
                 val newNote = Note(
                     folderId = folderId,
                     title = title,
                     content = content,
-                    timestamp = System.currentTimeMillis()
+                    timestamp = now
                 )
-                noteDao.insertNote(newNote)
+                val newId = noteDao.insertNote(newNote).toInt()
+                _currentNote.value = newNote.copy(id = newId)
+                newId
             } else {
+                val existing = noteDao.getNoteByIdOnce(currentId)
+                if (existing != null &&
+                    existing.title == title &&
+                    existing.content == content &&
+                    existing.folderId == folderId
+                ) {
+                    return@withContext currentId
+                }
                 noteDao.updateNote(
                     Note(
-                        id = noteId,
+                        id = currentId,
                         folderId = folderId,
                         title = title,
                         content = content,
-                        timestamp = System.currentTimeMillis()
+                        timestamp = now
                     )
                 )
+                currentId
             }
         }
     }
