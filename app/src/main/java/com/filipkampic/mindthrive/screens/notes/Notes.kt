@@ -4,6 +4,7 @@ package com.filipkampic.mindthrive.screens.notes
 
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,13 +44,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.filipkampic.mindthrive.ui.notes.AddFolderButton
 import com.filipkampic.mindthrive.ui.notes.FolderCard
 import com.filipkampic.mindthrive.ui.notes.NoteCard
 import com.filipkampic.mindthrive.ui.notes.SearchBar
@@ -70,6 +72,7 @@ fun NotesPreview() {
 fun Notes(navController: NavController) {
     val context = LocalContext.current
     val viewModel: NotesViewModel = viewModel(factory = NotesViewModelFactory(context.applicationContext as Application))
+    val focusManager = LocalFocusManager.current
 
     val folders by viewModel.folders.collectAsState()
     val showAddFolderDialog by viewModel.showAddFolderDialog.collectAsState()
@@ -81,6 +84,9 @@ fun Notes(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBlue)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })
+            }
     ) {
         TopAppBar(
             title = {},
@@ -132,13 +138,19 @@ fun Notes(navController: NavController) {
             }
         }
 
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(end = 16.dp),
-            contentAlignment = Alignment.CenterEnd
+                .padding(end = 8.dp),
+            horizontalArrangement = Arrangement.End
         ) {
-            AddFolderButton(onClick = { viewModel.openAddFolderDialog() })
+            IconButton(onClick = { viewModel.openAddFolderDialog() }) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Folder",
+                    tint = Peach
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

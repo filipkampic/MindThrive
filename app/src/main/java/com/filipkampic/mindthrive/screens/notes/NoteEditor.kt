@@ -1,9 +1,8 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package com.filipkampic.mindthrive.screens.notes
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
@@ -73,6 +72,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -90,7 +90,7 @@ import com.filipkampic.mindthrive.viewmodel.NotesViewModel
 import com.filipkampic.mindthrive.viewmodel.NotesViewModelFactory
 import jp.wasabeef.richeditor.RichEditor
 
-@SuppressLint("RememberReturnType")
+@SuppressLint("RememberReturnType", "ClickableViewAccessibility")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditor(
@@ -99,30 +99,15 @@ fun NoteEditor(
 ) {
     val context = LocalContext.current
     val viewModel: NotesViewModel = viewModel(factory = NotesViewModelFactory(context.applicationContext as Application))
-
     val note by viewModel.getNoteById(noteId).collectAsState(initial = null)
-    var selectedFolderId by remember { mutableStateOf<Int?>(null) }
     val folders by viewModel.folders.collectAsState()
-    var expanded by remember { mutableStateOf(false) }
 
+    var selectedFolderId by remember { mutableStateOf<Int?>(null) }
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
-    var isContentEditing by remember { mutableStateOf(false) }
+
     val editorRef = remember { mutableStateOf<RichEditor?>(null) }
     val activeStyles = remember { mutableStateMapOf<String, Boolean>() }
-
-    val customTextSelectionColors = TextSelectionColors(
-        handleColor = Peach,
-        backgroundColor = Peach.copy(alpha = 0.4f)
-    )
-
-    val hasChanges = (title != (note?.title ?: "")) || (content != (note?.content ?: ""))
-    val showExitDialog = remember { mutableStateOf(false) }
-    BackHandler(enabled = hasChanges && !showExitDialog.value) {
-        showExitDialog.value = true
-    }
-
-    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -130,21 +115,35 @@ fun NoteEditor(
     val contentFocus = remember { MutableInteractionSource() }
     val titleFocused by titleFocus.collectIsFocusedAsState()
     val contentFocused by contentFocus.collectIsFocusedAsState()
+    var isContentEditing by remember { mutableStateOf(false) }
     var isEditing = titleFocused || contentFocused || isContentEditing
 
-    val scrollState = rememberScrollState()
+    var folderExpanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(content) {
-        scrollState.animateScrollTo(scrollState.maxValue)
-    }
-
-    LaunchedEffect(note) {
-        if (note != null && selectedFolderId == null) {
-            selectedFolderId = note!!.folderId
-        }
-    }
+    val customTextSelectionColors = TextSelectionColors(
+        handleColor = Peach,
+        backgroundColor = Peach.copy(alpha = 0.4f)
+    )
 
     CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
+        val hasChanges = (title != (note?.title ?: "")) || (content != (note?.content ?: ""))
+        val showExitDialog = remember { mutableStateOf(false) }
+        BackHandler(enabled = hasChanges && !showExitDialog.value) {
+            showExitDialog.value = true
+        }
+
+        LaunchedEffect(note) {
+            if (note != null && selectedFolderId == null) {
+                selectedFolderId = note!!.folderId
+            }
+        }
+
+        val scrollState = rememberScrollState()
+        LaunchedEffect(content) {
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -248,7 +247,7 @@ fun NoteEditor(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .background(Peach, RoundedCornerShape(8.dp))
-                            .clickable { expanded = true }
+                            .clickable { folderExpanded = true }
                             .padding(12.dp)
                     ) {
                         val selectedFolderName = folders.find { it.id == selectedFolderId }?.name ?: "Select folder"
@@ -259,15 +258,15 @@ fun NoteEditor(
                         )
 
                         DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
+                            expanded = folderExpanded,
+                            onDismissRequest = { folderExpanded = false },
                             modifier = Modifier.background(Peach)
                         ) {
                             DropdownMenuItem(
                                 text = { Text("No folder", color = DarkBlue) },
                                 onClick = {
                                     selectedFolderId = null
-                                    expanded = false
+                                    folderExpanded = false
                                 },
                                 colors = MenuDefaults.itemColors(textColor = DarkBlue),
                                 modifier = Modifier.background(Peach)
@@ -277,7 +276,7 @@ fun NoteEditor(
                                     text = { Text(folder.name, color = DarkBlue) },
                                     onClick = {
                                         selectedFolderId = folder.id
-                                        expanded = false
+                                        folderExpanded = false
                                     },
                                     modifier = Modifier.background(Peach),
                                     colors = MenuDefaults.itemColors(textColor = DarkBlue)
@@ -307,29 +306,34 @@ fun NoteEditor(
                                     setInputEnabled(true)
                                     setOnTextChangeListener { text ->
                                         content = text
-                                        getCurrentStyles()?.let { types ->
-                                            activeStyles.clear()
-                                            types.forEach { type ->
-                                                activeStyles[type.name.lowercase()] = true
-                                            }
-                                        }
+                                        post { refreshDecorations() }
                                     }
                                     setOnFocusChangeListener { _, hasFocus ->
                                         isContentEditing = hasFocus
-                                        if (hasFocus) {
-                                            getCurrentStyles()?.let { types ->
-                                                activeStyles.clear()
-                                                types.forEach { type ->
-                                                    activeStyles[type.name.lowercase()] = true
-                                                }
-                                            }
-                                        }
+                                        if (hasFocus) post { refreshDecorations() }
                                     }
                                     setOnDecorationChangeListener { _, types ->
                                         activeStyles.clear()
                                         types?.forEach { type ->
                                             activeStyles[type.name.lowercase()] = true
                                         }
+                                        if (activeStyles["justifyleft"] != true &&
+                                            activeStyles["justifycenter"] != true &&
+                                            activeStyles["justifyright"]  != true) {
+                                            activeStyles["justifyleft"] = true
+                                        }
+                                        if (activeStyles["unorderedlist"] == true) activeStyles.remove("orderedlist")
+                                        if (activeStyles["orderedlist"]   == true) activeStyles.remove("unorderedlist")
+                                    }
+
+                                    setOnClickListener {
+                                        post { refreshDecorations() }
+                                    }
+                                    setOnTouchListener { v, event ->
+                                        if (event.action == MotionEvent.ACTION_UP) {
+                                            v.post { refreshDecorations() }
+                                        }
+                                        false
                                     }
                                     editorRef.value = this
                                 }
@@ -354,70 +358,108 @@ fun NoteEditor(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.padding(vertical = 8.dp)
                         ) {
-                            val buttons = listOf(
+                            val buttons: List<Triple<ImageVector, String, () -> Unit>> = listOf(
                                 Triple(Icons.Default.FormatBold, "bold") {
-                                    editorRef.value?.setBold()
-                                    activeStyles["bold"] = !(activeStyles["bold"] ?: false)
+                                    editorRef.value?.apply {
+                                        setBold()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.FormatItalic, "italic") {
-                                    editorRef.value?.setItalic()
-                                    activeStyles["italic"] = !(activeStyles["italic"] ?: false)
+                                    editorRef.value?.apply {
+                                        setItalic()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.FormatUnderlined, "underline") {
-                                    editorRef.value?.setUnderline()
-                                    activeStyles["underline"] =
-                                        !(activeStyles["underline"] ?: false)
+                                    editorRef.value?.apply {
+                                        setUnderline()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.FormatStrikethrough, "strikethrough") {
-                                    editorRef.value?.setStrikeThrough()
-                                    activeStyles["strikethrough"] = !(activeStyles["strikethrough"] ?: false)
+                                    editorRef.value?.apply {
+                                        setStrikeThrough()
+                                        refreshDecorations()
+                                    }
                                 },
-                                Triple(Icons.AutoMirrored.Filled.FormatListBulleted, "unordered") {
-                                    editorRef.value?.setBullets()
-                                    activeStyles["unordered"] = !(activeStyles["unordered"] ?: false)
+                                Triple(Icons.AutoMirrored.Filled.FormatListBulleted, "unorderedlist") {
+                                    editorRef.value?.apply {
+                                        setBullets()
+                                        refreshDecorations()
+                                    }
                                 },
-                                Triple(Icons.Default.FormatListNumbered, "ordered") {
-                                    editorRef.value?.setNumbers()
-                                    activeStyles["ordered"] = !(activeStyles["ordered"] ?: false)
+                                Triple(Icons.Default.FormatListNumbered, "orderedlist") {
+                                    editorRef.value?.apply {
+                                        setNumbers()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.SubdirectoryArrowRight, "indent") {
-                                    editorRef.value?.setIndent()
-                                    activeStyles["indent"] = !(activeStyles["indent"] ?: false)
+                                    editorRef.value?.apply {
+                                        setIndent()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.HorizontalRule, "outdent") {
-                                    editorRef.value?.setOutdent()
-                                    activeStyles["outdent"] = !(activeStyles["outdent"] ?: false)
+                                    editorRef.value?.apply {
+                                        setOutdent()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.AutoMirrored.Filled.FormatAlignLeft, "justifyLeft") {
-                                    editorRef.value?.setAlignLeft()
-                                    activeStyles["justifyleft"] = !(activeStyles["justifyleft"] ?: false)
+                                    editorRef.value?.apply {
+                                        setAlignLeft()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.FormatAlignCenter, "justifyCenter") {
-                                    editorRef.value?.setAlignCenter()
-                                    activeStyles["justifycenter"] = !(activeStyles["justifycenter"] ?: false)
+                                    editorRef.value?.apply {
+                                        setAlignCenter()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.AutoMirrored.Filled.FormatAlignRight, "justifyRight") {
-                                    editorRef.value?.setAlignRight()
-                                    activeStyles["justifyright"] = !(activeStyles["justifyright"] ?: false)
+                                    editorRef.value?.apply {
+                                        setAlignRight()
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.LooksOne, "h1") {
-                                    editorRef.value?.setHeading(1)
-                                    activeStyles["h1"] = !(activeStyles["h1"] ?: false)
+                                    editorRef.value?.apply {
+                                        if (activeStyles["h1"] == true) setParagraph() else setHeading(1)
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.LooksTwo, "h2") {
-                                    editorRef.value?.setHeading(2)
-                                    activeStyles["h2"] = !(activeStyles["h2"] ?: false)
+                                    editorRef.value?.apply {
+                                        if (activeStyles["h2"] == true) setParagraph() else setHeading(2)
+                                        refreshDecorations()
+                                    }
                                 },
                                 Triple(Icons.Default.Looks3, "h3") {
-                                    editorRef.value?.setHeading(3)
-                                    activeStyles["h3"] = !(activeStyles["h3"] ?: false)
+                                    editorRef.value?.apply {
+                                        if (activeStyles["h3"] == true) setParagraph() else setHeading(3)
+                                        refreshDecorations()
+                                    }
                                 }
                             )
                             buttons.forEach { (icon, desc, action) ->
                                 item {
-                                    val isActive = activeStyles[desc] == true
+                                    val isActive = when (desc) {
+                                        "justifyLeft" -> {
+                                            val anyAlign = activeStyles["justifyleft"] == true ||
+                                                    activeStyles["justifycenter"] == true ||
+                                                    activeStyles["justifyright"] == true
+                                            if (!anyAlign) true else activeStyles["justifyleft"] == true
+                                        }
+                                        "justifyCenter" -> activeStyles["justifycenter"] == true
+                                        "justifyRight"  -> activeStyles["justifyright"] == true
+                                        else -> activeStyles[desc] == true
+                                    }
+
                                     IconButton(
-                                        onClick = action,
+                                        onClick = { action() },
                                         modifier = Modifier.background(
                                             color = if (isActive) Color(0xFF052236) else Color.Transparent,
                                             shape = RoundedCornerShape(8.dp)
@@ -434,10 +476,13 @@ fun NoteEditor(
         )
 
         LaunchedEffect(note) {
-            note?.let {
-                title = it.title
-                content = it.content
-                editorRef.value?.setHtml(it.content)
+            note?.let { noteVal ->
+                title = noteVal.title
+                content = noteVal.content
+                editorRef.value?.let { editor ->
+                    editor.setHtml(noteVal.content)
+                    editor.post { editor.refreshDecorations() }
+                }
             }
         }
 
@@ -490,12 +535,10 @@ fun NoteEditor(
     }
 }
 
-private fun RichEditor.getCurrentStyles(): List<RichEditor.Type>? {
-    return try {
-        val field = RichEditor::class.java.getDeclaredField("mCurrentType")
-        field.isAccessible = true
-        field.get(this) as? List<RichEditor.Type>
-    } catch (e: Exception) {
-        null
-    }
+private fun RichEditor.refreshDecorations() {
+    this.loadUrl("javascript:RE.enabledEditingItems();")
+}
+
+private fun RichEditor.setParagraph() {
+    this.loadUrl("javascript:document.execCommand('formatBlock', false, 'p'); RE.enabledEditingItems();")
 }
