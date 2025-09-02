@@ -30,6 +30,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
             val timeBlockChannel = NotificationChannel(
                 "time_block_channel",
                 "Time Block Notifications",
@@ -38,7 +40,6 @@ class MainActivity : ComponentActivity() {
                 enableLights(true)
                 enableVibration(true)
             }
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(timeBlockChannel)
 
             val habitChannel = NotificationChannel(

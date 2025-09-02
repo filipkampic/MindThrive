@@ -44,6 +44,8 @@ import androidx.compose.material.icons.filled.LooksOne
 import androidx.compose.material.icons.filled.LooksTwo
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,7 +72,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -489,25 +490,36 @@ fun NoteEditor(
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Delete Note", color = Peach) },
-                text = { Text("Are you sure you want to delete this note?", color = Peach) },
+                title = { Text("Delete Note", color = DarkBlue) },
+                text = { Text("Are you sure you want to delete this note?", color = DarkBlue.copy(alpha = 0.8f)) },
                 confirmButton = {
-                    TextButton(
+                    Button(
                         onClick = {
                             viewModel.deleteNote()
                             showDeleteDialog = false
                             navController.popBackStack()
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DarkBlue,
+                            contentColor = Peach
+                        )
                     ) {
-                        Text("Delete", color = Red)
+                        Text("Delete")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancel", color = Peach)
+                    TextButton(
+                        onClick = { showDeleteDialog = false },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = DarkBlue
+                        )
+                    ) {
+                        Text("Cancel")
                     }
                 },
-                containerColor = DarkBlue
+                containerColor = Peach,
+                titleContentColor = DarkBlue,
+                textContentColor = DarkBlue
             )
         }
     }

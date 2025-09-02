@@ -89,7 +89,7 @@ fun Notes(navController: NavController) {
             }
     ) {
         TopAppBar(
-            title = {},
+            title = { Text("Notes", color = Peach) },
             navigationIcon = {
                 IconButton(onClick = { navController.navigate("home") }) {
                     Icon(Icons.Default.Home, contentDescription = "Home")

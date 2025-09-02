@@ -7,13 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -64,7 +61,7 @@ fun NoteCard(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(note.timestamp)),
+                text = SimpleDateFormat("d MMM", Locale.ENGLISH).format(Date(note.timestamp)),
                 color = DarkBlue,
                 fontSize = 12.sp
             )
