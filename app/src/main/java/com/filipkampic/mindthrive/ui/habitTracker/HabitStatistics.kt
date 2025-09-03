@@ -24,6 +24,7 @@ import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
 import com.filipkampic.mindthrive.model.habitTracker.HabitStats
 import com.filipkampic.mindthrive.model.habitTracker.parseFrequency
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 import java.time.LocalDate
@@ -53,6 +54,7 @@ fun HabitStatistics(
             text = "Habit Statistics",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
+            fontFamily = Montserrat,
             color = Peach
         )
         StatRow(label = "Current streak", value = "${stats.currentStreak}")

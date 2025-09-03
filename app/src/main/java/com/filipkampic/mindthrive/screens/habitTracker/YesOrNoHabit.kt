@@ -48,6 +48,7 @@ import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.ui.TimePickerDialog
 import com.filipkampic.mindthrive.ui.habitTracker.FrequencyDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.util.Calendar
 
@@ -105,6 +106,7 @@ fun YesOrNoHabit(
                         Text(
                             text = if (isEditMode) "Edit Habit" else "New Habit",
                             style = MaterialTheme.typography.titleLarge,
+                            fontFamily = Montserrat,
                             color = Peach
                         )
                     },

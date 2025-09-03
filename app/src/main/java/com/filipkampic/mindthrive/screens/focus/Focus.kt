@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.focus.FocusBottomNavigation
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.FocusViewModel
 
@@ -64,7 +65,7 @@ fun Focus(navController: NavController) {
                         )
                     }
                 },
-                title = { Text(currentTab.replaceFirstChar { it.uppercase() }) },
+                title = { Text(currentTab.replaceFirstChar { it.uppercase() }, fontFamily = Montserrat) },
                 actions = {
                     if (currentTab != "statistics") {
                         IconButton(

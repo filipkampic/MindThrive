@@ -58,6 +58,7 @@ import com.filipkampic.mindthrive.model.notes.NotesSortOption
 import com.filipkampic.mindthrive.ui.notes.NoteCard
 import com.filipkampic.mindthrive.ui.notes.NotesSortDropdown
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.NotesViewModel
 import com.filipkampic.mindthrive.viewmodel.NotesViewModelFactory
@@ -97,7 +98,8 @@ fun NoteFolder(navController: NavController, folderId: Int?) {
                         color = Peach,
                         modifier = Modifier.clickable {
                             showRenameDialog = true
-                        }
+                        },
+                        fontFamily = Montserrat
                     )
                 },
                 navigationIcon = {
@@ -157,7 +159,7 @@ fun NoteFolder(navController: NavController, folderId: Int?) {
 
         AlertDialog(
             onDismissRequest = { viewModel.hideDeleteFolderDialog() },
-            title = { Text("Delete Folder '${selectedFolder.name}'?", color = DarkBlue) },
+            title = { Text("Delete Folder '${selectedFolder.name}'?", color = DarkBlue, fontFamily = Montserrat) },
             text = {
                 if (folderNotes.isEmpty()) {
                     Text(
@@ -234,7 +236,7 @@ fun NoteFolder(navController: NavController, folderId: Int?) {
 
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
-            title = { Text("Rename Folder", color = DarkBlue) },
+            title = { Text("Rename Folder", color = DarkBlue, fontFamily = Montserrat) },
             text = {
                 OutlinedTextField(
                     value = newName,
@@ -270,5 +272,4 @@ fun NoteFolder(navController: NavController, folderId: Int?) {
             containerColor = Peach
         )
     }
-
 }

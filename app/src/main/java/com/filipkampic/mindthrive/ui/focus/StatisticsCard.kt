@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
@@ -22,8 +23,8 @@ fun StatisticCard(title: String, duration: Int, modifier: Modifier = Modifier) {
             .background(Peach, shape = RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
-        Text(title, color = DarkBlue)
+        Text(title, color = DarkBlue, fontFamily = Inter)
         Spacer(Modifier.height(4.dp))
-        Text("${hours}h ${minutes}m", color = DarkBlue)
+        Text("${hours}h ${minutes}m", color = DarkBlue, fontFamily = Inter)
     }
 }

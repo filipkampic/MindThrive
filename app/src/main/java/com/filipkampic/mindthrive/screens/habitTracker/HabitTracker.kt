@@ -51,6 +51,8 @@ import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.notification.habitTracker.scheduleHabitReminder
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 import com.filipkampic.mindthrive.viewmodel.HabitViewModelFactory
@@ -86,7 +88,7 @@ fun HabitTracker(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Habit Tracker") },
+                title = { Text("Habit Tracker", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(Icons.Default.Home, contentDescription = "Home")
@@ -126,7 +128,7 @@ fun HabitTracker(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(currentDate, style = MaterialTheme.typography.headlineMedium, color = Peach)
+                Text(currentDate, style = MaterialTheme.typography.headlineMedium, color = Peach, fontFamily = Inter)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -151,7 +153,7 @@ fun HabitTracker(navController: NavController) {
                 onDismissRequest = { showHabitTypeDialog = false },
                 confirmButton = {},
                 containerColor = DarkBlue,
-                title = { Text("New Habit", color = Peach) },
+                title = { Text("New Habit", color = Peach, fontFamily = Montserrat) },
                 text = {
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,

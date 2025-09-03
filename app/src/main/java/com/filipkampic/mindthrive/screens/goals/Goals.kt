@@ -62,6 +62,7 @@ import com.filipkampic.mindthrive.model.goals.GoalProgress
 import com.filipkampic.mindthrive.ui.goals.GoalCard
 import com.filipkampic.mindthrive.ui.goals.AddCategoryDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModelFactory
@@ -94,7 +95,7 @@ fun Goals(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Goals") },
+                title = { Text("Goals", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(Icons.Default.Home, contentDescription = "Home")
@@ -255,7 +256,7 @@ fun Goals(navController: NavController) {
 
         AlertDialog(
             onDismissRequest = { showCompletedDialog = false },
-            title = { Text("Completed Goals", color = DarkBlue) },
+            title = { Text("Completed Goals", color = DarkBlue, fontFamily = Montserrat) },
             text = {
                 if (completed.isEmpty()) {
                     Text("No completed goals.", color = DarkBlue.copy(alpha = 0.8f))
@@ -299,7 +300,7 @@ fun Goals(navController: NavController) {
 
         AlertDialog(
             onDismissRequest = { showManageCategories = false },
-            title = { Text("Manage Categories", color = DarkBlue) },
+            title = { Text("Manage Categories", color = DarkBlue, fontFamily = Montserrat) },
             text = {
                 if (userCategories.isEmpty()) {
                     Text("No categories.", color = DarkBlue.copy(alpha = 0.7f))
@@ -347,7 +348,7 @@ fun Goals(navController: NavController) {
         AlertDialog(
             onDismissRequest = { showEditCategory = null },
             title = {
-                Text("Edit Category", color = DarkBlue)
+                Text("Edit Category", color = DarkBlue, fontFamily = Montserrat)
             },
             text = {
                 Column {
@@ -429,7 +430,7 @@ fun Goals(navController: NavController) {
 
         AlertDialog(
             onDismissRequest = { showDeleteCategoryDialog = null },
-            title = { Text("Delete Category '$categoryName'?", color = DarkBlue) },
+            title = { Text("Delete Category '$categoryName'?", color = DarkBlue, fontFamily = Montserrat) },
             text = {
                 Column {
                     Text(

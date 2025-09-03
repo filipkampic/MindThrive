@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.filipkampic.mindthrive.model.notes.Note
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -57,6 +58,7 @@ fun NoteCard(
             Text(
                 text = note.title,
                 fontWeight = FontWeight.Bold,
+                fontFamily = Inter,
                 color = DarkBlue
             )
             Spacer(modifier = Modifier.height(4.dp))

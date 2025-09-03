@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.filipkampic.mindthrive.R
 import com.filipkampic.mindthrive.model.notes.NoteFolder
+import com.filipkampic.mindthrive.ui.theme.Inter
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
@@ -53,6 +54,7 @@ fun FolderCard(
             color = Peach,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
+            fontFamily = Inter,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(bottom = 12.dp, start = 6.dp, end = 6.dp)

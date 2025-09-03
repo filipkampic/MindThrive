@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.filipkampic.mindthrive.model.focus.FocusPeriod
+import com.filipkampic.mindthrive.ui.theme.Inter
 import com.patrykandpatrick.vico.compose.axis.axisLabelComponent
 import com.patrykandpatrick.vico.compose.axis.horizontal.bottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.startAxis
@@ -174,7 +175,7 @@ fun Statistics(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Daily Average: ${averageMinutes}m", color = Peach)
+            Text("Daily Average: ${averageMinutes}m", color = Peach, fontFamily = Inter)
         }
     }
 }

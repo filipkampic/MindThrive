@@ -46,6 +46,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.filipkampic.mindthrive.ui.DatePickerDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
 import java.time.YearMonth
@@ -106,7 +108,7 @@ fun Calendar(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Calendar") },
+                title = { Text("Calendar", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(Icons.Default.Home, contentDescription = "Home", tint = Peach)
@@ -149,6 +151,7 @@ fun Calendar(navController: NavController) {
                     } ${currentMonth.year}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = Inter,
                     color = DarkBlue,
                     modifier = Modifier.clickable { showDatePicker = true }
                 )

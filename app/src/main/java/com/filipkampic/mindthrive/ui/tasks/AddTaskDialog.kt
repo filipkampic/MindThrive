@@ -29,6 +29,7 @@ import com.filipkampic.mindthrive.model.tasks.Priority
 import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.ui.DatePickerDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import java.time.LocalDate
 
@@ -54,7 +55,7 @@ fun AddTaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Task", color = DarkBlue) },
+        title = { Text("Add Task", color = DarkBlue, fontFamily = Montserrat) },
         text = {
             Column {
                 OutlinedTextField(

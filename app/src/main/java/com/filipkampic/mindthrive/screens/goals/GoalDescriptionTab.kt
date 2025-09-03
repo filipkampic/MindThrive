@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,6 +36,8 @@ import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModelFactory
@@ -73,22 +74,23 @@ fun GoalDescriptionTab(
                 style = MaterialTheme.typography.titleLarge.copy(
                     color = Peach,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = Montserrat,
                     textAlign = TextAlign.Center
                 ),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             g.motivation?.takeIf { it.isNotBlank() }?.let { m ->
-                Text("Motivation", color = Peach, style  = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text("Motivation", color = Peach, style  = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, fontFamily = Inter)
                 Text(m, color = Peach)
             }
 
             g.reward?.takeIf { it.isNotBlank() }?.let { r ->
-                Text("Reward", color = Peach, style  = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text("Reward", color = Peach, style  = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, fontFamily = Inter)
                 Text(r, color = Peach)
             }
 
-            Text("Deadline", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text("Deadline", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, fontFamily = Inter)
 
             val deadlinePassed = viewModel.isDeadlinePassed(g.deadline)
             val deadlineColor = when {
@@ -105,7 +107,7 @@ fun GoalDescriptionTab(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            Text("Category", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text("Category", color = Peach, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, fontFamily = Inter)
             Text(g.category.ifBlank { "General" }, color = Peach)
 
             Row(
@@ -143,7 +145,7 @@ fun GoalDescriptionTab(
         if (showDeleteConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirmDialog = false },
-                title = { Text("Confirm Deletion", color = DarkBlue) },
+                title = { Text("Confirm Deletion", color = DarkBlue, fontFamily = Montserrat) },
                 text = {
                     Text(
                         "Are you sure you want to delete this goal?",
@@ -176,6 +178,5 @@ fun GoalDescriptionTab(
                 textContentColor = DarkBlue
             )
         }
-
     }
 }

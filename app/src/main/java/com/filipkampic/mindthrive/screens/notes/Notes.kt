@@ -57,6 +57,7 @@ import com.filipkampic.mindthrive.ui.notes.NoteCard
 import com.filipkampic.mindthrive.ui.notes.SearchBar
 import com.filipkampic.mindthrive.ui.notes.NotesSortDropdown
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.NotesViewModel
 import com.filipkampic.mindthrive.viewmodel.NotesViewModelFactory
@@ -89,7 +90,7 @@ fun Notes(navController: NavController) {
             }
     ) {
         TopAppBar(
-            title = { Text("Notes", color = Peach) },
+            title = { Text("Notes", color = Peach, fontFamily = Montserrat) },
             navigationIcon = {
                 IconButton(onClick = { navController.navigate("home") }) {
                     Icon(Icons.Default.Home, contentDescription = "Home")
@@ -219,7 +220,7 @@ fun Notes(navController: NavController) {
 
             AlertDialog(
                 onDismissRequest = { viewModel.closeAddFolderDialog() },
-                title = { Text("New Folder", color = DarkBlue) },
+                title = { Text("New Folder", color = DarkBlue, fontFamily = Montserrat) },
                 text = {
                     OutlinedTextField(
                         value = name,

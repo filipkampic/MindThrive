@@ -40,6 +40,8 @@ import com.filipkampic.mindthrive.model.tasks.Priority
 import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.ui.tasks.EditTaskDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 import java.time.LocalDate
@@ -80,7 +82,7 @@ fun EisenhowerMatrix(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Eisenhower Matrix") },
+                title = { Text("Eisenhower Matrix", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

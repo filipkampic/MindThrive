@@ -92,6 +92,8 @@ import androidx.navigation.compose.rememberNavController
 import com.filipkampic.mindthrive.model.TimeBlock
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.TimePickerDialog
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import kotlinx.coroutines.delay
 import java.time.Duration
@@ -153,7 +155,7 @@ fun TimeManagement(navController: NavController, date: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Time Management") },
+                title = { Text("Time Management", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -231,12 +233,14 @@ fun TimeManagement(navController: NavController, date: String) {
                     text = currentDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.UK),
                     color = Peach,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    fontFamily = Inter
                 )
                 Text(
                     text = currentDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.UK)),
                     color = Peach,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    fontFamily = Inter
                 )
             }
 
@@ -692,6 +696,7 @@ fun AddTimeBlockDialog(
             Text(
                 if (timeBlockToEdit != null) "Edit Time Block" else "New Time Block",
                 fontWeight = FontWeight.Bold,
+                fontFamily = Montserrat,
                 color = DarkBlue
             )
         },

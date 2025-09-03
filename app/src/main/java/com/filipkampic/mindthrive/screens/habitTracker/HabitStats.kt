@@ -32,6 +32,8 @@ import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 import com.filipkampic.mindthrive.viewmodel.HabitViewModelFactory
@@ -59,7 +61,7 @@ fun HabitStats(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Habit Statistics") },
+                title = { Text("Habit Statistics", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -86,13 +88,13 @@ fun HabitStats(
                 val streakLabel = if (longest.first.isNotBlank()) { "Longest Streak (${longest.first})" } else { "Longest Streak" }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "$totalHabits", fontSize = 40.sp, color = Peach)
-                    Text("Active Habits", fontSize = 20.sp, color = Peach)
+                    Text("Active Habits", fontSize = 20.sp, color = Peach, fontFamily = Inter)
                     Spacer(Modifier.height(80.dp))
                     Text(text = "${longest.second}", fontSize = 40.sp, color = Peach)
-                    Text(streakLabel, fontSize = 20.sp, color = Peach)
+                    Text(streakLabel, fontSize = 20.sp, color = Peach, fontFamily = Inter)
                     Spacer(Modifier.height(80.dp))
                     Text(text = "$successRate%", fontSize = 40.sp, color = Peach)
-                    Text("Success Rate", fontSize = 20.sp, color = Peach)
+                    Text("Success Rate", fontSize = 20.sp, color = Peach, fontFamily = Inter)
                 }
             }
         }

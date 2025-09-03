@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,11 +29,9 @@ fun AddCategoryDialog(
     onConfirm: () -> Unit,
     errorMessage: String? = null
 ) {
-    val forbidden = listOf("All", "General")
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New Category", color = DarkBlue) },
+        title = { Text("New Category", color = DarkBlue, fontFamily = Montserrat) },
         text = {
             OutlinedTextField(
                 value = value,

@@ -85,6 +85,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.NotesViewModel
 import com.filipkampic.mindthrive.viewmodel.NotesViewModelFactory
@@ -166,7 +167,8 @@ fun NoteEditor(
                     title = {
                         Text(
                             text = if (noteId == null) "New Note" else "Edit Note",
-                            color = Peach
+                            color = Peach,
+                            fontFamily = Montserrat
                         )
                     },
                     navigationIcon = {
@@ -490,7 +492,7 @@ fun NoteEditor(
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Delete Note", color = DarkBlue) },
+                title = { Text("Delete Note", color = DarkBlue, fontFamily = Montserrat) },
                 text = { Text("Are you sure you want to delete this note?", color = DarkBlue.copy(alpha = 0.8f)) },
                 confirmButton = {
                     Button(

@@ -55,6 +55,7 @@ import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.GoalNote
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModelFactory
@@ -145,7 +146,8 @@ fun GoalNoteEditor(
                     title = {
                         Text(
                             text = if (isEditing) "Edit Note" else "Add Note",
-                            color = Peach
+                            color = Peach,
+                            fontFamily = Montserrat
                         )
                     },
                     navigationIcon = {
@@ -237,7 +239,7 @@ fun GoalNoteEditor(
     if (showDeleteConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text("Confirm Deletion", color = DarkBlue) },
+            title = { Text("Confirm Deletion", color = DarkBlue, fontFamily = Montserrat) },
             text = {
                 Text(
                     "Are you sure you want to delete this note?",

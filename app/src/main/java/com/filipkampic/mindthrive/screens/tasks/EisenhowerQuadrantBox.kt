@@ -30,6 +30,7 @@ import com.filipkampic.mindthrive.R
 import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.ui.tasks.TaskCard
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
@@ -80,7 +81,7 @@ fun EisenhowerQuadrantBox(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text(title, style = MaterialTheme.typography.titleSmall, color = color)
+                    Text(title, style = MaterialTheme.typography.titleSmall, fontFamily = Inter, color = color)
                 }
                 Spacer(Modifier.height(8.dp))
 

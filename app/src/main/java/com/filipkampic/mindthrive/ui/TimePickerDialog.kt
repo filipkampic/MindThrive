@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +64,7 @@ fun TimePickerDialog(
                 color = DarkBlue
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Select Time", style = MaterialTheme.typography.titleMedium, color = Peach)
+                    Text("Select Time", style = MaterialTheme.typography.titleMedium, color = Peach, fontFamily = Montserrat)
 
                     Spacer(modifier = Modifier.height(16.dp))
 

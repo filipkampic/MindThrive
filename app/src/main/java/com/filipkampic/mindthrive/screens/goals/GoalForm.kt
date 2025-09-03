@@ -52,6 +52,7 @@ import com.filipkampic.mindthrive.data.goals.GoalRepository
 import com.filipkampic.mindthrive.model.goals.Goal
 import com.filipkampic.mindthrive.ui.DatePickerDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModelFactory
@@ -113,7 +114,7 @@ fun GoalForm(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(if (initialGoal == null) "Add Goal" else "Edit Goal", color = Peach) },
+                    title = { Text(if (initialGoal == null) "Add Goal" else "Edit Goal", color = Peach, fontFamily = Montserrat) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(

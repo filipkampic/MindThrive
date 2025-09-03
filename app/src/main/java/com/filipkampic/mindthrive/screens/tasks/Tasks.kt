@@ -62,6 +62,7 @@ import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
 import com.filipkampic.mindthrive.ui.tasks.AddTaskDialog
 import com.filipkampic.mindthrive.ui.tasks.EditTaskDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 
 @Composable
@@ -105,7 +106,7 @@ fun Tasks(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tasks") },
+                title = { Text("Tasks", fontFamily = Montserrat) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(Icons.Default.Home, contentDescription = "Home")
@@ -362,7 +363,7 @@ fun Tasks(
         if (taskToDelete.value != null) {
             AlertDialog(
                 onDismissRequest = { taskToDelete.value = null },
-                title = { Text("Confirm Deletion", color = DarkBlue) },
+                title = { Text("Confirm Deletion", color = DarkBlue, fontFamily = Montserrat) },
                 text = { Text("Are you sure you want to delete this task?", color = DarkBlue.copy(alpha = 0.8f)) },
                 confirmButton = {
                     Button(
@@ -425,7 +426,7 @@ fun Tasks(
                     }
                 },
                 title = {
-                    Text("Delete category '${categoryToDelete.value}'?", color = DarkBlue)
+                    Text("Delete category '${categoryToDelete.value}'?", color = DarkBlue, fontFamily = Montserrat)
                 },
                 text = {
                     Column {

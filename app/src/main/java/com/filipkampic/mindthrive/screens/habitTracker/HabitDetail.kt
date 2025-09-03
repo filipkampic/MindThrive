@@ -49,6 +49,8 @@ import com.filipkampic.mindthrive.ui.habitTracker.HabitStatistics
 import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.MonthlyProgressOverview
 import com.filipkampic.mindthrive.ui.habitTracker.habitOverview.WeeklyProgressOverview
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.Inter
+import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
@@ -125,14 +127,16 @@ fun HabitDetail(
                     Text(
                         text = habit.name,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Peach
+                        color = Peach,
+                        fontFamily = Montserrat
                     )
                     habit.description?.let {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Peach
+                            color = Peach,
+                            fontFamily = Inter
                         )
                     }
                 }
@@ -240,7 +244,7 @@ fun HabitDetail(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = {
-                Text(text = "Confirm Deletion", color = DarkBlue)
+                Text(text = "Confirm Deletion", color = DarkBlue, fontFamily = Montserrat)
             },
             text = {
                 Text(
