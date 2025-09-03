@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.screens.habitTracker
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,8 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,7 +62,7 @@ fun HabitStats(
                 title = { Text("Habit Statistics") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -85,12 +83,13 @@ fun HabitStats(
             contentAlignment = Alignment.Center
         ) {
             stats?.let { (totalHabits, longest, successRate) ->
+                val streakLabel = if (longest.first.isNotBlank()) { "Longest Streak (${longest.first})" } else { "Longest Streak" }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "$totalHabits", fontSize = 40.sp, color = Peach)
                     Text("Active Habits", fontSize = 20.sp, color = Peach)
                     Spacer(Modifier.height(80.dp))
                     Text(text = "${longest.second}", fontSize = 40.sp, color = Peach)
-                    Text("Longest Streak (${longest.first})", fontSize = 20.sp, color = Peach)
+                    Text(streakLabel, fontSize = 20.sp, color = Peach)
                     Spacer(Modifier.height(80.dp))
                     Text(text = "$successRate%", fontSize = 40.sp, color = Peach)
                     Text("Success Rate", fontSize = 20.sp, color = Peach)

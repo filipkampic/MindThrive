@@ -39,7 +39,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -65,7 +64,7 @@ fun YesOrNoHabit(
 
     var name by remember { mutableStateOf(habit?.name ?: "") }
     var frequency by remember { mutableStateOf(habit?.frequency ?: "Every day") }
-    var reminderTime by remember { mutableStateOf(habit?.reminder) }
+    var reminderTime by remember { mutableStateOf(habit?.reminder?.takeIf { it.isNotBlank() }) }
     var description by remember { mutableStateOf(habit?.description ?: "") }
 
     var showFrequencyDialog by remember { mutableStateOf(false) }
@@ -78,7 +77,7 @@ fun YesOrNoHabit(
         habit?.let {
             name = it.name
             frequency = it.frequency ?: "Every day"
-            reminderTime = it.reminder
+            reminderTime = it.reminder?.takeIf { s -> s.isNotBlank() }
             description = it.description ?: ""
         }
     }
@@ -131,7 +130,12 @@ fun YesOrNoHabit(
                                 return@IconButton
                             }
 
-                            onSave(name, frequency, reminderTime, description)
+                            onSave(
+                                name,
+                                frequency,
+                                reminderTime?.takeIf { it.isNotBlank() },
+                                description
+                            )
                             navController.popBackStack()
                         }) {
                             Icon(Icons.Default.Save, contentDescription = "Save", tint = Peach)
@@ -218,7 +222,7 @@ fun YesOrNoHabit(
                     onClick = { showTimePicker = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Peach)
                 ) {
-                    Text("Reminder: ${reminderTime ?: "Off"}", color = DarkBlue)
+                    Text("Reminder: ${reminderTime?.ifBlank { null } ?: "Off"}", color = DarkBlue)
                 }
 
                 if (showTimePicker) {
@@ -247,8 +251,10 @@ fun YesOrNoHabit(
                                 String.format("%02d:%02d", hour, minute)
                             }
                         },
-                        onRemove = {
-                            reminderTime = null
+                        onRemove = if (!reminderTime.isNullOrBlank()) {
+                            { reminderTime = null }
+                        } else {
+                            null
                         }
                     )
                 }

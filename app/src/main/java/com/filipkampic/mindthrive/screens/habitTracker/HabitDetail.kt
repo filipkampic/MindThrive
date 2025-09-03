@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,7 +43,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.habitTracker.HabitStatistics
@@ -238,34 +239,43 @@ fun HabitDetail(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    coroutineScope.launch {
-                        viewModel.deleteHabit(habit)
-                        navController.popBackStack()
-                    }
-                }) {
-                    Text("Delete", color = Peach)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = Color.White)
-                }
-            },
             title = {
-                Text(text = "Delete habit?", color = Peach)
+                Text(text = "Confirm Deletion", color = DarkBlue)
             },
             text = {
                 Text(
                     text = "Are you sure you want to delete this habit?",
-                    color = Color.White
+                    color = DarkBlue.copy(alpha = 0.8f)
                 )
             },
-            containerColor = DarkBlue,
-            titleContentColor = Peach,
-            textContentColor = Color.White
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        coroutineScope.launch {
+                          viewModel.deleteHabit(habit)
+                          navController.popBackStack()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DarkBlue,
+                        contentColor = Peach
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = DarkBlue)
+                ) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = Peach,
+            titleContentColor = DarkBlue,
+            textContentColor = DarkBlue
         )
     }
 }

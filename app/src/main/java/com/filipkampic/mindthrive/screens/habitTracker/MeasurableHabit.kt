@@ -78,7 +78,7 @@ fun MeasurableHabit(
     var target by remember { mutableStateOf(habit?.target?.toString() ?: "") }
     var frequency by remember { mutableStateOf(habit?.frequency ?: "Every day") }
     var targetType by remember { mutableStateOf(habit?.targetType ?: "At least") }
-    var reminderTime by remember { mutableStateOf(habit?.reminder) }
+    var reminderTime by remember { mutableStateOf(habit?.reminder?.takeIf { it.isNotBlank() }) }
     var description by remember { mutableStateOf(habit?.description ?: "") }
 
     var showFrequencyDialog by remember { mutableStateOf(false) }
@@ -95,7 +95,7 @@ fun MeasurableHabit(
             target = it.target?.toString().orEmpty()
             frequency = it.frequency ?: "Every day"
             targetType = it.targetType ?: "At least"
-            reminderTime = it.reminder
+            reminderTime = it.reminder?.takeIf { s -> s.isNotBlank() }
             description = it.description ?: ""
         }
     }
@@ -153,7 +153,15 @@ fun MeasurableHabit(
                                 return@IconButton
                             }
 
-                            onSave(name, unit.ifBlank { null }, target.ifBlank { null }, frequency, targetType, reminderTime, description)
+                            onSave(
+                                name,
+                                unit.ifBlank { null },
+                                target.ifBlank { null },
+                                frequency,
+                                targetType,
+                                reminderTime?.takeIf { it.isNotBlank() },
+                                description
+                            )
                             navController.popBackStack()
                         }) {
                             Icon(Icons.Default.Save, contentDescription = "Save", tint = Peach)
@@ -293,7 +301,7 @@ fun MeasurableHabit(
                     onClick = { showTimePicker = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Peach)
                 ) {
-                    Text("Reminder: ${reminderTime ?: "Off"}", color = DarkBlue)
+                    Text("Reminder: ${reminderTime?.ifBlank { null } ?: "Off"}", color = DarkBlue)
                 }
 
                 if (showTimePicker) {
@@ -322,8 +330,10 @@ fun MeasurableHabit(
                                 String.format("%02d:%02d", hour, minute)
                             }
                         },
-                        onRemove = {
-                            reminderTime = null
+                        onRemove = if (!reminderTime.isNullOrBlank()) {
+                            { reminderTime = null }
+                        } else {
+                            null
                         }
                     )
                 }
