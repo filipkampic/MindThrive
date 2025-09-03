@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.screens.goals
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,20 +12,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -47,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -61,9 +58,13 @@ import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModel
 import com.filipkampic.mindthrive.viewmodel.GoalsViewModelFactory
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun GoalNoteEditor(
     goalId: Int,
@@ -82,6 +83,9 @@ fun GoalNoteEditor(
     var title by rememberSaveable { mutableStateOf("") }
     var text by rememberSaveable { mutableStateOf("") }
     val isEditing = noteId != null
+    var editingNoteId by remember { mutableStateOf(noteId) }
+    var baseline by remember { mutableStateOf("" to "") }
+    var hasBaseline by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -94,15 +98,6 @@ fun GoalNoteEditor(
         backgroundColor = Peach.copy(alpha = 0.4f)
     )
 
-    var initialTitle by remember { mutableStateOf("") }
-    var initialText by remember { mutableStateOf("") }
-
-    val hasChanges = (title != initialTitle) || (text != initialText)
-    var showExitConfirmDialog by remember { mutableStateOf(false) }
-    BackHandler(enabled = hasChanges && !showExitConfirmDialog) {
-        showExitConfirmDialog = true
-    }
-
     LaunchedEffect(noteId) {
         if (isEditing && noteId != null) {
             viewModel.loadGoalNote(noteId)
@@ -113,19 +108,34 @@ fun GoalNoteEditor(
         }
     }
 
-    LaunchedEffect(loadedNote) {
-        loadedNote?.let {
-            if (isEditing && it.id == noteId) {
-                title = it.title
-                initialTitle = it.title
-
-                text = it.text
-                initialText = it.text
-            }
+    LaunchedEffect(loadedNote?.id) {
+        loadedNote?.let { n ->
+            title = n.title
+            text = n.text
+            editingNoteId = n.id
+            baseline = n.title to n.text
+            hasBaseline = true
         } ?: run {
-            initialTitle = ""
-            initialText = ""
+            title = ""
+            text = ""
+            baseline = "" to ""
+            hasBaseline = true
         }
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { title to text }
+            .debounce(500)
+            .distinctUntilChanged()
+            .collectLatest { (title, content) ->
+                if (!hasBaseline) return@collectLatest
+                if (title.isBlank() && content.isBlank()) return@collectLatest
+                if (baseline == (title to content)) return@collectLatest
+
+                val id = viewModel.upsertNoteAutosave(goalId, editingNoteId, title, content)
+                editingNoteId = id
+                baseline = title to content
+            }
     }
 
     CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
@@ -140,13 +150,7 @@ fun GoalNoteEditor(
                     },
                     navigationIcon = {
                         IconButton(
-                            onClick = {
-                                if (title != initialTitle || text != initialText) {
-                                    showExitConfirmDialog = true
-                                } else {
-                                    navController.popBackStack()
-                                }
-                            }
+                            onClick = { navController.popBackStack() }
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
@@ -171,22 +175,6 @@ fun GoalNoteEditor(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBlue)
                 )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        focusManager.clearFocus()
-                        viewModel.upsertNote(goalId, noteId, title, text)
-                        initialTitle = title
-                        initialText = text
-                        showExitConfirmDialog = false
-                        navController.popBackStack()
-                    },
-                    containerColor = Peach,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = "Save Note", tint = DarkBlue)
-                }
             },
             containerColor = DarkBlue
         ) { padding ->
@@ -288,28 +276,6 @@ fun GoalNoteEditor(
             containerColor = Peach,
             titleContentColor = DarkBlue,
             textContentColor = DarkBlue
-        )
-    }
-
-    if (showExitConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showExitConfirmDialog = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    showExitConfirmDialog = false
-                    navController.popBackStack()
-                }) {
-                    Text("Exit", color = Peach)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExitConfirmDialog = false }) {
-                    Text("Cancel", color = Peach)
-                }
-            },
-            title = { Text("Unsaved Changes", color = Peach) },
-            text = { Text("You have unsaved changes. Are you sure you want to exit?", color = Peach) },
-            containerColor = DarkBlue
         )
     }
 }

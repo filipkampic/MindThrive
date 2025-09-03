@@ -17,7 +17,7 @@ interface GoalNoteDao {
     suspend fun getById(id: Int): GoalNote?
 
     @Insert
-    suspend fun insert(note: GoalNote)
+    suspend fun insert(note: GoalNote): Long
 
     @Update
     suspend fun update(note: GoalNote)

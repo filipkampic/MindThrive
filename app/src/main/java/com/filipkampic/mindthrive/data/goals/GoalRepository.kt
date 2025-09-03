@@ -54,7 +54,7 @@ class GoalRepository(
 
     suspend fun getGoalNote(id: Int)= goalNoteDao.getById(id)
 
-    suspend fun insertGoalNote(note: GoalNote) = goalNoteDao.insert(note)
+    suspend fun insertGoalNote(note: GoalNote): Long = goalNoteDao.insert(note)
 
     suspend fun updateGoalNote(note: GoalNote) = goalNoteDao.update(note)
 

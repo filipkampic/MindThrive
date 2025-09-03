@@ -9,6 +9,7 @@ import com.filipkampic.mindthrive.model.goals.GoalCategory
 import com.filipkampic.mindthrive.model.goals.GoalNote
 import com.filipkampic.mindthrive.model.goals.GoalProgress
 import com.filipkampic.mindthrive.model.goals.GoalStep
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -198,28 +200,38 @@ class GoalsViewModel(private val repository: GoalRepository) : ViewModel() {
 
     fun getNotes(goalId: Int): Flow<List<GoalNote>> = repository.getGoalNotes(goalId)
 
-    fun upsertNote(goalId: Int, id: Int?, title: String, text: String) {
-        viewModelScope.launch {
+    suspend fun upsertNoteAutosave(
+        goalId: Int,
+        id: Int?,
+        title: String,
+        text: String
+    ): Int {
+        return withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             if (id == null) {
-                repository.insertGoalNote(
-                    GoalNote(
-                        goalId = goalId,
-                        title = title.trim(),
-                        text = text.trim(),
-                        createdAt = now,
-                        updatedAt = now
-                    )
+                val newNote = GoalNote(
+                    goalId = goalId,
+                    title = title.trim(),
+                    text = text.trim(),
+                    createdAt = now,
+                    updatedAt = now
                 )
+                val newId = repository.insertGoalNote(newNote).toInt()
+                _selectedGoalNote.value = newNote.copy(id = newId)
+                newId
             } else {
-                val existing = repository.getGoalNote(id) ?: return@launch
+                val existing = repository.getGoalNote(id)
+                if (existing != null && existing.title == title.trim() && existing.text == text.trim()) {
+                    return@withContext id
+                }
                 repository.updateGoalNote(
-                    existing.copy(
+                    existing!!.copy(
                         title = title.trim(),
                         text = text.trim(),
                         updatedAt = now
                     )
                 )
+                id
             }
         }
     }
