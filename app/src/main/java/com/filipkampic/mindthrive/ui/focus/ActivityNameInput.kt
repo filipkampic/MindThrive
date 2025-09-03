@@ -43,7 +43,9 @@ fun ActivityNameInput(
                 focusedTextColor = Peach,
                 unfocusedTextColor = Peach,
                 focusedBorderColor = Peach,
-                unfocusedBorderColor = Peach
+                unfocusedBorderColor = Peach,
+                focusedLabelColor = Peach,
+                unfocusedLabelColor = Peach
             ),
             interactionSource = interactionSource,
             readOnly = isReadOnly

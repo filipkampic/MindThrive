@@ -1,6 +1,8 @@
 package com.filipkampic.mindthrive.screens.focus
 
 import android.media.MediaPlayer
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -516,13 +518,23 @@ fun Pomodoro(
                                 tint = Peach
                             )
                         }
+                        LaunchedEffect(triedToStartWithoutPlanning) {
+                            if (triedToStartWithoutPlanning) {
+                                delay(2000)
+                                triedToStartWithoutPlanning = false
+                            }
+                        }
                         Box(
                             modifier = Modifier
                                 .height(20.dp)
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (triedToStartWithoutPlanning) {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = triedToStartWithoutPlanning,
+                                enter = fadeIn(),
+                                exit = fadeOut()
+                            ) {
                                 Text("Please plan your activities first", color = Color.Red)
                             }
                         }
