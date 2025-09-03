@@ -2,6 +2,7 @@ package com.filipkampic.mindthrive.screens.goals
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -63,7 +64,7 @@ fun GoalStepsTab(goalId: Int) {
     val stepsStateList = remember { mutableStateListOf<GoalStep>() }
     val hapticFeedback = LocalHapticFeedback.current
 
-    val steps by viewModel.getSteps(goalId).collectAsState(initial = emptyList())
+    val steps by viewModel.getSteps(goalId).collectAsState(initial = null)
 
     var showStepDialog by remember { mutableStateOf(false) }
     var selectedStepForEditing by remember { mutableStateOf<GoalStep?>(null) }
@@ -82,8 +83,10 @@ fun GoalStepsTab(goalId: Int) {
     )
 
     LaunchedEffect(steps) {
-        stepsStateList.clear()
-        stepsStateList.addAll(steps.sortedBy { it.order })
+        if (steps != null) {
+            stepsStateList.clear()
+            stepsStateList.addAll(steps!!.sortedBy { it.order })
+        }
     }
 
     Column(
@@ -92,81 +95,110 @@ fun GoalStepsTab(goalId: Int) {
             .background(DarkBlue)
             .padding(horizontal = 16.dp)
     ) {
-        LazyColumn(
-            state = reorderState.listState,
-            modifier = Modifier
-                .weight(1f)
-                .reorderable(reorderState)
-        ) {
-            itemsIndexed(
-                items = stepsStateList,
-                key = { _, step -> step.id }
-            ) { index, step ->
-                val textColor = if (step.isCompleted) Peach.copy(alpha = 0.6f) else Peach
-                val descriptionColor = if (step.isCompleted) Peach.copy(alpha = 0.4f) else Peach.copy(alpha = 0.7f)
-                val textDecoration = if (step.isCompleted) TextDecoration.LineThrough else null
+        when {
+            steps == null -> {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+            }
 
-                ReorderableItem(
-                    reorderableState = reorderState,
-                    key = step.id
-                ) { isDragging ->
-                    val elevation = if (isDragging) 8.dp else 0.dp
+            steps!!.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No steps yet", color = Peach.copy(alpha = 0.7f))
+                }
+            }
+            else -> {
+                LazyColumn(
+                    state = reorderState.listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .reorderable(reorderState)
+                ) {
+                    itemsIndexed(
+                        items = stepsStateList,
+                        key = { _, step -> step.id }
+                    ) { index, step ->
+                        val textColor = if (step.isCompleted) Peach.copy(alpha = 0.6f) else Peach
+                        val descriptionColor =
+                            if (step.isCompleted) Peach.copy(alpha = 0.4f) else Peach.copy(alpha = 0.7f)
+                        val textDecoration =
+                            if (step.isCompleted) TextDecoration.LineThrough else null
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(elevation)
-                            .clickable {
-                                selectedStepForEditing = step
-                                showStepDialog = true
-                            }
-                            .padding(horizontal = 12.dp)
-                            .detectReorderAfterLongPress(reorderState)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = "${index + 1}.",
-                                color = textColor,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
+                        ReorderableItem(
+                            reorderableState = reorderState,
+                            key = step.id
+                        ) { isDragging ->
+                            val elevation = if (isDragging) 8.dp else 0.dp
 
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    step.name,
-                                    color = textColor,
-                                    textDecoration = textDecoration
-                                )
-                                step.description?.let { text ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(elevation)
+                                    .clickable {
+                                        selectedStepForEditing = step
+                                        showStepDialog = true
+                                    }
+                                    .padding(horizontal = 12.dp)
+                                    .detectReorderAfterLongPress(reorderState)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 12.dp)
+                                ) {
                                     Text(
-                                        text = text,
-                                        color = descriptionColor,
-                                        textDecoration = textDecoration
+                                        text = "${index + 1}.",
+                                        color = textColor,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            step.name,
+                                            color = textColor,
+                                            textDecoration = textDecoration
+                                        )
+                                        step.description?.let { text ->
+                                            Text(
+                                                text = text,
+                                                color = descriptionColor,
+                                                textDecoration = textDecoration
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Checkbox(
+                                        checked = step.isCompleted,
+                                        onCheckedChange = { isCheckedValue ->
+                                            viewModel.updateGoalStepCompletion(
+                                                step,
+                                                isCheckedValue
+                                            )
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = Peach,
+                                            uncheckedColor = Peach.copy(alpha = 0.7f),
+                                            checkmarkColor = DarkBlue
+                                        )
+                                    )
+                                }
+
+                                if (index < stepsStateList.size - 1) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        thickness = 1.dp,
+                                        color = Peach.copy(alpha = 0.3f)
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Checkbox(
-                                checked = step.isCompleted,
-                                onCheckedChange = { isCheckedValue -> viewModel.updateGoalStepCompletion(step, isCheckedValue) },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Peach,
-                                    uncheckedColor = Peach.copy(alpha = 0.7f),
-                                    checkmarkColor = DarkBlue
-                                )
-                            )
-                        }
-
-                        if (index < steps.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(top = 8.dp),
-                                thickness = 1.dp,
-                                color = Peach.copy(alpha = 0.3f)
-                            )
                         }
                     }
                 }

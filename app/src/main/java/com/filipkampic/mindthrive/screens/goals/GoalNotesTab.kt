@@ -2,6 +2,7 @@ package com.filipkampic.mindthrive.screens.goals
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,7 +50,7 @@ fun GoalNotesTab(
     }
     val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(repository))
 
-    val notes by viewModel.getNotes(goalId).collectAsState(initial = emptyList())
+    val notes by viewModel.getNotes(goalId).collectAsState(initial = null)
 
     Column(
         modifier = Modifier
@@ -57,27 +58,59 @@ fun GoalNotesTab(
             .background(DarkBlue)
             .padding(horizontal = 16.dp)
     ) {
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(notes, key = { it.id }) { note ->
-                val date = remember(note.updatedAt) {
-                    SimpleDateFormat("dd.MM.yyyy. HH:mm", Locale.getDefault()).format(Date(note.updatedAt))
-                }
-
-                Column(
+        when {
+            notes == null -> {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
-                        .clickable { navController.navigate("goalNoteEditor/$goalId?noteId=${note.id}") }
-                ) {
-                    Text(text = note.title, color = Peach, style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(2.dp))
-                    Text(text = date, color = Peach.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
-                }
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    thickness = 1.dp,
-                    color = Peach.copy(alpha = 0.3f)
+                       .fillMaxWidth()
+                        .weight(1f)
                 )
+            }
+            notes!!.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No notes yet", color = Peach.copy(alpha = 0.7f))
+                }
+            }
+            else -> {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(notes!!, key = { it.id }) { note ->
+                        val date = remember(note.updatedAt) {
+                            SimpleDateFormat(
+                                "dd.MM.yyyy. HH:mm",
+                                Locale.getDefault()
+                            ).format(Date(note.updatedAt))
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 12.dp)
+                                .clickable { navController.navigate("goalNoteEditor/$goalId?noteId=${note.id}") }
+                        ) {
+                            Text(
+                                text = note.title,
+                                color = Peach,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = date,
+                                color = Peach.copy(alpha = 0.6f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            thickness = 1.dp,
+                            color = Peach.copy(alpha = 0.3f)
+                        )
+                    }
+                }
             }
         }
 
