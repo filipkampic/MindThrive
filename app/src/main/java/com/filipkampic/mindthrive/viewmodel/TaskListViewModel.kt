@@ -2,7 +2,7 @@ package com.filipkampic.mindthrive.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.filipkampic.mindthrive.data.TaskRepository
+import com.filipkampic.mindthrive.data.tasks.TaskRepository
 import com.filipkampic.mindthrive.model.tasks.Category
 import com.filipkampic.mindthrive.model.tasks.SortDirection
 import com.filipkampic.mindthrive.model.tasks.Task

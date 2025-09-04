@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.notification.timeManagement.cancelTimeBlockNotification
 import com.filipkampic.mindthrive.data.AppDatabase
-import com.filipkampic.mindthrive.model.TimeBlock
+import com.filipkampic.mindthrive.model.timeManagement.TimeBlock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

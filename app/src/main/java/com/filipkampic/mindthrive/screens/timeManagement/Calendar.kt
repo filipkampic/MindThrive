@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.screens
+package com.filipkampic.mindthrive.screens.timeManagement
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.data
+package com.filipkampic.mindthrive.data.tasks
 
 import android.content.Context
 import com.filipkampic.mindthrive.model.tasks.Category

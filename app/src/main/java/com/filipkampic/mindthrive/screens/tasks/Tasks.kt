@@ -51,7 +51,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.data.AppDatabase
-import com.filipkampic.mindthrive.data.TaskRepository
+import com.filipkampic.mindthrive.data.tasks.TaskRepository
 import com.filipkampic.mindthrive.model.tasks.SortDirection
 import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.model.tasks.TaskSortOption

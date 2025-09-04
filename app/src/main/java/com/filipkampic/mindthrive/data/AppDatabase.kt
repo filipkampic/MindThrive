@@ -11,9 +11,13 @@ import com.filipkampic.mindthrive.data.goals.GoalNoteDao
 import com.filipkampic.mindthrive.data.goals.GoalStepDao
 import com.filipkampic.mindthrive.data.habitTracker.HabitCheckDao
 import com.filipkampic.mindthrive.data.habitTracker.HabitDao
+import com.filipkampic.mindthrive.data.notes.NoteDao
+import com.filipkampic.mindthrive.data.tasks.CategoryDao
+import com.filipkampic.mindthrive.data.tasks.TaskDao
+import com.filipkampic.mindthrive.data.timeManagement.TimeBlockDao
 import com.filipkampic.mindthrive.model.tasks.Task
-import com.filipkampic.mindthrive.model.TimeBlock
-import com.filipkampic.mindthrive.model.TimeBlockTypeConverters
+import com.filipkampic.mindthrive.model.timeManagement.TimeBlock
+import com.filipkampic.mindthrive.model.timeManagement.TimeBlockTypeConverters
 import com.filipkampic.mindthrive.model.goals.Goal
 import com.filipkampic.mindthrive.model.goals.GoalCategory
 import com.filipkampic.mindthrive.model.goals.GoalNote

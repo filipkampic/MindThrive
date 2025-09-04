@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.screens
+package com.filipkampic.mindthrive.screens.timeManagement
 
 import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModel
 import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModelFactory
@@ -83,7 +83,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.filipkampic.mindthrive.model.TimeBlock
+import com.filipkampic.mindthrive.model.timeManagement.TimeBlock
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.ui.TimePickerDialog
 import com.filipkampic.mindthrive.ui.theme.Inter

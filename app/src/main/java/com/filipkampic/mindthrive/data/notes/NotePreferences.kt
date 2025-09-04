@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.data
+package com.filipkampic.mindthrive.data.notes
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit

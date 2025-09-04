@@ -35,12 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.R
 import com.filipkampic.mindthrive.data.AppDatabase
-import com.filipkampic.mindthrive.data.TaskRepository
+import com.filipkampic.mindthrive.data.tasks.TaskRepository
 import com.filipkampic.mindthrive.model.tasks.Priority
 import com.filipkampic.mindthrive.model.tasks.Task
 import com.filipkampic.mindthrive.ui.tasks.EditTaskDialog
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
-import com.filipkampic.mindthrive.ui.theme.Inter
 import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel

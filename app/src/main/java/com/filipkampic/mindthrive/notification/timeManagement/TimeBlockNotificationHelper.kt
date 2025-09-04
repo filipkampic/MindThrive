@@ -5,7 +5,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.filipkampic.mindthrive.model.TimeBlock
+import com.filipkampic.mindthrive.model.timeManagement.TimeBlock
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit

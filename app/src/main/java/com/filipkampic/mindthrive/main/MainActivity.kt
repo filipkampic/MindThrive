@@ -75,14 +75,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MindThriveTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = DarkBlue
-                ) {
-                    MindThriveApp()
-                }
-            }
+            MindThriveApp()
         }
     }
 }

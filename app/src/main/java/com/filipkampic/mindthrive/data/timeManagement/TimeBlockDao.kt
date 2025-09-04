@@ -1,7 +1,7 @@
-package com.filipkampic.mindthrive.data
+package com.filipkampic.mindthrive.data.timeManagement
 
 import androidx.room.*
-import com.filipkampic.mindthrive.model.TimeBlock
+import com.filipkampic.mindthrive.model.timeManagement.TimeBlock
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.LocalDateTime

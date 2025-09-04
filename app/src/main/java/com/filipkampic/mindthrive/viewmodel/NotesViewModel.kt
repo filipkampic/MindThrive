@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.AppDatabase
-import com.filipkampic.mindthrive.data.NoteDao
-import com.filipkampic.mindthrive.data.NotesPreferences
+import com.filipkampic.mindthrive.data.notes.NoteDao
+import com.filipkampic.mindthrive.data.notes.NotesPreferences
 import com.filipkampic.mindthrive.model.notes.Note
 import com.filipkampic.mindthrive.model.notes.NoteFolder
 import com.filipkampic.mindthrive.model.notes.NotesSortOption

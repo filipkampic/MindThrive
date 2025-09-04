@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.data
+package com.filipkampic.mindthrive.data.tasks
 
 import androidx.room.Dao
 import androidx.room.Delete

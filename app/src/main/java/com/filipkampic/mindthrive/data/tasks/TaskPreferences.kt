@@ -1,4 +1,4 @@
-package com.filipkampic.mindthrive.data
+package com.filipkampic.mindthrive.data.tasks
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -10,7 +10,7 @@ import com.filipkampic.mindthrive.model.tasks.TaskSortOption
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.dataStore by preferencesDataStore(name = "task_prefs")
+val Context.dataStore by preferencesDataStore(name = "task_prefs")
 
 class TaskPreferences(private val context: Context) {
     object Keys {
