@@ -1,5 +1,7 @@
 package com.filipkampic.mindthrive.screens.focus
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -146,13 +148,23 @@ fun Stopwatch(
                                 tint = Peach
                             )
                         }
+                        LaunchedEffect(triedToStartWithoutActivity) {
+                            if (triedToStartWithoutActivity) {
+                                delay(2000)
+                                triedToStartWithoutActivity = false
+                            }
+                        }
                         Box(
                             modifier = Modifier
                                 .height(20.dp)
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (triedToStartWithoutActivity) {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = triedToStartWithoutActivity,
+                                enter = fadeIn(),
+                                exit = fadeOut()
+                            ) {
                                 Text(text = "Please enter an activity first", color = Color.Red)
                             }
                         }

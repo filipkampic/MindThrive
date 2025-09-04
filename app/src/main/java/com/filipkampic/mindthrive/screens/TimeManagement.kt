@@ -571,15 +571,17 @@ fun TimeBlockCard(
                     fontSize = 14.sp
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = timeBlock.duration(),
                     color = if (isActive) Color.White else DarkBlue,
                     fontSize = 14.sp
                 )
                 if (isActive) {
-                    Spacer(modifier = Modifier.width(8.dp))
-
                     val remHours = remainingMinutes / 60
                     val remMins = remainingMinutes % 60
 
