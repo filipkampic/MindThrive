@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -100,7 +101,13 @@ fun Focus(navController: NavController) {
                                             onCheckedChange = {
                                                 focusViewModel.saveAlarmEnabled(context, it)
                                             },
-                                            colors = CheckboxDefaults.colors(checkedColor = DarkBlue, uncheckedColor = DarkBlue)
+                                            colors = CheckboxDefaults.colors(
+                                                checkedColor = DarkBlue,
+                                                uncheckedColor = DarkBlue,
+                                                checkmarkColor = Peach,
+                                                disabledCheckedColor = DarkBlue,
+                                                disabledUncheckedColor = DarkBlue
+                                            )
                                         )
                                         Text("Enable Alarm", color = DarkBlue)
                                     }

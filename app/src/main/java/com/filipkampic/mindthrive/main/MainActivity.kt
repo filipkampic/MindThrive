@@ -15,10 +15,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.filipkampic.mindthrive.MindThriveApp
+import com.filipkampic.mindthrive.ui.theme.DarkBlue
+import com.filipkampic.mindthrive.ui.theme.MindThriveTheme
 
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -70,7 +75,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MindThriveApp()
+            MindThriveTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = DarkBlue
+                ) {
+                    MindThriveApp()
+                }
+            }
         }
     }
 }
