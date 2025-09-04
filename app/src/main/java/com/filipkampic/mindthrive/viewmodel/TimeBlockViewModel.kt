@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.filipkampic.mindthrive.notification.timeManagement.cancelTimeBlockNotification
 import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.model.TimeBlock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import scheduleTimeBlockNotification
+import com.filipkampic.mindthrive.notification.timeManagement.scheduleTimeBlockNotification
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -95,6 +96,7 @@ class TimeBlockViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun deleteTimeBlock(timeBlock: TimeBlock) {
         viewModelScope.launch {
+            cancelTimeBlockNotification(getApplication(), timeBlock.id)
             timeBlockDao.deleteTimeBlock(timeBlock)
         }
     }

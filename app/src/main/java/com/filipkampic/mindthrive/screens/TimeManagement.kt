@@ -3,13 +3,7 @@ package com.filipkampic.mindthrive.screens
 import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModel
 import com.filipkampic.mindthrive.viewmodel.TimeBlockViewModelFactory
 import android.annotation.SuppressLint
-import android.app.AlarmManager
 import android.app.Application
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
@@ -175,26 +169,14 @@ fun TimeManagement(navController: NavController, date: String) {
                             text = { Text("Duplicate Day", color = DarkBlue) },
                             onClick = {
                                 expanded = false
-                                val appContext = context.applicationContext
-                                val alarmManager =
-                                    appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-                                    val intent =
-                                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                            data = Uri.parse("package:" + appContext.packageName)
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        }
-                                    appContext.startActivity(intent)
-                                } else {
-                                    todaysTimeBlocks.forEach { timeBlock ->
-                                        val newTimeBlock = timeBlock.copy(
-                                            id = UUID.randomUUID().toString(),
-                                            start = timeBlock.start?.plusDays(1),
-                                            end = timeBlock.end?.plusDays(1),
-                                            date = timeBlock.date.plusDays(1)
-                                        )
-                                        viewModel.insertTimeBlock(newTimeBlock)
-                                    }
+                                todaysTimeBlocks.forEach { timeBlock ->
+                                    val newTimeBlock = timeBlock.copy(
+                                        id = UUID.randomUUID().toString(),
+                                        start = timeBlock.start?.plusDays(1),
+                                        end = timeBlock.end?.plusDays(1),
+                                        date = timeBlock.date.plusDays(1)
+                                    )
+                                    viewModel.insertTimeBlock(newTimeBlock)
                                 }
                             }
                         )
@@ -373,8 +355,7 @@ fun TimeManagement(navController: NavController, date: String) {
                                         val density = LocalDensity.current
                                         val defaultCardHeightPx = with(density) { 48.dp.toPx() } + with(density) { 8.dp.toPx() }
                                         val isHovered = hoveredIndex.value == globalIndex && draggedItemIndex.value != globalIndex
-                                        val isActive = timeBlock.start != null && timeBlock.end != null &&
-                                                currentTime.isAfter(timeBlock.start) && currentTime.isBefore(timeBlock.end)
+                                        val isActive = timeBlock.start != null && timeBlock.end != null && currentTime.isAfter(timeBlock.start) && currentTime.isBefore(timeBlock.end)
                                         val remainingMinutes = timeBlock.end?.let { Duration.between(currentTime, it).plusSeconds(59).toMinutes().coerceAtLeast(0) } ?: 0
 
                                         TimeBlockCard(

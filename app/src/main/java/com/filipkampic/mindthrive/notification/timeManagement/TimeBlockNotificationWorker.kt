@@ -18,6 +18,7 @@ class TimeBlockNotificationWorker(
 ) : Worker(appContext, workerParams) {
 
     override fun doWork(): Result {
+        val blockId = inputData.getString("BLOCK_ID") ?: return Result.failure()
         val blockName = inputData.getString("BLOCK_NAME") ?: return Result.failure()
 
         val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -46,8 +47,9 @@ class TimeBlockNotificationWorker(
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
+        val notificationId = blockId.hashCode()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(notificationId, notification)
 
         return Result.success()
     }
