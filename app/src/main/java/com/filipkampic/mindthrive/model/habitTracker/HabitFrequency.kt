@@ -8,20 +8,23 @@ data class HabitFrequency(
 )
 
 fun parseFrequency(frequency: String?): HabitFrequency? {
-    if (frequency == null) return null
+    if (frequency == null) return HabitFrequency(FrequencyType.DAILY_INTERVAL, 1)
+
+    val f = frequency.trim().lowercase()
     return when {
-        frequency.startsWith("every") -> {
-            val days = frequency.removePrefix("every ").removeSuffix(" days").toIntOrNull()
-            if (days != null) HabitFrequency(FrequencyType.DAILY_INTERVAL, days) else null
+        f == "every day" -> HabitFrequency(FrequencyType.DAILY_INTERVAL, 1)
+        f.startsWith("every ") && f.endsWith(" days") -> {
+            val days = f.removePrefix("every ").removeSuffix(" days").toIntOrNull()
+            if (days != null && days > 0) HabitFrequency(FrequencyType.DAILY_INTERVAL, days) else HabitFrequency(FrequencyType.DAILY_INTERVAL, 1)
         }
-        frequency.endsWith("times per week") -> {
-            val times = frequency.removeSuffix(" times per week").toIntOrNull()
-            if (times != null) HabitFrequency(FrequencyType.TIMES_PER_WEEK, times) else null
+        f.endsWith(" times per week") -> {
+            val times = f.removeSuffix(" times per week").toIntOrNull()
+            if (times != null && times > 0) HabitFrequency(FrequencyType.TIMES_PER_WEEK, times) else null
         }
-        frequency.endsWith("times per month") -> {
-            val times = frequency.removeSuffix(" times per month").toIntOrNull()
-            if (times != null) HabitFrequency(FrequencyType.TIMES_PER_MONTH, times) else null
+        f.endsWith(" times per month") -> {
+            val times = f.removeSuffix(" times per month").toIntOrNull()
+            if (times != null && times > 0) HabitFrequency(FrequencyType.TIMES_PER_MONTH, times) else null
         }
-        else -> null
+        else -> HabitFrequency(FrequencyType.DAILY_INTERVAL, 1)
     }
 }

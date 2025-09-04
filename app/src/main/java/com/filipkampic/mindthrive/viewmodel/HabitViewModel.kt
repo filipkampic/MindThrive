@@ -1,6 +1,5 @@
 package com.filipkampic.mindthrive.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -138,23 +137,13 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         }
     }
 
-    private fun isSuccessful(check: HabitCheck, habit: Habit): Boolean {
-        return if (habit.isMeasurable) {
-            val amount = check.amount ?: 0f
-            val target = (habit.target ?: Int.MAX_VALUE).toFloat()
-            amount >= target
-        } else {
-            check.isChecked
-        }
-    }
-
     suspend fun calculateOverallStats(): Triple<Int, Pair<String, Int>, Int> {
         val habits = repository.getHabits().firstOrNull().orEmpty()
         val totalHabits = habits.size
         var longestStreak = 0
         var longestStreakName = ""
         var totalSuccesses = 0
-        var totalChecks = 0
+        var totalExpected = 0
 
         for (habit in habits) {
             val checks = repository.getAllChecksForHabit(habit.id).firstOrNull().orEmpty()
@@ -165,11 +154,11 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                 longestStreakName = habit.name
             }
 
-            totalSuccesses += checks.count { check -> return@count isSuccessful(check, habit) }
-            totalChecks += checks.size
+            totalSuccesses += stats.successCount
+            totalExpected += stats.totalExpected
         }
 
-        val successRate = if (totalChecks == 0) 0 else ((totalSuccesses.toDouble() / totalChecks) * 100).toInt()
+        val successRate = if (totalExpected == 0) 0 else ((totalSuccesses.toDouble() / totalExpected) * 100).toInt()
         return Triple(totalHabits, longestStreakName to longestStreak, successRate)
     }
 }

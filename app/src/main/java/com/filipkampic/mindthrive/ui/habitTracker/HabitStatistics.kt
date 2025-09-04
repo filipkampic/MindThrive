@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.filipkampic.mindthrive.model.habitTracker.FrequencyType
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
+import com.filipkampic.mindthrive.model.habitTracker.HabitFrequency
 import com.filipkampic.mindthrive.model.habitTracker.HabitStats
 import com.filipkampic.mindthrive.model.habitTracker.parseFrequency
 import com.filipkampic.mindthrive.ui.theme.DarkBlue
@@ -79,20 +80,8 @@ fun StatRow(
 
 fun calculateHabitStats(checks: List<HabitCheck>, habit: Habit): HabitStats {
     val today = LocalDate.now()
-    val mutableMap = checks.associateBy { LocalDate.parse(it.date) }.toMutableMap()
 
-    val todayCheck = mutableMap[today]
-    if (todayCheck != null) {
-        mutableMap[today] = todayCheck
-    } else if (habit.isDoneToday && !habit.isMeasurable) {
-        val pseudoCheck = HabitCheck(
-            habitId = habit.id,
-            date = today.toString(),
-            isChecked = true,
-            amount = null
-        )
-        mutableMap[today] = pseudoCheck
-    }
+    val mutableMap = checks.associateBy { LocalDate.parse(it.date) }.toMutableMap()
 
     if (!mutableMap.containsKey(today) && habit.isDoneToday) {
         val pseudoCheck = HabitCheck(
@@ -106,28 +95,30 @@ fun calculateHabitStats(checks: List<HabitCheck>, habit: Habit): HabitStats {
 
     fun isSuccessful(check: HabitCheck): Boolean {
         if (!habit.isMeasurable) return check.isChecked
-
-        val target = habit.target ?: return false
+        val target = habit.target?.toFloat() ?: return false
         val amount = check.amount ?: return false
-
         return when (habit.targetType?.lowercase()) {
             "at most" -> amount <= target
-            else -> amount >= target
+            else      -> amount >= target
         }
     }
 
-    val parsedFrequency = parseFrequency(habit.frequency)
+    val parsedFrequency = parseFrequency(habit.frequency) ?: HabitFrequency(FrequencyType.DAILY_INTERVAL, 1)
+
     var currentStreak = 0
     var bestStreak = 0
-    var tempStreak = 0
+    var tempStreak: Int
     var successCount = 0
     var totalExpected = 0
 
-    when (parsedFrequency?.type) {
+    val firstDate: LocalDate = mutableMap.keys.minOrNull() ?: today
+
+    when (parsedFrequency.type) {
         FrequencyType.DAILY_INTERVAL -> {
             val interval = parsedFrequency.value
+
             var date = today
-            while (true) {
+            while (!date.isBefore(firstDate)) {
                 val check = mutableMap[date]
                 if (date == today && (check == null || !isSuccessful(check))) {
                     date = date.minusDays(interval.toLong())
@@ -136,132 +127,132 @@ fun calculateHabitStats(checks: List<HabitCheck>, habit: Habit): HabitStats {
                 if (check != null && isSuccessful(check)) {
                     currentStreak++
                     date = date.minusDays(interval.toLong())
-                } else {
-                    break
-                }
+                } else break
             }
 
-            val pastDays = (0..30).map { today.minusDays((it * interval).toLong()) }
-            for (date in pastDays) {
-                if (date == today && !habit.isDoneToday) continue
-                val check = mutableMap[date]
-                if (check != null && isSuccessful(check)) successCount++
+            val pastDays = generateSequence(today) { it.minusDays(interval.toLong()) }
+                .takeWhile { !it.isBefore(firstDate) }
+                .toList()
+
+            for (day in pastDays) {
+                val c = mutableMap[day]
+                if (c != null && isSuccessful(c)) successCount++
                 totalExpected++
             }
 
-            date = today
-            while (date.isAfter(today.minusDays(180))) {
-                val check = mutableMap[date]
-                if (check != null && isSuccessful(check)) {
+            var scanDate = today
+            tempStreak = 0
+            while (!scanDate.isBefore(firstDate)) {
+                val c = mutableMap[scanDate]
+                if (c != null && isSuccessful(c)) {
                     tempStreak++
                     bestStreak = maxOf(bestStreak, tempStreak)
                 } else {
                     tempStreak = 0
                 }
-                date = date.minusDays(interval.toLong())
+                scanDate = scanDate.minusDays(interval.toLong())
             }
         }
 
         FrequencyType.TIMES_PER_WEEK -> {
-            val startOfWeek = today.with(java.time.DayOfWeek.MONDAY)
-            val endOfWeek = startOfWeek.plusDays(6)
+            val targetPerWeek = parsedFrequency.value
 
-            val weeklyChecks = mutableMap.filterKeys { it in startOfWeek..endOfWeek && (it != today || habit.isDoneToday) }
-            successCount = weeklyChecks.count { isSuccessful(it.value) }
-            totalExpected = parsedFrequency.value
+            val firstWeekStart = firstDate.with(java.time.DayOfWeek.MONDAY)
+            val currentWeekStart = today.with(java.time.DayOfWeek.MONDAY)
+            val weeksCount = java.time.temporal.ChronoUnit.WEEKS.between(firstWeekStart, currentWeekStart).toInt() + 1
 
-            while (true) {
-                val weekStart = startOfWeek.minusWeeks(currentStreak.toLong())
+            successCount = 0
+            totalExpected = 0
+
+            repeat(weeksCount) { i ->
+                val weekStart = currentWeekStart.minusWeeks(i.toLong())
                 val weekEnd = weekStart.plusDays(6)
-                val weekSuccesses = mutableMap.filterKeys { it in weekStart..weekEnd }
+                val weekSuccesses = mutableMap
+                    .filterKeys { it in weekStart..weekEnd && (it != today || habit.isDoneToday) }
                     .count { isSuccessful(it.value) }
 
-                if (weekSuccesses >= parsedFrequency.value) {
-                    currentStreak++
-                } else break
+                successCount += kotlin.math.min(weekSuccesses, targetPerWeek)
+                totalExpected += targetPerWeek
             }
 
-            var testBestStreak = 0
-            while (true) {
-                val weekStart = today.minusWeeks(testBestStreak.toLong())
-                val weekEnd = weekStart.plusDays(6)
-                val weekSuccesses = mutableMap.filterKeys { it in weekStart..weekEnd }
-                    .count { isSuccessful(it.value) }
-                if (weekSuccesses >= parsedFrequency.value) {
-                    testBestStreak++
-                    bestStreak = maxOf(bestStreak, testBestStreak)
+            var ws = currentWeekStart
+            var streak = 0
+            while (!ws.isBefore(firstWeekStart)) {
+                val we = ws.plusDays(6)
+                val cnt = mutableMap.filterKeys { it in ws..we }.count { isSuccessful(it.value) }
+                if (cnt >= targetPerWeek) {
+                    streak++
+                    ws = ws.minusWeeks(1)
                 } else break
+            }
+            currentStreak = streak
+
+            var scanStart = currentWeekStart
+            var running = 0
+            while (!scanStart.isBefore(firstWeekStart)) {
+                val scanEnd = scanStart.plusDays(6)
+                val cnt = mutableMap.filterKeys { it in scanStart..scanEnd }.count { isSuccessful(it.value) }
+                if (cnt >= targetPerWeek) {
+                    running++
+                    bestStreak = maxOf(bestStreak, running)
+                } else {
+                    running = 0
+                }
+                scanStart = scanStart.minusWeeks(1)
             }
         }
 
         FrequencyType.TIMES_PER_MONTH -> {
-            val startOfMonth = today.withDayOfMonth(1)
-            val endOfMonth = startOfMonth.plusMonths(1).minusDays(1)
+            val targetPerMonth = parsedFrequency.value
 
-            val monthlyChecks = mutableMap.filterKeys { it in startOfMonth..endOfMonth && (it != today || habit.isDoneToday) }
-            successCount = monthlyChecks.count { isSuccessful(it.value) }
-            totalExpected = parsedFrequency.value
+            val firstMonthStart = firstDate.withDayOfMonth(1)
+            val currentMonthStart = today.withDayOfMonth(1)
+            val monthsCount = java.time.temporal.ChronoUnit.MONTHS.between(firstMonthStart, currentMonthStart).toInt() + 1
 
-            while (true) {
-                val monthStart = startOfMonth.minusMonths(currentStreak.toLong())
+            successCount = 0
+            totalExpected = 0
+
+            repeat(monthsCount) { i ->
+                val monthStart = currentMonthStart.minusMonths(i.toLong())
                 val monthEnd = monthStart.plusMonths(1).minusDays(1)
-                val monthSuccesses = mutableMap.filterKeys { it in monthStart..monthEnd }
+                val monthSuccesses = mutableMap
+                    .filterKeys { it in monthStart..monthEnd && (it != today || habit.isDoneToday) }
                     .count { isSuccessful(it.value) }
-                if (monthSuccesses >= parsedFrequency.value) {
-                    currentStreak++
+
+                successCount += kotlin.math.min(monthSuccesses, targetPerMonth)
+                totalExpected += targetPerMonth
+            }
+
+            var ms = currentMonthStart
+            var streak = 0
+            while (!ms.isBefore(firstMonthStart)) {
+                val me = ms.plusMonths(1).minusDays(1)
+                val cnt = mutableMap.filterKeys { it in ms..me }.count { isSuccessful(it.value) }
+                if (cnt >= targetPerMonth) {
+                    streak++
+                    ms = ms.minusMonths(1)
                 } else break
             }
+            currentStreak = streak
 
-            var testBestStreak = 0
-            while (true) {
-                val monthStart = today.minusMonths(testBestStreak.toLong()).withDayOfMonth(1)
-                val monthEnd = monthStart.plusMonths(1).minusDays(1)
-                val monthSuccesses = mutableMap.filterKeys { it in monthStart..monthEnd }
-                    .count { isSuccessful(it.value) }
-                if (monthSuccesses >= parsedFrequency.value) {
-                    testBestStreak++
-                    bestStreak = maxOf(bestStreak, testBestStreak)
-                } else break
-            }
-        }
-
-        else -> {
-            var date = today
-            while (true) {
-                val check = mutableMap[date]
-                if (date == today && (check == null || !isSuccessful(check))) {
-                    date = date.minusDays(1)
-                    continue
-                }
-                if (check != null && isSuccessful(check)) {
-                    currentStreak++
-                    date = date.minusDays(1)
+            var scanStart = currentMonthStart
+            var running = 0
+            while (!scanStart.isBefore(firstMonthStart)) {
+                val scanEnd = scanStart.plusMonths(1).minusDays(1)
+                val cnt = mutableMap.filterKeys { it in scanStart..scanEnd }.count { isSuccessful(it.value) }
+                if (cnt >= targetPerMonth) {
+                    running++
+                    bestStreak = maxOf(bestStreak, running)
                 } else {
-                    break
+                    running = 0
                 }
-            }
-
-            for (check in checks.sortedBy { it.date }) {
-                val date = LocalDate.parse(check.date)
-                if (date == today && !habit.isDoneToday) continue
-
-                if (isSuccessful(check)) {
-                    tempStreak++
-                    successCount++
-                    bestStreak = maxOf(bestStreak, tempStreak)
-                } else {
-                    tempStreak = 0
-                }
-            }
-            totalExpected = checks.count {
-                val date = LocalDate.parse(it.date)
-                date != today || habit.isDoneToday
+                scanStart = scanStart.minusMonths(1)
             }
         }
     }
 
     val successRate = if (totalExpected > 0) (successCount * 100) / totalExpected else 0
     bestStreak = maxOf(bestStreak, currentStreak)
-    return HabitStats(currentStreak, bestStreak, successRate)
+    return HabitStats(currentStreak, bestStreak, successRate, successCount, totalExpected)
 }
 
