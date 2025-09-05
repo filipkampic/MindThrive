@@ -1,6 +1,7 @@
 package com.filipkampic.mindthrive.screens.focus
 
 import android.annotation.SuppressLint
+import android.icu.util.Calendar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,13 +52,18 @@ fun Statistics(
     viewModel: FocusViewModel
 ) {
     val entries by viewModel.focusEntries
-    val now = System.currentTimeMillis()
+
+    val startOfDay = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
     val today = remember(entries) {
         entries.filter { entry ->
-            entry.timestamp >= now - 24 * 60 * 60 * 1000
-        }.sumOf { entry->
-            entry.durationSeconds }
+            entry.timestamp >= startOfDay
+        }.sumOf { it.durationSeconds }
     }
 
     val total by viewModel.totalFocusFromPrefs.collectAsState(initial = 0)
