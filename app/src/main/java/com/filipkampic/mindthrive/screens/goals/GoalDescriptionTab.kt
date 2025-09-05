@@ -157,7 +157,6 @@ fun GoalDescriptionTab(
                         onClick = {
                             viewModel.deleteGoal(g)
                             showDeleteConfirmDialog = false
-                            navController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = DarkBlue,

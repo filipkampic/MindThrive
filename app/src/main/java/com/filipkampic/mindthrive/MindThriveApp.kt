@@ -47,6 +47,7 @@ import com.filipkampic.mindthrive.screens.habitTracker.YesOrNoHabit
 import com.filipkampic.mindthrive.screens.notes.NoteEditor
 import com.filipkampic.mindthrive.screens.notes.NoteFolder
 import com.filipkampic.mindthrive.screens.tasks.EisenhowerMatrix
+import com.filipkampic.mindthrive.ui.theme.DarkBlue
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
 import com.filipkampic.mindthrive.viewmodel.HabitViewModelFactory
 import com.filipkampic.mindthrive.viewmodel.TaskListViewModel
@@ -74,7 +75,7 @@ fun MindThriveApp() {
     MaterialTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = DarkBlue
         ) {
             NavHost(
                 navController = navController,
