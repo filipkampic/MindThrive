@@ -1,11 +1,13 @@
 package com.filipkampic.mindthrive.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filipkampic.mindthrive.data.habitTracker.HabitRepository
 import com.filipkampic.mindthrive.model.habitTracker.Habit
 import com.filipkampic.mindthrive.model.habitTracker.HabitCheck
+import com.filipkampic.mindthrive.notification.habitTracker.cancelHabitReminder
 import com.filipkampic.mindthrive.ui.habitTracker.calculateHabitStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,9 +60,10 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         repository.insertHabit(habit)
     }
 
-    fun deleteHabit(habit: Habit) = viewModelScope.launch {
+    fun deleteHabit(habit: Habit, context: Context) = viewModelScope.launch {
         repository.deleteHabit(habit)
         repository.deleteChecksForHabit(habit.id)
+        cancelHabitReminder(context, habit.id)
     }
 
     fun getAllChecksForHabit(habitId: Int): Flow<List<HabitCheck>> {

@@ -43,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.filipkampic.mindthrive.ui.habitTracker.HabitStatistics
@@ -62,6 +63,8 @@ fun HabitDetail(
     navController: NavController,
     viewModel: HabitViewModel
 ) {
+    val context = LocalContext.current
+
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Weekly Progress", "Monthly Progress")
     val coroutineScope = rememberCoroutineScope()
@@ -257,7 +260,7 @@ fun HabitDetail(
                     onClick = {
                         showDeleteDialog = false
                         coroutineScope.launch {
-                          viewModel.deleteHabit(habit)
+                          viewModel.deleteHabit(habit, context)
                           navController.popBackStack()
                         }
                     },

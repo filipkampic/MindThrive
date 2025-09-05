@@ -17,6 +17,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :id")
     fun getHabitById(id: Int): Flow<Habit?>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM habits WHERE id = :id)")
+    suspend fun habitExists(id: Int): Boolean
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
 

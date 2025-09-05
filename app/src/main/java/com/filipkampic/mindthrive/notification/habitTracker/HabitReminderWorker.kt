@@ -8,7 +8,9 @@ import androidx.core.app.NotificationCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.filipkampic.mindthrive.R
+import com.filipkampic.mindthrive.data.AppDatabase
 import com.filipkampic.mindthrive.main.MainActivity
+import kotlinx.coroutines.runBlocking
 
 class HabitReminderWorker(
     context: Context,
@@ -16,7 +18,13 @@ class HabitReminderWorker(
 ) : Worker(context, params) {
 
     override fun doWork(): Result {
-        val habitName = inputData.getString("HABIT_NAME") ?: return Result.failure()
+        val habitId = inputData.getInt("HABIT_ID", -1)
+        val habitName = inputData.getString("HABIT_NAME") ?: return Result.success()
+
+        val stillExists = runBlocking {
+            AppDatabase.getDatabase(applicationContext).habitDao().habitExists(habitId)
+        }
+        if (!stillExists) return Result.success()
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             putExtra("navigate_to", "habit")
@@ -40,7 +48,7 @@ class HabitReminderWorker(
             .build()
 
         val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(System.currentTimeMillis().toInt(), notification)
+        manager.notify(habitId, notification)
 
         return Result.success()
     }
