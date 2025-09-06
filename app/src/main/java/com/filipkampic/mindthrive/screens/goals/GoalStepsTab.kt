@@ -31,9 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -62,7 +60,6 @@ fun GoalStepsTab(goalId: Int) {
     )
 
     val stepsStateList = remember { mutableStateListOf<GoalStep>() }
-    val hapticFeedback = LocalHapticFeedback.current
 
     val steps by viewModel.getSteps(goalId).collectAsState(initial = null)
 
@@ -73,7 +70,6 @@ fun GoalStepsTab(goalId: Int) {
         onMove = { from, to ->
             val movedItem = stepsStateList.removeAt(from.index)
             stepsStateList.add(to.index, movedItem)
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
 
             val updatedOrder = stepsStateList.mapIndexed { index, step ->
                 step.copy(order = index)
@@ -126,10 +122,8 @@ fun GoalStepsTab(goalId: Int) {
                         key = { _, step -> step.id }
                     ) { index, step ->
                         val textColor = if (step.isCompleted) Peach.copy(alpha = 0.6f) else Peach
-                        val descriptionColor =
-                            if (step.isCompleted) Peach.copy(alpha = 0.4f) else Peach.copy(alpha = 0.7f)
-                        val textDecoration =
-                            if (step.isCompleted) TextDecoration.LineThrough else null
+                        val descriptionColor = if (step.isCompleted) Peach.copy(alpha = 0.4f) else Peach.copy(alpha = 0.7f)
+                        val textDecoration = if (step.isCompleted) TextDecoration.LineThrough else null
 
                         ReorderableItem(
                             reorderableState = reorderState,

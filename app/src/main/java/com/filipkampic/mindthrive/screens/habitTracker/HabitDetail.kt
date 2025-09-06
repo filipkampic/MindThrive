@@ -39,7 +39,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +53,6 @@ import com.filipkampic.mindthrive.ui.theme.Inter
 import com.filipkampic.mindthrive.ui.theme.Montserrat
 import com.filipkampic.mindthrive.ui.theme.Peach
 import com.filipkampic.mindthrive.viewmodel.HabitViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +65,6 @@ fun HabitDetail(
 
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Weekly Progress", "Monthly Progress")
-    val coroutineScope = rememberCoroutineScope()
 
     val checks by viewModel.getAllChecksForHabit(habitId).collectAsState(initial = emptyList())
     val habits by viewModel.habits.collectAsState()
@@ -259,10 +256,8 @@ fun HabitDetail(
                 Button(
                     onClick = {
                         showDeleteDialog = false
-                        coroutineScope.launch {
-                          viewModel.deleteHabit(habit, context)
-                          navController.popBackStack()
-                        }
+                        viewModel.deleteHabit(habit, context)
+                        navController.popBackStack()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = DarkBlue,

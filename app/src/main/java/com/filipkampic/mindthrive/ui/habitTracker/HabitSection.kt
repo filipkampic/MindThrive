@@ -50,7 +50,6 @@ fun HabitSection(
             val item = habitList.removeAt(from.index)
             habitList.add(to.index, item)
             onMove(habitList.mapIndexed { index, habit -> habit.copy(position = index) })
-            println("Drag moved: habit=${item.name}, id=${item.id}, from=${from.index} to=${to.index}")
         }
     })
 

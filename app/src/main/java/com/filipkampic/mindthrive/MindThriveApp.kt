@@ -148,21 +148,6 @@ fun MindThriveApp() {
                 composable("habitDetail/{habitId}") { backStackEntry ->
                     val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
 
-                    val viewModel: HabitViewModel = viewModel()
-                    val habit by viewModel.getHabitById(habitId).collectAsState(initial = null)
-
-                    habit?.let {
-                        HabitDetail(
-                            habitId = habitId,
-                            navController = navController,
-                            viewModel = viewModel
-                        )
-                    }
-                }
-
-                composable("habitDetail/{habitId}") { backStackEntry ->
-                    val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
-
                     val db = AppDatabase.getDatabase(context)
                     val repo = HabitRepository(db.habitDao(), db.habitCheckDao())
                     val factory = HabitViewModelFactory(repo)
