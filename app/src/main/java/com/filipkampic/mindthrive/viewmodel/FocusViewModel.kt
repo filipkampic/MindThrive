@@ -74,9 +74,9 @@ class FocusViewModel(application: Application) : AndroidViewModel(application) {
         val calendar = Calendar.getInstance()
         val now = calendar.timeInMillis
         val dateFormat = when (period) {
-            FocusPeriod.WEEK -> SimpleDateFormat("EEE", Locale.getDefault())
-            FocusPeriod.MONTH -> SimpleDateFormat("d", Locale.getDefault())
-            FocusPeriod.YEAR -> SimpleDateFormat("MMM", Locale.getDefault())
+            FocusPeriod.WEEK -> SimpleDateFormat("EEE", Locale.ENGLISH)
+            FocusPeriod.MONTH -> SimpleDateFormat("d", Locale.ENGLISH)
+            FocusPeriod.YEAR -> SimpleDateFormat("MMM", Locale.ENGLISH)
         }
 
         val timeFrame = when (period) {
