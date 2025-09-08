@@ -86,9 +86,7 @@ fun DatePickerDialog(
                     Spacer(Modifier.height(16.dp))
 
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 0.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         DatePicker(
                             state = state,
